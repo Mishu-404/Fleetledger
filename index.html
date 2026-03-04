@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ফ্লিটলেজার — ট্রাক আয় ও ব্যয় ট্র্যাকার</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #dde1e9;
+    --accent: #1a56db;
+    --accent2: #e3470a;
+    --green: #057a55;
+    --green-bg: #def7ec;
+    --red: #c81e1e;
+    --red-bg: #fde8e8;
+    --yellow: #92400e;
+    --yellow-bg: #fef3c7;
+    --muted: #6b7280;
+    --text: #374151;
+    --heading: #111827;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* HEADER */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; height: 64px;
+    border-bottom: 2px solid var(--border);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06);
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 38px; height: 38px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .logo-text { font-size: 20px; font-weight: 700; color: var(--heading); letter-spacing: -.01em; }
+  .logo-sub { font-size: 11px; color: var(--muted); }
+  nav { display: flex; gap: 2px; }
+  .nav-btn {
+    background: none; border: none; cursor: pointer; padding: 8px 18px;
+    font-family: 'Hind Siliguri', sans-serif; font-size: 14px; color: var(--muted);
+    transition: all .15s; border-bottom: 3px solid transparent; border-radius: 0;
+    font-weight: 500;
+  }
+  .nav-btn:hover { color: var(--accent); background: #eff6ff; }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .header-actions { display: flex; gap: 8px; }
+  .btn { padding: 9px 18px; border: none; cursor: pointer; font-family: 'Hind Siliguri', sans-serif; font-size: 13px; font-weight: 600; transition: all .15s; border-radius: 6px; }
+  .btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+  .btn-rev { background: var(--green); color: #fff; }
+  .btn-rev:hover { background: #046c4e; }
+  .btn-exp { background: var(--red); color: #fff; }
+  .btn-exp:hover { background: #9b1c1c; }
+  .btn-blue { background: var(--accent); color: #fff; }
+  .btn-blue:hover { background: #1e429f; }
+
+  /* FILTERS */
+  .filters {
+    display: flex; align-items: center; gap: 14px; padding: 10px 32px;
+    border-bottom: 1px solid var(--border); background: var(--surface);
+  }
+  .filter-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  select.sel {
+    background: var(--surface2); border: 1.5px solid var(--border); color: var(--text);
+    font-family: 'Hind Siliguri', sans-serif; font-size: 13px; padding: 7px 12px;
+    cursor: pointer; outline: none; min-width: 150px; border-radius: 6px;
+  }
+  select.sel:focus { border-color: var(--accent); }
+  .entry-count { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  /* KPI STRIP */
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 32px 0; }
+  .kpi-card {
+    background: var(--surface); padding: 20px 22px;
+    border-radius: 10px; border: 1.5px solid var(--border);
+    border-left: 5px solid transparent;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    animation: fadeUp .35s ease both;
+  }
+  .kpi-card.green { border-left-color: var(--green); }
+  .kpi-card.red { border-left-color: var(--red); }
+  .kpi-card.blue { border-left-color: var(--accent); }
+  .kpi-card.orange { border-left-color: var(--accent2); }
+  .kpi-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.blue { color: var(--accent); }
+  .kpi-value.orange { color: var(--accent2); }
+
+  /* MAIN CONTENT */
+  main { padding: 24px 32px 60px; }
+  .section-title { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .06em; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1.5px solid var(--border); text-transform: uppercase; }
+  .grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .panel { background: var(--surface); border: 1.5px solid var(--border); padding: 22px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.04); animation: fadeUp .35s ease both; }
+
+  /* CHART */
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 160px; }
+  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
+  .chart-bars-inner { flex: 1; width: 100%; display: flex; gap: 4px; align-items: flex-end; }
+  .bar { flex: 1; min-height: 4px; border-radius: 4px 4px 0 0; transition: height .5s ease; }
+  .bar-rev { background: var(--green); opacity: .75; }
+  .bar-exp { background: var(--red); opacity: .7; }
+  .bar-label { font-size: 10px; color: var(--muted); }
+  .chart-legend { display: flex; gap: 20px; margin-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* EXPENSE BREAKDOWN */
+  .exp-row { margin-bottom: 16px; }
+  .exp-row-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+  .exp-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .exp-fill { height: 100%; transition: width .6s ease; border-radius: 3px; }
+
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; animation: fadeUp .35s ease both; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 2px solid var(--border); background: var(--surface2); }
+  th { padding: 12px 18px; text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+  td { padding: 12px 18px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .1s; }
+  tbody tr:hover { background: #f8faff; }
+  .tag { display: inline-block; padding: 3px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; }
+  .tag-rev { background: var(--green-bg); color: var(--green); }
+  .tag-exp { background: var(--red-bg); color: var(--red); }
+  .tag-margin { font-size: 12px; padding: 3px 10px; border-radius: 4px; }
+  .tag-good { background: var(--green-bg); color: var(--green); }
+  .tag-mid { background: var(--yellow-bg); color: var(--yellow); }
+  .tag-bad { background: var(--red-bg); color: var(--red); }
+
+  /* TRUCK MINI CARD */
+  .truck-mini {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 16px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .truck-mini:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(26,86,219,.12); }
+  .truck-mini-name { font-size: 12px; font-weight: 600; color: var(--heading); margin-bottom: 8px; }
+  .truck-mini-profit { font-size: 20px; font-weight: 700; margin-bottom: 4px; line-height: 1.2; }
+  .truck-mini-sub { font-size: 10px; color: var(--muted); }
+
+  /* PROFIT BAR */
+  .profit-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .profit-label { width: 65px; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  .profit-track { flex: 1; height: 16px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .profit-bar { height: 100%; transition: width .5s ease; border-radius: 4px; }
+  .profit-amt { width: 90px; font-size: 11px; font-weight: 700; text-align: right; flex-shrink: 0; }
+
+  /* SUMMARY */
+  .summary-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { font-size: 13px; color: var(--muted); }
+  .summary-val { font-size: 13px; font-weight: 700; color: var(--heading); }
+
+  /* MODAL */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(17,24,39,.55); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1.5px solid var(--border); padding: 32px; width: 480px; border-radius: 14px; border-top: 4px solid var(--accent); animation: fadeUp .25s ease; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+  .modal-title { font-size: 20px; font-weight: 700; color: var(--heading); margin-bottom: 20px; }
+  .form-row { margin-bottom: 16px; }
+  .form-row label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .form-row input, .form-row select {
+    width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+    color: var(--text); font-family: 'Hind Siliguri', sans-serif; font-size: 13px;
+    padding: 10px 12px; outline: none; transition: border-color .15s; border-radius: 7px;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--accent); background: #fff; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tab-row { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tab-btn {
+    flex: 1; padding: 10px; border: 1.5px solid var(--border); cursor: pointer;
+    font-family: 'Hind Siliguri', sans-serif; font-size: 13px; font-weight: 600;
+    transition: all .15s; background: var(--surface2); color: var(--muted); border-radius: 7px;
+  }
+  .tab-btn.rev-active { background: var(--green); color: #fff; border-color: var(--green); }
+  .tab-btn.exp-active { background: var(--red); color: #fff; border-color: var(--red); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* NOTIFICATION */
+  .notif {
+    position: fixed; bottom: 28px; right: 28px; z-index: 300;
+    padding: 13px 24px; font-size: 13px; font-weight: 600;
+    border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    display: none; animation: slideIn .25s ease;
+  }
+  .notif.show { display: block; }
+  @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .more-info { padding: 12px 20px; font-size: 12px; color: var(--muted); text-align: center; background: var(--surface2); }
+
+  /* ═══ ROLE SCREEN ═══ */
+  #roleScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 28px; padding: 24px;
+  }
+  .rl-badge { width: 72px; height: 72px; background: var(--accent); border-radius: 18px;
+    display: flex; align-items: center; justify-content: center; font-size: 34px;
+    box-shadow: 0 12px 40px rgba(26,86,219,.5); }
+  .rl-h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; letter-spacing: -.02em; }
+  .rl-sub { font-size: 13px; color: #94a3b8; }
+  .rl-cards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; max-width: 500px; width: 100%; }
+  .rl-card {
+    flex: 1; min-width: 190px; background: rgba(255,255,255,.07);
+    border: 1.5px solid rgba(255,255,255,.13); border-radius: 16px;
+    padding: 30px 22px; cursor: pointer; text-align: center; transition: all .2s;
+  }
+  .rl-card:hover { background: rgba(26,86,219,.28); border-color: #93c5fd; transform: translateY(-5px); }
+  .rl-card-icon { font-size: 38px; margin-bottom: 14px; }
+  .rl-card-name { font-size: 17px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+  .rl-card-desc { font-size: 12px; color: #94a3b8; line-height: 1.65; }
+
+  /* ═══ WORKER FORM SCREEN ═══ */
+  #workerScreen { display: none; min-height: 100vh; background: var(--bg); padding-bottom: 90px; }
+  .wf-hdr {
+    background: #0f172a; color: #fff; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
+  }
+  .wf-hdr-title { font-size: 16px; font-weight: 700; }
+  .wf-hdr-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .wf-back-btn {
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
+    color: #cbd5e1; padding: 8px 14px; border-radius: 7px; cursor: pointer;
+    font-size: 12px; font-family: 'Hind Siliguri', sans-serif; font-weight: 600;
+  }
+  .wf-back-btn:hover { background: rgba(255,255,255,.18); }
+  .wf-wrap { max-width: 700px; margin: 0 auto; padding: 16px; }
+  .wf-sec {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; margin-bottom: 12px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  }
+  .wf-sec-hd {
+    background: #1e293b; color: #fff; padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .wf-sec-num {
+    width: 24px; height: 24px; background: var(--accent); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .wf-sec-title { font-size: 13px; font-weight: 700; }
+  .wf-sec-hint { font-size: 10px; color: #94a3b8; margin-left: auto; }
+  .wf-body { padding: 14px; }
+  .wfg4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+  .wfg3 { display: grid; grid-template-columns: 110px 1fr 130px; gap: 10px; }
+  .wfg2 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+  .wf-field label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--muted); margin-bottom: 4px; letter-spacing: .03em;
+  }
+  .wf-field label span { font-weight: 400; color: #9ca3af; font-size: 10px; }
+  .wf-field input, .wf-field select {
+    width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+    color: var(--heading); padding: 10px 11px; border-radius: 7px;
+    outline: none; transition: border-color .15s, background .15s;
+    font-size: 13px; font-family: 'Hind Siliguri', sans-serif; -webkit-appearance: none;
+  }
+  .wf-field input:focus, .wf-field select:focus { border-color: var(--accent); background: #fff; }
+  .wf-field input[readonly] { background: #fffbeb; color: #92400e; border-color: #fcd34d; cursor: default; }
+
+  /* expense table */
+  .etbl { width: 100%; border-collapse: collapse; }
+  .etbl thead tr { background: #1e293b; }
+  .etbl thead th { padding: 8px 12px; font-size: 11px; color: #fff; font-weight: 700; text-align: left; letter-spacing: .04em; }
+  .etbl thead th:last-child { text-align: right; padding-right: 16px; }
+  .etbl tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  .etbl tbody tr:nth-child(even) { background: #f8fafc; }
+  .etbl tbody tr:hover { background: #eff6ff; }
+  .etbl td { padding: 4px 10px; vertical-align: middle; }
+  .enum {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--accent);
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .elbl { font-size: 13px; color: var(--heading); padding: 6px 0; }
+  .elbl small { display: block; font-size: 10px; color: var(--muted); }
+  .einp {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1.5px solid var(--border); color: var(--heading);
+    padding: 6px 4px; text-align: right; font-size: 13px; outline: none;
+    font-family: 'Hind Siliguri', sans-serif; transition: border-color .15s;
+  }
+  .einp:focus { border-bottom-color: var(--accent); background: #eff6ff; }
+  .einp.ro { background: #fffbeb; border-bottom-color: #fcd34d; color: #92400e; }
+  .etbl tfoot tr td { background: #fef2f2; padding: 10px 12px; }
+
+  /* cash summary */
+  .ctbl { width: 100%; border-collapse: collapse; }
+  .ctbl tr { border-bottom: 1px solid var(--border); }
+  .ctbl td { padding: 10px 14px; font-size: 13px; }
+  .ck { width: 60%; color: var(--text); }
+  .ck small { display: block; font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .cv { text-align: right; font-weight: 700; font-size: 15px; }
+  .crow-net { background: #eff6ff; }
+  .crow-net td { font-weight: 700; color: var(--accent); font-size: 15px; }
+  .crow-final { background: #0f172a; }
+  .crow-final td { color: #fff; font-size: 17px; font-weight: 700; }
+
+  /* mileage result */
+  .mile-box {
+    background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px;
+    padding: 11px 16px; margin-top: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .mile-box-lbl { font-size: 12px; color: var(--accent); font-weight: 600; }
+  .mile-box-val { font-size: 20px; font-weight: 700; color: var(--accent); }
+
+  /* signatures */
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .sig-box {
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 14px 12px 10px; text-align: center;
+  }
+  .sig-line { border-bottom: 1.5px solid var(--border); margin: 18px 10px 8px; }
+  .sig-lbl { font-size: 11px; color: var(--muted); line-height: 1.55; }
+
+  /* submit bar */
+  .wf-sub-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 2px solid var(--border);
+    padding: 14px 20px; z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+  }
+  .wf-sub-btn {
+    width: 100%; max-width: 700px; display: block; margin: 0 auto;
+    background: var(--accent); color: #fff; border: none;
+    padding: 15px; font-size: 15px; font-weight: 700; border-radius: 9px;
+    cursor: pointer; font-family: 'Hind Siliguri', sans-serif; transition: all .2s;
+  }
+  .wf-sub-btn:hover { background: #1e429f; transform: translateY(-1px); }
+
+  #mainApp { display: none; }
+
+  @media (max-width: 640px) {
+    .wfg4 { grid-template-columns: 1fr 1fr; }
+    .wfg3 { grid-template-columns: 90px 1fr 110px; }
+    .wfg2 { grid-template-columns: 1fr 1fr; }
+    .sig-row { grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+</style>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL = 'https://ggarbfxekttnimdhioga.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnYXJiZnhla3R0bmltZGhpb2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzA4ODQsImV4cCI6MjA4ODIwNjg4NH0.u_RD1mtHKRI114gnJEaqLBLK3lTF_2MGG3DmnhqWFYM';
+const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ── Load all entries from Supabase ──
+async function loadEntries() {
+  try {
+    const { data, error } = await supa
+      .from('trips')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Load error:', JSON.stringify(error));
+      return null; // null = error, [] = empty table
+    }
+    return data.map(r => ({
+      id: r.id, type: r.type, truck: r.truck, date: r.date,
+      amount: r.amount, description: r.description,
+      client: r.client, category: r.category,
+    }));
+  } catch(e) {
+    console.error('Load exception:', e);
+    return null;
+  }
+}
+
+// ── Save a single entry to Supabase ──
+async function saveEntry(entry) {
+  const { error } = await supa.from('trips').upsert({
+    id: entry.id, type: entry.type, truck: entry.truck,
+    date: entry.date, amount: entry.amount,
+    description: entry.description || null,
+    client: entry.client || null,
+    category: entry.category || null,
+  });
+  if (error) console.error('Save error:', error);
+}
+</script>
+
+</head>
+<body>
+
+<!-- ═══ ROLE SCREEN ═══ -->
+<div id="roleScreen">
+  <div class="rl-badge">🚚</div>
+  <div class="rl-h1">ফ্লিটলেজার</div>
+  <div class="rl-sub">আপনার ভূমিকা বেছে নিন / Select your role</div>
+  <div class="rl-cards">
+    <div class="rl-card" onclick="enterWorker()">
+      <div class="rl-card-icon">👷</div>
+      <div class="rl-card-name">Data Entry Operator</div>
+      <div class="rl-card-desc">দৈনিক ট্রিপ রিপোর্ট ফর্ম পূরণ করুন<br><span style="color:#64748b">Fill the daily trip report form</span></div>
+    </div>
+    <div class="rl-card" onclick="enterOwner()">
+      <div class="rl-card-icon">📊</div>
+      <div class="rl-card-name">Management</div>
+      <div class="rl-card-desc">সব ট্রাকের ড্যাশবোর্ড ও রিপোর্ট দেখুন<br><span style="color:#64748b">View fleet dashboard &amp; reports</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WORKER TRIP FORM ═══ -->
+<div id="workerScreen">
+  <div class="wf-hdr">
+    <button class="wf-back-btn" onclick="showRole()">← পিছনে যান</button>
+    <div>
+      <div class="wf-hdr-title">📋 দৈনিক ট্রিপ রিপোর্ট</div>
+      <div class="wf-hdr-sub">Daily Trip Report Form</div>
+    </div>
+    <div style="width:100px"></div>
+  </div>
+
+  <div class="wf-wrap">
+
+    <!-- §1 গাড়ির পরিচয় -->
+    <div class="wf-sec">
+      <div class="wf-sec-hd">
+        <div class="wf-sec-num">১</div>
+        <div class="wf-sec-title">গাড়ির পরিচয় / Vehicle Identity</div>
+      </div>
+      <div class="wf-body">
+        <div class="wfg4">
+          <div class="wf-field">
+            <label>গাড়ির নম্বর প্লেট <span>/ Plate No.</span></label>
+            <select id="wPlate"><option value="">— বেছে নিন —</option></select>
+          </div>
+          <div class="wf-field">
+            <label>গাড়ির কোড <span>/ Truck Code</span></label>
+            <input type="text" id="wCode" placeholder="যেমন: ট্রাক-০১"/>
+          </div>
+          <div class="wf-field">
+            <label>ড্রাইভারের নাম <span>/ Driver</span></label>
+            <input type="text" id="wDriver" placeholder="নাম লিখুন"/>
+          </div>
+          <div class="wf-field">
+            <label>হেলপারের নাম <span>/ Helper</span></label>
+            <input type="text" id="wHelper" placeholder="নাম লিখুন"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- §2 ট্রিপ তথ্য -->
+    <div class="wf-sec">
+      <div class="wf-sec-hd">
+        <div class="wf-sec-num">২</div>
+        <div class="wf-sec-title">ট্রিপের তথ্য / Trip Information</div>
+      </div>
+      <div class="wf-body">
+        <div class="wfg3">
+          <div class="wf-field">
+            <label>তারিখ <span>/ Date</span></label>
+            <input type="date" id="wDate"/>
+          </div>
+          <div class="wf-field">
+            <label>ট্রিপ রুট <span>/ Route (From → To)</span></label>
+            <input type="text" id="wRoute" placeholder="যেমন: ঢাকা → চট্টগ্রাম"/>
+          </div>
+          <div class="wf-field">
+            <label>ভাড়া (৳) <span>/ Fare</span></label>
+            <input type="number" id="wFare" placeholder="০" oninput="wCalc()"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- §3 দৈনিক খরচ -->
+    <div class="wf-sec">
+      <div class="wf-sec-hd">
+        <div class="wf-sec-num">৩</div>
+        <div class="wf-sec-title">দৈনিক খরচ / Daily Expenses</div>
+        <div class="wf-sec-hint">কমিশন স্বয়ংক্রিয় হিসাব হবে</div>
+      </div>
+      <table class="etbl">
+        <thead>
+          <tr>
+            <th style="width:40px">ক্রম</th>
+            <th>খরচের খাত / Expense Category</th>
+            <th style="width:130px">টাকার পরিমাণ</th>
+          </tr>
+        </thead>
+        <tbody id="wExpBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="font-size:14px;font-weight:700;color:var(--red)">** মোট খরচ / Total Expenses **</td>
+            <td style="text-align:right;padding-right:16px;font-size:16px;font-weight:700;color:var(--red)" id="wExpTotal">৳ ০</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- §4 নগদ হিসাব -->
+    <div class="wf-sec">
+      <div class="wf-sec-hd">
+        <div class="wf-sec-num">৪</div>
+        <div class="wf-sec-title">নগদ হিসাব / Cash Calculation</div>
+      </div>
+      <table class="ctbl">
+        <tr>
+          <td class="ck">মোট আদায়কৃত ক্যাশ<small>Total Collected Cash</small></td>
+          <td class="cv" id="wCGross" style="color:var(--green)">৳ ০</td>
+        </tr>
+        <tr>
+          <td class="ck" style="color:var(--red)">(-) মোট খরচ<small>Total Expenses</small></td>
+          <td class="cv" id="wCExp" style="color:var(--red)">৳ ০</td>
+        </tr>
+        <tr class="crow-net">
+          <td class="ck">নিট আদায়কৃত ক্যাশ<small>Net Collected Cash</small></td>
+          <td class="cv" id="wCNet">৳ ০</td>
+        </tr>
+        <tr>
+          <td class="ck">
+            <div class="wf-field" style="padding: 4px 0">
+              <label>(-) ঐচ্ছিক ছাড় <span>/ Optional Discount (৳)</span></label>
+              <input type="number" id="wDiscount" placeholder="০" oninput="wCalc()" style="background:#fff"/>
+            </div>
+          </td>
+          <td class="cv" id="wCDisc" style="color:var(--muted)">৳ ০</td>
+        </tr>
+        <tr class="crow-final">
+          <td class="ck" style="color:#fff;font-weight:700">নিট ক্যাশ (চূড়ান্ত)<small style="color:#94a3b8">Final Net Cash</small></td>
+          <td class="cv" id="wCFinal" style="color:#fbbf24">৳ ০</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- §5 মাইলেজ -->
+    <div class="wf-sec">
+      <div class="wf-sec-hd">
+        <div class="wf-sec-num">৫</div>
+        <div class="wf-sec-title">মাইলেজ ও জ্বালানি / Mileage &amp; Fuel</div>
+      </div>
+      <div class="wf-body">
+        <div class="wfg2">
+          <div class="wf-field">
+            <label>পূর্ববর্তী মিটার <span>/ Prev Meter (km)</span></label>
+            <input type="number" id="wMPrev" placeholder="০" oninput="wCalcM()"/>
+          </div>
+          <div class="wf-field">
+            <label>বর্তমান মিটার <span>/ Curr Meter (km)</span></label>
+            <input type="number" id="wMCurr" placeholder="০" oninput="wCalcM()"/>
+          </div>
+          <div class="wf-field">
+            <label>মোট দূরত্ব <span>/ Distance (km)</span></label>
+            <input type="number" id="wMDist" placeholder="স্বয়ংক্রিয়" readonly/>
+          </div>
+          <div class="wf-field">
+            <label>তেল ক্রয় <span>/ Fuel Purchased (L)</span></label>
+            <input type="number" id="wMLiters" placeholder="০" oninput="wCalcM()"/>
+          </div>
+        </div>
+        <div class="mile-box">
+          <span class="mile-box-lbl">মোট মাইলেজ / Fuel Efficiency</span>
+          <span class="mile-box-val" id="wMRes">— কি.মি. / লিটার</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- §6 স্বাক্ষর -->
+    <div class="wf-sec">
+      <div class="wf-sec-hd">
+        <div class="wf-sec-num">৬</div>
+        <div class="wf-sec-title">মন্তব্য ও স্বাক্ষর / Notes &amp; Signatures</div>
+      </div>
+      <div class="wf-body">
+        <div class="wf-field" style="margin-bottom:14px">
+          <label>মন্তব্য <span>/ Notes (optional)</span></label>
+          <input type="text" id="wNote" placeholder="কোনো বিশেষ তথ্য থাকলে লিখুন..."/>
+        </div>
+        <div class="sig-row">
+          <div class="sig-box">
+            <div class="sig-line"></div>
+            <div class="sig-lbl">হিসাবগ্রহণকারী<br><small style="color:#9ca3af">Accountant / Supervisor</small></div>
+          </div>
+          <div class="sig-box">
+            <div class="sig-line"></div>
+            <div class="sig-lbl">ড্রাইভার<br><small style="color:#9ca3af">Driver</small></div>
+          </div>
+          <div class="sig-box">
+            <div class="sig-line"></div>
+            <div class="sig-lbl">মালিক<br><small style="color:#9ca3af">Owner / Manager</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /wf-wrap -->
+  <div class="wf-sub-bar">
+    <button class="wf-sub-btn" onclick="wSubmit()">✅ ট্রিপ রিপোর্ট জমা দিন &nbsp;/&nbsp; Submit Trip Report</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="mainApp">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚚</div>
+    <div>
+      <div class="logo-text">ফ্লিটলেজার</div>
+      <div class="logo-sub">১২টি ট্রাক · আয় ও ব্যয় ট্র্যাকার</div>
+    </div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="switchView('dashboard',this)">ড্যাশবোর্ড</button>
+    <button class="nav-btn" onclick="switchView('trucks',this)">ট্রাকসমূহ</button>
+    <button class="nav-btn" onclick="switchView('entries',this)">এন্ট্রি তালিকা</button>
+    <button class="nav-btn" onclick="switchView('reports',this)">প্রতিবেদন</button>
+  </nav>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV ডাউনলোড</button>
+    <button class="btn btn-rev" onclick="openModal('revenue')">+ আয় যোগ করুন</button>
+    <button class="btn btn-exp" onclick="openModal('expense')">+ ব্যয় যোগ করুন</button>
+  </div>
+</header>
+
+<!-- FILTERS -->
+<div class="filters">
+  <span class="filter-label">ফিল্টার ▸</span>
+  <select class="sel" id="truckFilter" onchange="applyFilters()">
+    <option value="All Trucks">সকল ট্রাক</option>
+  </select>
+  <select class="sel" id="monthFilter" onchange="applyFilters()">
+    <option value="All">সকল মাস</option>
+  </select>
+  <span class="entry-count" id="entryCount">— টি এন্ট্রি</span>
+</div>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi-card green">
+    <div class="kpi-label">মোট আয়</div>
+    <div class="kpi-value green" id="kpiRevenue">৳০</div>
+  </div>
+  <div class="kpi-card red">
+    <div class="kpi-label">মোট ব্যয়</div>
+    <div class="kpi-value red" id="kpiExpenses">৳০</div>
+  </div>
+  <div class="kpi-card blue" id="kpiProfitCard">
+    <div class="kpi-label">নিট মুনাফা</div>
+    <div class="kpi-value blue" id="kpiProfit">৳০</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="kpi-label">মুনাফার হার</div>
+    <div class="kpi-value orange" id="kpiMargin">০%</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- DASHBOARD -->
+  <div id="view-dashboard" class="view active">
+    <div class="grid2" style="margin-top:8px;">
+      <div class="panel">
+        <div class="section-title">মাসিক আয় বনাম ব্যয়</div>
+        <div class="chart-bars" id="monthlyChart"></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green);opacity:.8"></div>আয়</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red);opacity:.8"></div>ব্যয়</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="section-title">ব্যয়ের ধরন অনুযায়ী বিভাজন</div>
+        <div id="expBreakdown"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="section-title">সকল ট্রাকের সংক্ষিপ্ত চিত্র</div>
+      <div class="grid4" id="truckGrid"></div>
+    </div>
+
+    <!-- CASH FLOW SUMMARY STRIP -->
+    <div class="panel" style="margin-top:0">
+      <div class="section-title">নগদ প্রবাহ সারসংক্ষেপ / Cash Flow Summary</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="cashFlowStrip">
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px 16px">
+          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:6px">মোট আদায়কৃত ক্যাশ</div>
+          <div style="font-size:20px;font-weight:700;color:#057a55" id="cfGross">৳০</div>
+        </div>
+        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:14px 16px">
+          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:6px">(-) মোট খরচ</div>
+          <div style="font-size:20px;font-weight:700;color:#c81e1e" id="cfExp">৳০</div>
+        </div>
+        <div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:14px 16px">
+          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:6px">নিট আদায়কৃত ক্যাশ</div>
+          <div style="font-size:20px;font-weight:700;color:#1a56db" id="cfNet">৳০</div>
+        </div>
+        <div style="background:#0f172a;border:1.5px solid #334155;border-radius:8px;padding:14px 16px">
+          <div style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:6px">নিট ক্যাশ (চূড়ান্ত)</div>
+          <div style="font-size:20px;font-weight:700;color:#fbbf24" id="cfFinal">৳০</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRUCKS -->
+  <div id="view-trucks" class="view">
+    <div class="table-wrap" style="margin-top:8px;">
+      <table>
+        <thead><tr>
+          <th>ক্রম</th><th>ট্রাক</th><th>মোট আয়</th><th>মোট ব্যয়</th><th>নিট মুনাফা</th><th>মুনাফার হার</th><th>কার্যক্রম</th>
+        </tr></thead>
+        <tbody id="truckTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ENTRIES -->
+  <div id="view-entries" class="view">
+    <div class="table-wrap" style="margin-top:8px;">
+      <table>
+        <thead><tr>
+          <th>ধরন</th><th>ট্রাক</th><th>তারিখ</th><th>পরিমাণ</th><th>বিবরণ</th><th>ক্লায়েন্ট / বিভাগ</th>
+        </tr></thead>
+        <tbody id="entriesTableBody"></tbody>
+      </table>
+      <div class="more-info" id="moreInfo" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div id="view-reports" class="view">
+    <div class="grid2" style="margin-top:8px;">
+      <div class="panel">
+        <div class="section-title">ট্রাক অনুযায়ী মুনাফা তুলনা</div>
+        <div id="profitBars"></div>
+      </div>
+      <div class="panel">
+        <div class="section-title">সামগ্রিক প্রতিবেদন</div>
+        <div id="summaryReport"></div>
+        <button class="btn btn-blue" style="margin-top:20px;width:100%" onclick="exportCSV()">সম্পূর্ণ প্রতিবেদন ডাউনলোড করুন (CSV)</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">নতুন এন্ট্রি যোগ করুন</div>
+    <div class="tab-row">
+      <button class="tab-btn rev-active" id="tabRev" onclick="setModalType('revenue')">আয়</button>
+      <button class="tab-btn" id="tabExp" onclick="setModalType('expense')">ব্যয়</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>ট্রাক নির্বাচন করুন</label>
+        <select id="fTruck"></select>
+      </div>
+      <div class="form-row">
+        <label>তারিখ</label>
+        <input type="date" id="fDate"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>পরিমাণ (৳)</label>
+      <input type="number" id="fAmount" placeholder="০.০০"/>
+    </div>
+    <div class="form-row" id="fCategoryRow" style="display:none">
+      <label>ব্যয়ের বিভাগ</label>
+      <select id="fCategory">
+        <option>তেল</option>
+        <option>লেবার</option>
+        <option>ব্রিজ/টোল</option>
+        <option>চাঁদা/পুলিশ</option>
+        <option>কমিশন (১০%)</option>
+        <option>দৈনিক ভাতা (খোরাকি)</option>
+        <option>টায়ার</option>
+        <option>মেইনটেন্যান্স</option>
+        <option>ড্রাইভার স্যালারি</option>
+        <option>বার্ষিক গাড়ির কাজ</option>
+        <option>কেইস/ফাইন</option>
+        <option>অন্যান্য (৫০০+)</option>
+      </select>
+    </div>
+    <div class="form-row" id="fClientRow">
+      <label>ক্লায়েন্ট / গ্রাহক</label>
+      <input type="text" id="fClient" placeholder="ক্লায়েন্টের নাম"/>
+    </div>
+    <div class="form-row">
+      <label>বিবরণ / নোট</label>
+      <input type="text" id="fDesc" placeholder="ট্রিপ নম্বর, নোট..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-rev" id="modalSubmitBtn" onclick="submitEntry()" style="flex:1">আয় যোগ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('modalBg').classList.remove('open')">বাতিল করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<script>
+const TRUCKS = Array.from({length:12},(_,i)=>`ট্রাক ${String(i+1).padStart(2,'০').replace(/0/g,'০').replace(/1/g,'১').replace(/2/g,'২').replace(/3/g,'৩').replace(/4/g,'৪').replace(/5/g,'৫').replace(/6/g,'৬').replace(/7/g,'৭').replace(/8/g,'৮').replace(/9/g,'৯')}`);
+
+// Fix truck names to proper Bangla numerals
+const TRUCK_NAMES = Array.from({length:12},(_,i)=>{
+  const n = i+1;
+  const bn = n.toString().split('').map(d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]).join('');
+  return `ট্রাক-${bn.padStart(2,'০')}`;
+});
+
+const MONTHS_BN = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
+const MONTHS_SHORT = ["জান","ফেব","মার","এপ্র","মে","জুন","জুল","আগ","সেপ","অক্ট","নভ","ডিস"];
+const EXP_TYPES_BN = ["তেল","লেবার","ব্রিজ/টোল","চাঁদা/পুলিশ","কমিশন (১০%)","দৈনিক ভাতা (খোরাকি)","টায়ার","মেইনটেন্যান্স","ড্রাইভার স্যালারি","বার্ষিক গাড়ির কাজ","কেইস/ফাইন","অন্যান্য (৫০০+)"];
+const EXP_TYPES_KEY = ["Fuel","Labour","Bridge/Toll","Bribe/Police","Commission 10%","Daily Allowance","Tyre","Maintenance","Driver Salary","Annual Vehicle","Case/Fine","Other 500+"];
+const CAT_COLORS = {"তেল":"#d97706","লেবার":"#7c3aed","ব্রিজ/টোল":"#db2777","চাঁদা/পুলিশ":"#dc2626","কমিশন (১০%)":"#2563eb","দৈনিক ভাতা (খোরাকি)":"#059669","টায়ার":"#9333ea","মেইনটেন্যান্স":"#16a34a","ড্রাইভার স্যালারি":"#0891b2","বার্ষিক গাড়ির কাজ":"#b45309","কেইস/ফাইন":"#b91c1c","অন্যান্য (৫০০+)":"#6b7280"};
+const CLIENTS_BN = ["এবিসি লজিস্টিক্স","প্রাইম ফ্রেইট","ফাস্টমুভ কোং","ডেল্টা কার্গো","সামিট ট্রান্সপোর্ট"];
+
+let entries = [];
+let filteredEntries = [];
+let modalType = 'revenue';
+
+function toBN(n) {
+  return Math.abs(Math.round(n)).toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+}
+
+function fmt(n) {
+  const val = Math.abs(Math.round(n));
+  // Format with commas (Indian style)
+  const s = val.toString();
+  let result = s;
+  if(s.length > 3) {
+    const last3 = s.slice(-3);
+    const rest = s.slice(0,-3);
+    const restFormatted = rest.replace(/\B(?=(\d{2})+(?!\d))/g,',');
+    result = restFormatted + ',' + last3;
+  }
+  // Convert to Bangla digits
+  result = result.replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+  return '৳' + result;
+}
+
+function fmtDate(d) {
+  const [y,m,day] = d.split('-');
+  const dayBN = day.replace(/\d/g,n=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+n]);
+  const yearBN = y.replace(/\d/g,n=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+n]);
+  return `${MONTHS_BN[+m-1]} ${dayBN}, ${yearBN}`;
+}
+
+function genSample() {
+  const now = new Date(); const arr = [];
+  TRUCK_NAMES.forEach((truck, ti) => {
+    for (let m = 0; m < 3; m++) {
+      const month = now.getMonth() - m;
+      for (let d = 0; d < 7; d++) {
+        const day = Math.floor(Math.random()*28)+1;
+        const dt = new Date(now.getFullYear(), month, day).toISOString().split('T')[0];
+        arr.push({ id:`r${ti}${m}${d}`, type:'revenue', truck, date:dt,
+          amount:Math.floor(Math.random()*40000)+8000,
+          description:`ট্রিপ #${Math.floor(Math.random()*9000)+1000}`,
+          client:CLIENTS_BN[Math.floor(Math.random()*CLIENTS_BN.length)] });
+        [["তেল",2000,3000],["লেবার",500,800],["ব্রিজ/টোল",200,600],["চাঁদা/পুলিশ",0,400],["দৈনিক ভাতা (খোরাকি)",300,0],["টায়ার",0,1],["মেইনটেন্যান্স",0,1],["ড্রাইভার স্যালারি",500,500],["কেইস/ফাইন",0,1],["অন্যান্য (৫০০+)",0,1]].forEach(([cat,base,range],ci) => {
+          if((cat==="টায়ার"||cat==="মেইনটেন্যান্স") && Math.random()>0.25) return;
+          if((cat==="চাঁদা/পুলিশ"||cat==="কেইস/ফাইন"||cat==="অন্যান্য (৫০০+)") && Math.random()>0.35) return;
+          const fare = arr[arr.length-1]?.amount || 20000;
+          const comm = cat==="কমিশন (১০%)" ? Math.round(fare*0.1) : 0;
+          const amt = comm > 0 ? comm : Math.round(base + Math.random()*range*(cat==="টায়ার"||cat==="মেইনটেন্যান্স"?5000:1));
+          if(amt>0) arr.push({ id:`e${ti}${m}${d}${ci}`, type:'expense', truck, date:dt, amount:amt, category:cat, description:cat+' ব্যয়' });
+        });
+        // commission separately
+        const lastFare = arr.filter(x=>x.type==='revenue').slice(-1)[0]?.amount || 20000;
+        arr.push({ id:`ec${ti}${m}${d}`, type:'expense', truck, date:dt, amount:Math.round(lastFare*0.1), category:'কমিশন (১০%)', description:'কমিশন ব্যয়' });
+      }
+    }
+  });
+  return arr;
+}
+
+async function init() {
+  const now = new Date();
+  const tSel = document.getElementById('truckFilter');
+  const fTruck = document.getElementById('fTruck');
+  TRUCK_NAMES.forEach(t => {
+    tSel.innerHTML += `<option value="${t}">${t}</option>`;
+    fTruck.innerHTML += `<option value="${t}">${t}</option>`;
+  });
+  const mSel = document.getElementById('monthFilter');
+  MONTHS_BN.forEach((m,i) => {
+    const yearBN = now.getFullYear().toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+    mSel.innerHTML += `<option value="${i}">${m} ${yearBN}</option>`;
+  });
+  document.getElementById('fDate').value = now.toISOString().split('T')[0];
+
+  // Load from Supabase; fall back to sample data on error
+  const loaded = await loadEntries();
+  if (loaded === null) {
+    // Supabase error — use sample data
+    entries = genSample();
+    console.warn('Using sample data due to Supabase error');
+  } else if (loaded.length === 0) {
+    // Empty table — use sample data until real entries exist
+    entries = genSample();
+  } else {
+    entries = loaded;
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  const truck = document.getElementById('truckFilter').value;
+  const month = document.getElementById('monthFilter').value;
+  filteredEntries = entries.filter(e => {
+    const tOk = truck === 'All Trucks' || e.truck === truck;
+    const mOk = month === 'All' || new Date(e.date).getMonth() === +month;
+    return tOk && mOk;
+  });
+  const countBN = filteredEntries.length.toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+  document.getElementById('entryCount').textContent = countBN + ' টি এন্ট্রি';
+  renderAll();
+}
+
+function renderAll() {
+  renderKPIs(); renderMonthlyChart(); renderExpBreakdown();
+  renderTruckGrid(); renderTruckTable(); renderEntries(); renderReports();
+  renderCashFlow();
+}
+
+function renderCashFlow() {
+  const rev = filteredEntries.filter(e=>e.type==='revenue').reduce((s,e)=>s+e.amount,0);
+  const exp = filteredEntries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  const net = rev - exp;
+  const el = (id,v,col) => { const d=document.getElementById(id); if(d){d.textContent=fmt(Math.abs(v));d.style.color=col;} };
+  el('cfGross', rev,  '#057a55');
+  el('cfExp',   exp,  '#c81e1e');
+  el('cfNet',   net,  net>=0?'#1a56db':'#c81e1e');
+  el('cfFinal', net,  net>=0?'#fbbf24':'#fca5a5');
+}
+
+function getKPIs() {
+  const rev = filteredEntries.filter(e=>e.type==='revenue').reduce((s,e)=>s+e.amount,0);
+  const exp = filteredEntries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  const profit = rev - exp;
+  const margin = rev > 0 ? ((profit/rev)*100).toFixed(1) : '০.০';
+  return {rev,exp,profit,margin};
+}
+
+function renderKPIs() {
+  const {rev,exp,profit,margin} = getKPIs();
+  document.getElementById('kpiRevenue').textContent = fmt(rev);
+  document.getElementById('kpiExpenses').textContent = fmt(exp);
+  const pEl = document.getElementById('kpiProfit');
+  pEl.textContent = (profit<0?'-':'')+fmt(Math.abs(profit));
+  pEl.className = 'kpi-value '+(profit>=0?'blue':'red');
+  document.getElementById('kpiProfitCard').className = 'kpi-card '+(profit>=0?'blue':'red');
+  const marginBN = margin.toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+  document.getElementById('kpiMargin').textContent = marginBN+'%';
+}
+
+function getTruckSummaries() {
+  return TRUCK_NAMES.map(truck => {
+    const te = filteredEntries.filter(e=>e.truck===truck);
+    const rev = te.filter(e=>e.type==='revenue').reduce((s,e)=>s+e.amount,0);
+    const exp = te.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+    return { truck, revenue:rev, expenses:exp, profit:rev-exp };
+  }).sort((a,b)=>b.profit-a.profit);
+}
+
+function renderMonthlyChart() {
+  const truck = document.getElementById('truckFilter').value;
+  const data = {};
+  entries.filter(e=>truck==='All Trucks'||e.truck===truck).forEach(e=>{
+    const d=new Date(e.date); const key=`${d.getFullYear()}-${d.getMonth()}`;
+    if(!data[key]) data[key]={label:MONTHS_SHORT[d.getMonth()],revenue:0,expenses:0,month:d.getMonth(),year:d.getFullYear()};
+    if(e.type==='revenue') data[key].revenue+=e.amount; else data[key].expenses+=e.amount;
+  });
+  const months = Object.values(data).sort((a,b)=>a.year!==b.year?a.year-b.year:a.month-b.month).slice(-6);
+  const max = Math.max(...months.map(m=>Math.max(m.revenue,m.expenses)),1);
+  document.getElementById('monthlyChart').innerHTML = months.map(m=>`
+    <div class="chart-col">
+      <div class="chart-bars-inner">
+        <div class="bar bar-rev" style="height:${(m.revenue/max)*100}%" title="আয়: ${fmt(m.revenue)}"></div>
+        <div class="bar bar-exp" style="height:${(m.expenses/max)*100}%" title="ব্যয়: ${fmt(m.expenses)}"></div>
+      </div>
+      <div class="bar-label">${m.label}</div>
+    </div>
+  `).join('');
+}
+
+function renderExpBreakdown() {
+  const cats = {};
+  filteredEntries.filter(e=>e.type==='expense').forEach(e=>{ cats[e.category]=(cats[e.category]||0)+e.amount; });
+  const total = Object.values(cats).reduce((s,v)=>s+v,0);
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('expBreakdown').innerHTML = sorted.length ? sorted.map(([cat,amt])=>`
+    <div class="exp-row">
+      <div class="exp-row-header">
+        <span style="color:${CAT_COLORS[cat]||'#6b7280'};font-weight:600">${cat}</span>
+        <span style="color:var(--heading);font-weight:700">${fmt(amt)}</span>
+      </div>
+      <div class="exp-track">
+        <div class="exp-fill" style="width:${total>0?(amt/total)*100:0}%;background:${CAT_COLORS[cat]||'#6b7280'}"></div>
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px 0">কোনো ব্যয়ের তথ্য নেই</p>';
+}
+
+function renderTruckGrid() {
+  const summaries = getTruckSummaries();
+  document.getElementById('truckGrid').innerHTML = summaries.map(t=>`
+    <div class="truck-mini" onclick="goTruck('${t.truck}')">
+      <div class="truck-mini-name">🚚 ${t.truck}</div>
+      <div class="truck-mini-profit" style="color:${t.profit>=0?'var(--green)':'var(--red)'}">${t.profit<0?'-':''}${fmt(Math.abs(t.profit))}</div>
+      <div class="truck-mini-sub">আয়: ${fmt(t.revenue)} | ব্যয়: ${fmt(t.expenses)}</div>
+    </div>
+  `).join('');
+}
+
+function renderTruckTable() {
+  const summaries = getTruckSummaries();
+  document.getElementById('truckTableBody').innerHTML = summaries.map((t,i)=>{
+    const m = t.revenue>0?((t.profit/t.revenue)*100).toFixed(1):'০.০';
+    const mClass = parseFloat(m)>=20?'tag-good':parseFloat(m)>=0?'tag-mid':'tag-bad';
+    const rankBN = (i+1).toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+    const mBN = m.replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+    return `<tr>
+      <td style="color:var(--muted);font-weight:600">#${rankBN}</td>
+      <td style="color:var(--heading);font-weight:600">🚚 ${t.truck}</td>
+      <td style="color:var(--green);font-weight:600">${fmt(t.revenue)}</td>
+      <td style="color:var(--red);font-weight:600">${fmt(t.expenses)}</td>
+      <td style="color:${t.profit>=0?'var(--green)':'var(--red)'};font-size:16px;font-weight:700">${t.profit<0?'-':''}${fmt(Math.abs(t.profit))}</td>
+      <td><span class="tag tag-margin ${mClass}">${mBN}%</span></td>
+      <td><button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="goTruckEntries('${t.truck}')">এন্ট্রি দেখুন →</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderEntries() {
+  const sorted = [...filteredEntries].sort((a,b)=>b.date.localeCompare(a.date));
+  const shown = sorted.slice(0,30);
+  document.getElementById('entriesTableBody').innerHTML = shown.map(e=>`
+    <tr>
+      <td><span class="tag ${e.type==='revenue'?'tag-rev':'tag-exp'}">${e.type==='revenue'?'আয়':'ব্যয়'}</span></td>
+      <td style="color:var(--muted)">${e.truck}</td>
+      <td style="color:var(--muted)">${fmtDate(e.date)}</td>
+      <td style="color:${e.type==='revenue'?'var(--green)':'var(--red)'};font-weight:700">${e.type==='revenue'?'+':'-'}${fmt(Math.abs(e.amount))}</td>
+      <td style="color:var(--heading)">${e.description}</td>
+      <td style="color:var(--muted)">${e.client||e.category||'—'}</td>
+    </tr>
+  `).join('');
+  const more = document.getElementById('moreInfo');
+  if(sorted.length > 30) {
+    const extraBN = (sorted.length-30).toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+    const totalBN = sorted.length.toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+    more.style.display='block';
+    more.textContent = `${totalBN} টি এন্ট্রির মধ্যে ৩০টি দেখানো হচ্ছে। আরো ${extraBN}টি আছে। ফিল্টার ব্যবহার করুন।`;
+  } else { more.style.display='none'; }
+}
+
+function renderReports() {
+  const summaries = getTruckSummaries();
+  const maxP = Math.max(...summaries.map(t=>Math.abs(t.profit)),1);
+  document.getElementById('profitBars').innerHTML = summaries.map(t=>`
+    <div class="profit-row">
+      <div class="profit-label" style="font-size:10px">${t.truck}</div>
+      <div class="profit-track">
+        <div class="profit-bar" style="width:${(Math.abs(t.profit)/maxP)*100}%;background:${t.profit>=0?'var(--green)':'var(--red)'};opacity:.8"></div>
+      </div>
+      <div class="profit-amt" style="color:${t.profit>=0?'var(--green)':'var(--red)'}">${t.profit<0?'-':''}${fmt(Math.abs(t.profit))}</div>
+    </div>
+  `).join('');
+
+  const {rev,exp,profit,margin} = getKPIs();
+  const best = summaries[0]; const worst = summaries[summaries.length-1];
+  const marginBN = margin.toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
+  const truckCountBN = '১২';
+  document.getElementById('summaryReport').innerHTML = [
+    ['মোট আদায়কৃত ক্যাশ', fmt(rev)],
+    ['(-) মোট খরচ', fmt(exp)],
+    ['নিট আদায়কৃত ক্যাশ', (profit<0?'-':'')+fmt(Math.abs(profit))],
+    ['নিট ক্যাশ (চূড়ান্ত)', (profit<0?'-':'')+fmt(Math.abs(profit))],
+    ['মুনাফার হার', marginBN+'%'],
+    ['সক্রিয় ট্রাক', truckCountBN+'টি'],
+    ['সেরা পারফরম্যান্স', best?.truck||'—'],
+    ['মনোযোগ প্রয়োজন', worst?.truck||'—'],
+    ['প্রতি ট্রাকে গড় আয়', fmt(rev/12)],
+    ['প্রতি ট্রাকে গড় মুনাফা', fmt(profit/12)],
+  ].map(([k,v])=>`<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`).join('');
+}
+
+function switchView(v, btn) {
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function goTruck(truck) {
+  document.getElementById('truckFilter').value = truck;
+  applyFilters();
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{ if(i===1) b.classList.add('active'); else b.classList.remove('active'); });
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-trucks').classList.add('active');
+}
+
+function goTruckEntries(truck) {
+  document.getElementById('truckFilter').value = truck;
+  applyFilters();
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{ if(i===2) b.classList.add('active'); else b.classList.remove('active'); });
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-entries').classList.add('active');
+}
+
+function openModal(type) {
+  setModalType(type);
+  document.getElementById('modalBg').classList.add('open');
+  document.getElementById('fAmount').value='';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fClient').value='';
+}
+
+function closeModal(e) { if(e.target===document.getElementById('modalBg')) document.getElementById('modalBg').classList.remove('open'); }
+
+function setModalType(type) {
+  modalType = type;
+  document.getElementById('tabRev').className='tab-btn'+(type==='revenue'?' rev-active':'');
+  document.getElementById('tabExp').className='tab-btn'+(type==='expense'?' exp-active':'');
+  document.getElementById('fCategoryRow').style.display = type==='expense'?'block':'none';
+  document.getElementById('fClientRow').style.display = type==='revenue'?'block':'none';
+  const submitBtn = document.getElementById('modalSubmitBtn');
+  submitBtn.textContent = type==='revenue'?'আয় যোগ করুন':'ব্যয় যোগ করুন';
+  submitBtn.className = 'btn '+(type==='revenue'?'btn-rev':'btn-exp');
+}
+
+function submitEntry() {
+  const amt = parseFloat(document.getElementById('fAmount').value);
+  if(!amt || amt<=0) { showNotif('সঠিক পরিমাণ লিখুন','var(--red)'); return; }
+  const catEl = document.getElementById('fCategory');
+  const entry = {
+    id:'m'+Date.now(), type:modalType,
+    truck: document.getElementById('fTruck').value,
+    date: document.getElementById('fDate').value,
+    amount: Math.round(amt),
+    description: document.getElementById('fDesc').value || (modalType==='revenue'?'আয় এন্ট্রি':catEl.value+' ব্যয়'),
+    ...(modalType==='revenue' ? {client:document.getElementById('fClient').value} : {category:catEl.value}),
+  };
+  entries.unshift(entry);
+  saveEntry(entry);
+  applyFilters();
+  document.getElementById('modalBg').classList.remove('open');
+  showNotif(modalType==='revenue'?'আয়ের এন্ট্রি যোগ হয়েছে!':'ব্যয়ের এন্ট্রি যোগ হয়েছে!', modalType==='revenue'?'var(--green)':'var(--red)');
+}
+
+function exportCSV() {
+  const rows = [['ধরন','ট্রাক','তারিখ','পরিমাণ','বিবরণ','ক্লায়েন্ট/বিভাগ']];
+  filteredEntries.forEach(e=>rows.push([e.type==='revenue'?'আয়':'ব্যয়',e.truck,e.date,e.amount,e.description,e.client||e.category||'']));
+  const csv = '\uFEFF'+rows.map(r=>r.join(',')).join('\n');
+  const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='ফ্লিট-প্রতিবেদন.csv'; a.click();
+  showNotif('CSV ডাউনলোড হয়েছে!','var(--accent)');
+}
+
+function showNotif(msg, color='var(--green)') {
+  const n = document.getElementById('notif');
+  n.textContent=msg; n.style.background=color; n.style.color='#fff';
+  n.classList.add('show');
+  setTimeout(()=>n.classList.remove('show'),3000);
+}
+
+
+// ═══════════════════════════════════════════════
+//  ROLE SCREEN + WORKER FORM
+// ═══════════════════════════════════════════════
+var W_EXPS = [
+  {id:'fuel',        bn:'তেল',                         en:'Fuel',             auto:false},
+  {id:'labor',       bn:'লেবার',                       en:'Labour',           auto:false},
+  {id:'toll',        bn:'ব্রিজ/টোল',                   en:'Bridge/Toll',      auto:false},
+  {id:'police',      bn:'চাঁদা/পুলিশ',                 en:'Bribe/Police',     auto:false},
+  {id:'commission',  bn:'কমিশন (১০%)',                  en:'Commission 10%',   auto:true},
+  {id:'allowance',   bn:'দৈনিক ভাতা (খোরাকি)',          en:'Daily Allowance',  auto:false},
+  {id:'tire',        bn:'টায়ার',                       en:'Tyre',             auto:false},
+  {id:'maintenance', bn:'মেইনটেন্যান্স',               en:'Maintenance',      auto:false},
+  {id:'salary',      bn:'ড্রাইভার স্যালারি',            en:'Driver Salary',    auto:false},
+  {id:'annual',      bn:'বার্ষিক গাড়ির কাজ',           en:'Annual Vehicle',   auto:false},
+  {id:'fine',        bn:'কেইস/ফাইন',                   en:'Case/Fine',        auto:false},
+  {id:'other',       bn:'অন্যান্য (৫০০+ টাকা)',          en:'Other (500+)',     auto:false},
+];
+var W_NUMS = ['১','২','৩','৪','৫','৬','৭','৮','৯','১০','১১'];
+
+function showRole() {
+  document.getElementById('roleScreen').style.display = 'flex';
+  document.getElementById('workerScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'none';
+}
+function enterWorker() {
+  document.getElementById('roleScreen').style.display = 'none';
+  document.getElementById('workerScreen').style.display = 'block';
+  document.getElementById('mainApp').style.display = 'none';
+  wBuildExpTable();
+  document.getElementById('wDate').value = new Date().toISOString().split('T')[0];
+}
+function enterOwner() {
+  document.getElementById('roleScreen').style.display = 'none';
+  document.getElementById('workerScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+}
+
+function wFmt(n) {
+  var val = Math.abs(Math.round(n)).toString();
+  var r = val.length > 3
+    ? val.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',') + ',' + val.slice(-3)
+    : val;
+  return '৳' + r.replace(/\d/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; });
+}
+function wNv(id) {
+  var el = document.getElementById(id);
+  return el ? (parseFloat(el.value) || 0) : 0;
+}
+function wBuildExpTable() {
+  var tbody = document.getElementById('wExpBody');
+  if (!tbody) return;
+  tbody.innerHTML = W_EXPS.map(function(e, i) {
+    return '<tr>'
+      + '<td style="padding:5px 10px"><div class="enum">' + W_NUMS[i] + '</div></td>'
+      + '<td><div class="elbl">' + e.bn + '<small>' + e.en + '</small></div></td>'
+      + '<td style="padding:5px 12px">'
+      +   '<div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">'
+      +   '<span style="color:var(--muted);font-size:12px">৳</span>'
+      +   '<input type="number" id="we_' + e.id + '" class="einp' + (e.auto ? ' ro' : '') + '" '
+      +   'placeholder="' + (e.auto ? 'স্বয়ংক্রিয়' : '০') + '" '
+      +   (e.auto ? 'readonly' : 'oninput="wCalc()"')
+      +   ' style="width:95px"/>'
+      +   '</div>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+}
+function wCalc() {
+  var fare = wNv('wFare');
+  var comm = Math.round(fare * 0.10);
+  var cEl = document.getElementById('we_commission');
+  if (cEl) cEl.value = comm > 0 ? comm : '';
+  var totalExp = 0;
+  W_EXPS.forEach(function(e) {
+    var el = document.getElementById('we_' + e.id);
+    totalExp += el ? (parseFloat(el.value) || 0) : 0;
+  });
+  var disc = wNv('wDiscount');
+  var net = fare - totalExp;
+  var final = net - disc;
+  document.getElementById('wExpTotal').textContent = wFmt(totalExp);
+  document.getElementById('wCGross').textContent   = wFmt(fare);
+  document.getElementById('wCExp').textContent     = wFmt(totalExp);
+  document.getElementById('wCNet').textContent     = wFmt(net);
+  document.getElementById('wCNet').style.color     = net >= 0 ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('wCDisc').textContent    = wFmt(disc);
+  document.getElementById('wCFinal').textContent   = wFmt(final);
+  document.getElementById('wCFinal').style.color   = final >= 0 ? '#fbbf24' : '#fca5a5';
+}
+function wCalcM() {
+  var prev = wNv('wMPrev'), curr = wNv('wMCurr'), lit = wNv('wMLiters');
+  var dist = curr - prev;
+  if (dist > 0) document.getElementById('wMDist').value = dist;
+  var eff = (lit > 0 && dist > 0) ? (dist / lit).toFixed(2) : null;
+  document.getElementById('wMRes').textContent = eff
+    ? eff.replace(/\d/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }) + ' কি.মি. / লিটার'
+    : '— কি.মি. / লিটার';
+}
+function wSubmit() {
+  var plate = document.getElementById('wPlate').value;
+  var date  = document.getElementById('wDate').value;
+  if (!plate || !date) { showNotif('গাড়ির নম্বর ও তারিখ আবশ্যক', 'var(--red)'); return; }
+  var fare   = wNv('wFare');
+  var route  = document.getElementById('wRoute').value || 'ট্রিপ';
+  var driver = document.getElementById('wDriver').value || '—';
+  var totalExp = 0;
+  W_EXPS.forEach(function(e) {
+    var el = document.getElementById('we_' + e.id);
+    var amt = el ? (parseFloat(el.value) || 0) : 0;
+    totalExp += amt;
+    if (amt > 0) {
+      const expEntry = { id:'wx'+Date.now()+e.id, type:'expense',
+        truck:plate, date:date, amount:amt, category:e.bn, description:e.bn+' ব্যয়' };
+      entries.unshift(expEntry);
+      saveEntry(expEntry);
+    }
+  });
+  const revEntry = { id:'w'+Date.now(), type:'revenue',
+    truck:plate, date:date, amount:fare, description:route, client:driver };
+  entries.unshift(revEntry);
+  saveEntry(revEntry);
+  ['wCode','wDriver','wHelper','wRoute','wNote','wFare','wDiscount','wMPrev','wMCurr','wMLiters','wMDist']
+    .forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  W_EXPS.forEach(function(e){ var el=document.getElementById('we_'+e.id); if(el) el.value=''; });
+  document.getElementById('wDate').value = new Date().toISOString().split('T')[0];
+  wCalc(); wCalcM();
+  showNotif('✅ ট্রিপ সফলভাবে জমা হয়েছে!', 'var(--green)');
+  setTimeout(function(){ enterOwner(); applyFilters(); }, 1400);
+}
+
+// After init runs, populate worker plate dropdown too
+(function() {
+  var _orig = window.init;
+  window.init = function() {
+    _orig();
+    var wp = document.getElementById('wPlate');
+    if (wp && typeof TRUCK_NAMES !== 'undefined') {
+      TRUCK_NAMES.forEach(function(t){
+        wp.innerHTML += '<option value="'+t+'">'+t+'</option>';
+      });
+    }
+  };
+})();
+
+init();
+</script>
+</div><!-- /mainApp -->
+</body>
+</html>
