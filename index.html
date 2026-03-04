@@ -198,6 +198,7 @@
   .notif.show { display: block; }
   @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform:translateX(0); } }
   @keyframes fadeUp { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
 
   .view { display: none; }
   .view.active { display: block; }
@@ -359,6 +360,49 @@
     .sig-row { grid-template-columns: 1fr 1fr 1fr; }
   }
 
+
+  /* ── PIN MODAL ── */
+  #workerPinModal {
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(15,23,42,.7); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+  }
+  #workerPinModal.open { display: flex; }
+  #pinModal {
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(15,23,42,.7); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+  }
+  #pinModal.open { display: flex; }
+  .pin-box {
+    background: #fff; border-radius: 16px; padding: 36px 32px;
+    width: 320px; text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,.2);
+    animation: fadeUp .2s ease;
+  }
+  .pin-icon { font-size: 36px; margin-bottom: 12px; }
+  .pin-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .pin-sub { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+  .pin-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #e5e7eb; transition: background .15s;
+  }
+  .pin-dot.filled { background: #1a56db; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pin-btn {
+    background: #f3f4f6; border: none; border-radius: 10px;
+    padding: 16px; font-size: 20px; font-weight: 700; color: #111827;
+    cursor: pointer; transition: all .1s; font-family: 'Hind Siliguri', sans-serif;
+  }
+  .pin-btn:hover { background: #e0e7ff; color: #1a56db; }
+  .pin-btn:active { transform: scale(.94); }
+  .pin-btn.del { font-size: 16px; color: #6b7280; }
+  .pin-error { color: #c81e1e; font-size: 12px; font-weight: 600; margin-top: 14px; display: none; }
+  .pin-cancel { margin-top: 14px; background: none; border: none; color: #6b7280;
+    font-size: 13px; cursor: pointer; font-family: 'Hind Siliguri', sans-serif; }
+  .pin-cancel:hover { color: #111827; }
+
 </style>
 
 <!-- Supabase -->
@@ -406,18 +450,49 @@ async function saveEntry(entry) {
 </head>
 <body>
 
+<!-- ── PIN MODAL ── -->
+<div id="pinModal">
+  <div class="pin-box">
+    <div class="pin-icon">🔒</div>
+    <div class="pin-title">Management Access</div>
+    <div class="pin-sub">পিন কোড দিন / Enter PIN</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn" onclick="pinPress('')" style="visibility:hidden"></button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError">❌ ভুল পিন। আবার চেষ্টা করুন।</div>
+    <button class="pin-cancel" onclick="pinCancel()">বাতিল করুন / Cancel</button>
+  </div>
+</div>
+
 <!-- ═══ ROLE SCREEN ═══ -->
 <div id="roleScreen">
   <div class="rl-badge">🚚</div>
   <div class="rl-h1">ফ্লিটলেজার</div>
   <div class="rl-sub">আপনার ভূমিকা বেছে নিন / Select your role</div>
   <div class="rl-cards">
-    <div class="rl-card" onclick="enterWorker()">
+    <div class="rl-card" onclick="askWorkerPin()">
       <div class="rl-card-icon">👷</div>
       <div class="rl-card-name">Data Entry Operator</div>
       <div class="rl-card-desc">দৈনিক ট্রিপ রিপোর্ট ফর্ম পূরণ করুন<br><span style="color:#64748b">Fill the daily trip report form</span></div>
     </div>
-    <div class="rl-card" onclick="enterOwner()">
+    <div class="rl-card" onclick="askPin()">
       <div class="rl-card-icon">📊</div>
       <div class="rl-card-name">Management</div>
       <div class="rl-card-desc">সব ট্রাকের ড্যাশবোর্ড ও রিপোর্ট দেখুন<br><span style="color:#64748b">View fleet dashboard &amp; reports</span></div>
