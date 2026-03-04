@@ -198,501 +198,229 @@
   .notif.show { display: block; }
   @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform:translateX(0); } }
   @keyframes fadeUp { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
 
   .view { display: none; }
   .view.active { display: block; }
 
   .more-info { padding: 12px 20px; font-size: 12px; color: var(--muted); text-align: center; background: var(--surface2); }
 
-  /* ═══ ROLE SCREEN ═══ */
-  #roleScreen {
+  /* ── SCREEN SYSTEM ── */
+  .screen { display: none !important; }
+  .screen.active { display: block !important; }
+  #screen-role.active { display: flex !important; }
+  #screen-pin.active  { display: flex !important; }
+
+  #screen-role {
     position: fixed; inset: 0; z-index: 9999;
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-    display: flex; flex-direction: column;
+    background: linear-gradient(135deg,#0f172a,#1e3a5f);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; padding: 24px;
+  }
+  #screen-pin {
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(15,23,42,.78);
     align-items: center; justify-content: center;
-    gap: 28px; padding: 24px;
   }
-  .rl-badge { width: 72px; height: 72px; background: var(--accent); border-radius: 18px;
-    display: flex; align-items: center; justify-content: center; font-size: 34px;
-    box-shadow: 0 12px 40px rgba(26,86,219,.5); }
-  .rl-h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; letter-spacing: -.02em; }
-  .rl-sub { font-size: 13px; color: #94a3b8; }
-  .rl-cards { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; max-width: 500px; width: 100%; }
-  .rl-card {
-    flex: 1; min-width: 190px; background: rgba(255,255,255,.07);
-    border: 1.5px solid rgba(255,255,255,.13); border-radius: 16px;
-    padding: 30px 22px; cursor: pointer; text-align: center; transition: all .2s;
-  }
-  .rl-card:hover { background: rgba(26,86,219,.28); border-color: #93c5fd; transform: translateY(-5px); }
-  .rl-card-icon { font-size: 38px; margin-bottom: 14px; }
-  .rl-card-name { font-size: 17px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
-  .rl-card-desc { font-size: 12px; color: #94a3b8; line-height: 1.65; }
+  #screen-worker { background: #f4f6f9; min-height: 100vh; padding-bottom: 90px; }
 
-  /* ═══ WORKER FORM SCREEN ═══ */
-  #workerScreen { display: none; min-height: 100vh; background: var(--bg); padding-bottom: 90px; }
-  .wf-hdr {
-    background: #0f172a; color: #fff; height: 60px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; position: sticky; top: 0; z-index: 50;
-    box-shadow: 0 2px 12px rgba(0,0,0,.3);
-  }
-  .wf-hdr-title { font-size: 16px; font-weight: 700; }
-  .wf-hdr-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
-  .wf-back-btn {
-    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18);
-    color: #cbd5e1; padding: 8px 14px; border-radius: 7px; cursor: pointer;
-    font-size: 12px; font-family: 'Hind Siliguri', sans-serif; font-weight: 600;
-  }
-  .wf-back-btn:hover { background: rgba(255,255,255,.18); }
-  .wf-wrap { max-width: 700px; margin: 0 auto; padding: 16px; }
-  .wf-sec {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: 10px; margin-bottom: 12px; overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  }
-  .wf-sec-hd {
-    background: #1e293b; color: #fff; padding: 10px 16px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .wf-sec-num {
-    width: 24px; height: 24px; background: var(--accent); border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; flex-shrink: 0;
-  }
-  .wf-sec-title { font-size: 13px; font-weight: 700; }
-  .wf-sec-hint { font-size: 10px; color: #94a3b8; margin-left: auto; }
-  .wf-body { padding: 14px; }
-  .wfg4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-  .wfg3 { display: grid; grid-template-columns: 110px 1fr 130px; gap: 10px; }
-  .wfg2 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
-  .wf-field label {
-    display: block; font-size: 11px; font-weight: 600;
-    color: var(--muted); margin-bottom: 4px; letter-spacing: .03em;
-  }
-  .wf-field label span { font-weight: 400; color: #9ca3af; font-size: 10px; }
-  .wf-field input, .wf-field select {
-    width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
-    color: var(--heading); padding: 10px 11px; border-radius: 7px;
-    outline: none; transition: border-color .15s, background .15s;
-    font-size: 13px; font-family: 'Hind Siliguri', sans-serif; -webkit-appearance: none;
-  }
-  .wf-field input:focus, .wf-field select:focus { border-color: var(--accent); background: #fff; }
-  .wf-field input[readonly] { background: #fffbeb; color: #92400e; border-color: #fcd34d; cursor: default; }
+  .rl-badge { width:70px;height:70px;background:#1a56db;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 12px 40px rgba(26,86,219,.5); }
+  .rl-h1   { font-size:27px;font-weight:700;color:#f1f5f9; }
+  .rl-sub  { font-size:13px;color:#94a3b8; }
+  .rl-cards{ display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:480px;width:100%; }
+  .rl-card { flex:1;min-width:185px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.13);border-radius:16px;padding:28px 20px;cursor:pointer;text-align:center;transition:all .2s; }
+  .rl-card:hover { background:rgba(26,86,219,.28);border-color:#93c5fd;transform:translateY(-4px); }
+  .rl-icon { font-size:36px;margin-bottom:12px; }
+  .rl-name { font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:7px; }
+  .rl-desc { font-size:12px;color:#94a3b8;line-height:1.6; }
 
-  /* expense table */
-  .etbl { width: 100%; border-collapse: collapse; }
-  .etbl thead tr { background: #1e293b; }
-  .etbl thead th { padding: 8px 12px; font-size: 11px; color: #fff; font-weight: 700; text-align: left; letter-spacing: .04em; }
-  .etbl thead th:last-child { text-align: right; padding-right: 16px; }
-  .etbl tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
-  .etbl tbody tr:nth-child(even) { background: #f8fafc; }
-  .etbl tbody tr:hover { background: #eff6ff; }
-  .etbl td { padding: 4px 10px; vertical-align: middle; }
-  .enum {
-    width: 28px; height: 28px; border-radius: 6px; background: var(--accent);
-    color: #fff; font-size: 11px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .elbl { font-size: 13px; color: var(--heading); padding: 6px 0; }
-  .elbl small { display: block; font-size: 10px; color: var(--muted); }
-  .einp {
-    width: 100%; background: transparent; border: none;
-    border-bottom: 1.5px solid var(--border); color: var(--heading);
-    padding: 6px 4px; text-align: right; font-size: 13px; outline: none;
-    font-family: 'Hind Siliguri', sans-serif; transition: border-color .15s;
-  }
-  .einp:focus { border-bottom-color: var(--accent); background: #eff6ff; }
-  .einp.ro { background: #fffbeb; border-bottom-color: #fcd34d; color: #92400e; }
-  .etbl tfoot tr td { background: #fef2f2; padding: 10px 12px; }
+  .pin-box   { background:#fff;border-radius:16px;padding:36px 28px;width:300px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.25); }
+  .pin-icon  { font-size:34px;margin-bottom:10px; }
+  .pin-title { font-size:17px;font-weight:700;color:#111827;margin-bottom:5px; }
+  .pin-sub2  { font-size:12px;color:#6b7280;margin-bottom:20px; }
+  .pin-dots  { display:flex;justify-content:center;gap:12px;margin-bottom:20px; }
+  .pin-dot   { width:13px;height:13px;border-radius:50%;background:#e5e7eb;transition:background .15s; }
+  .pin-dot.on{ background:#1a56db; }
+  .pin-grid  { display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px; }
+  .pin-key   { background:#f3f4f6;border:none;border-radius:10px;padding:15px;font-size:20px;font-weight:700;color:#111827;cursor:pointer;transition:all .1s;font-family:'Hind Siliguri',sans-serif; }
+  .pin-key:hover  { background:#dbeafe;color:#1a56db; }
+  .pin-key:active { transform:scale(.93); }
+  .pin-key.del    { font-size:15px;color:#6b7280; }
+  .pin-err   { color:#c81e1e;font-size:12px;font-weight:600;margin-top:10px;min-height:18px; }
+  .pin-cancel{ margin-top:10px;background:none;border:none;color:#6b7280;font-size:13px;cursor:pointer;font-family:'Hind Siliguri',sans-serif; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
 
-  /* cash summary */
-  .ctbl { width: 100%; border-collapse: collapse; }
-  .ctbl tr { border-bottom: 1px solid var(--border); }
-  .ctbl td { padding: 10px 14px; font-size: 13px; }
-  .ck { width: 60%; color: var(--text); }
-  .ck small { display: block; font-size: 10px; color: var(--muted); margin-top: 1px; }
-  .cv { text-align: right; font-weight: 700; font-size: 15px; }
-  .crow-net { background: #eff6ff; }
-  .crow-net td { font-weight: 700; color: var(--accent); font-size: 15px; }
-  .crow-final { background: #0f172a; }
-  .crow-final td { color: #fff; font-size: 17px; font-weight: 700; }
-
-  /* mileage result */
-  .mile-box {
-    background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 8px;
-    padding: 11px 16px; margin-top: 10px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .mile-box-lbl { font-size: 12px; color: var(--accent); font-weight: 600; }
-  .mile-box-val { font-size: 20px; font-weight: 700; color: var(--accent); }
-
-  /* signatures */
-  .sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .sig-box {
-    background: var(--surface2); border: 1.5px solid var(--border);
-    border-radius: 8px; padding: 14px 12px 10px; text-align: center;
-  }
-  .sig-line { border-bottom: 1.5px solid var(--border); margin: 18px 10px 8px; }
-  .sig-lbl { font-size: 11px; color: var(--muted); line-height: 1.55; }
-
-  /* submit bar */
-  .wf-sub-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--surface); border-top: 2px solid var(--border);
-    padding: 14px 20px; z-index: 100;
-    box-shadow: 0 -4px 20px rgba(0,0,0,.08);
-  }
-  .wf-sub-btn {
-    width: 100%; max-width: 700px; display: block; margin: 0 auto;
-    background: var(--accent); color: #fff; border: none;
-    padding: 15px; font-size: 15px; font-weight: 700; border-radius: 9px;
-    cursor: pointer; font-family: 'Hind Siliguri', sans-serif; transition: all .2s;
-  }
-  .wf-sub-btn:hover { background: #1e429f; transform: translateY(-1px); }
-
-  #mainApp { display: none; }
-
-  @media (max-width: 640px) {
-    .wfg4 { grid-template-columns: 1fr 1fr; }
-    .wfg3 { grid-template-columns: 90px 1fr 110px; }
-    .wfg2 { grid-template-columns: 1fr 1fr; }
-    .sig-row { grid-template-columns: 1fr 1fr 1fr; }
-  }
-
-
-  /* ── PIN MODAL ── */
-  #workerPinModal {
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(15,23,42,.7); backdrop-filter: blur(6px);
-    display: none; align-items: center; justify-content: center;
-  }
-  #workerPinModal.open { display: flex; }
-  #pinModal {
-    position: fixed; inset: 0; z-index: 99999;
-    background: rgba(15,23,42,.7); backdrop-filter: blur(6px);
-    display: none; align-items: center; justify-content: center;
-  }
-  #pinModal.open { display: flex; }
-  .pin-box {
-    background: #fff; border-radius: 16px; padding: 36px 32px;
-    width: 320px; text-align: center;
-    box-shadow: 0 24px 60px rgba(0,0,0,.2);
-    animation: fadeUp .2s ease;
-  }
-  .pin-icon { font-size: 36px; margin-bottom: 12px; }
-  .pin-title { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 6px; }
-  .pin-sub { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
-  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
-  .pin-dot {
-    width: 14px; height: 14px; border-radius: 50%;
-    background: #e5e7eb; transition: background .15s;
-  }
-  .pin-dot.filled { background: #1a56db; }
-  .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .pin-btn {
-    background: #f3f4f6; border: none; border-radius: 10px;
-    padding: 16px; font-size: 20px; font-weight: 700; color: #111827;
-    cursor: pointer; transition: all .1s; font-family: 'Hind Siliguri', sans-serif;
-  }
-  .pin-btn:hover { background: #e0e7ff; color: #1a56db; }
-  .pin-btn:active { transform: scale(.94); }
-  .pin-btn.del { font-size: 16px; color: #6b7280; }
-  .pin-error { color: #c81e1e; font-size: 12px; font-weight: 600; margin-top: 14px; display: none; }
-  .pin-cancel { margin-top: 14px; background: none; border: none; color: #6b7280;
-    font-size: 13px; cursor: pointer; font-family: 'Hind Siliguri', sans-serif; }
-  .pin-cancel:hover { color: #111827; }
+  .wf-hdr  { background:#0f172a;color:#fff;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50; }
+  .wf-back { background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#cbd5e1;padding:7px 13px;border-radius:7px;cursor:pointer;font-size:12px;font-family:'Hind Siliguri',sans-serif;font-weight:600; }
+  .wf-wrap { max-width:700px;margin:0 auto;padding:14px; }
+  .wf-sec  { background:#fff;border:1.5px solid #dde1e9;border-radius:10px;margin-bottom:12px;overflow:hidden; }
+  .wf-sh   { background:#1e293b;color:#fff;padding:9px 15px;display:flex;align-items:center;gap:9px; }
+  .wf-sn   { width:23px;height:23px;background:#1a56db;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0; }
+  .wf-st   { font-size:13px;font-weight:700; }
+  .wf-hint { font-size:10px;color:#94a3b8;margin-left:auto; }
+  .wf-bd   { padding:13px; }
+  .wfg4 { display:grid;grid-template-columns:repeat(4,1fr);gap:9px; }
+  .wfg3 { display:grid;grid-template-columns:110px 1fr 130px;gap:9px; }
+  .wfg4m{ display:grid;grid-template-columns:repeat(4,1fr);gap:9px; }
+  .wf-f label { display:block;font-size:10px;font-weight:600;color:#6b7280;margin-bottom:3px; }
+  .wf-f label span { font-weight:400;color:#9ca3af;font-size:9px; }
+  .wf-f input,.wf-f select { width:100%;background:#f0f2f5;border:1.5px solid #dde1e9;color:#111827;padding:9px 10px;border-radius:7px;outline:none;font-size:13px;font-family:'Hind Siliguri',sans-serif;-webkit-appearance:none; }
+  .wf-f input:focus,.wf-f select:focus { border-color:#1a56db;background:#fff; }
+  .wf-f input[readonly] { background:#fffbeb;color:#92400e;border-color:#fcd34d; }
+  .etbl { width:100%;border-collapse:collapse; }
+  .etbl thead tr { background:#1e293b; }
+  .etbl thead th { padding:7px 11px;font-size:10px;color:#fff;font-weight:700;text-align:left; }
+  .etbl thead th:last-child { text-align:right;padding-right:14px; }
+  .etbl tbody tr { border-bottom:1px solid #dde1e9; }
+  .etbl tbody tr:nth-child(even) { background:#f8fafc; }
+  .etbl td { padding:3px 9px;vertical-align:middle; }
+  .enum { width:26px;height:26px;border-radius:6px;background:#1a56db;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center; }
+  .elbl { font-size:12px;color:#111827;padding:5px 0; }
+  .elbl small { display:block;font-size:10px;color:#6b7280; }
+  .einp { width:100%;background:transparent;border:none;border-bottom:1.5px solid #dde1e9;color:#111827;padding:5px 4px;text-align:right;font-size:13px;outline:none;font-family:'Hind Siliguri',sans-serif; }
+  .einp:focus { border-bottom-color:#1a56db;background:#eff6ff; }
+  .einp.ro { background:#fffbeb;border-bottom-color:#fcd34d;color:#92400e; }
+  .etbl tfoot td { background:#fef2f2;padding:9px 11px; }
+  .ctbl { width:100%;border-collapse:collapse; }
+  .ctbl tr { border-bottom:1px solid #dde1e9; }
+  .ctbl td { padding:9px 13px;font-size:13px; }
+  .ck { width:60%;color:#374151; }
+  .ck small { display:block;font-size:10px;color:#6b7280; }
+  .cv { text-align:right;font-weight:700;font-size:15px; }
+  .crow-net td { background:#eff6ff;font-weight:700;color:#1a56db;font-size:15px; }
+  .crow-fin td { background:#0f172a;color:#fff;font-size:17px;font-weight:700; }
+  .mile-box { background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:11px 15px;margin-top:10px;display:flex;justify-content:space-between;align-items:center; }
+  .mile-lbl { font-size:12px;color:#1a56db;font-weight:600; }
+  .mile-val { font-size:19px;font-weight:700;color:#1a56db; }
+  .sig-row { display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px; }
+  .sig-box { background:#f0f2f5;border:1.5px solid #dde1e9;border-radius:8px;padding:13px 10px 9px;text-align:center; }
+  .sig-line { border-bottom:1.5px solid #dde1e9;margin:17px 10px 7px; }
+  .sig-lbl { font-size:10px;color:#6b7280;line-height:1.55; }
+  .wf-bar { position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #dde1e9;padding:13px 18px;z-index:100; }
+  .wf-btn { width:100%;max-width:700px;display:block;margin:0 auto;background:#1a56db;color:#fff;border:none;padding:14px;font-size:15px;font-weight:700;border-radius:9px;cursor:pointer;font-family:'Hind Siliguri',sans-serif; }
+  @media(max-width:640px){ .wfg4{grid-template-columns:1fr 1fr;} .wfg3{grid-template-columns:90px 1fr 110px;} .wfg4m{grid-template-columns:1fr 1fr;} }
 
 </style>
-
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPA_URL = 'https://ggarbfxekttnimdhioga.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnYXJiZnhla3R0bmltZGhpb2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzA4ODQsImV4cCI6MjA4ODIwNjg4NH0.u_RD1mtHKRI114gnJEaqLBLK3lTF_2MGG3DmnhqWFYM';
-const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-
-// ── Load all entries from Supabase ──
-async function loadEntries() {
-  try {
-    const { data, error } = await supa
-      .from('trips')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Load error:', JSON.stringify(error));
-      return null; // null = error, [] = empty table
-    }
-    return data.map(r => ({
-      id: r.id, type: r.type, truck: r.truck, date: r.date,
-      amount: r.amount, description: r.description,
-      client: r.client, category: r.category,
-    }));
-  } catch(e) {
-    console.error('Load exception:', e);
-    return null;
-  }
-}
-
-// ── Save a single entry to Supabase ──
-async function saveEntry(entry) {
-  const { error } = await supa.from('trips').upsert({
-    id: entry.id, type: entry.type, truck: entry.truck,
-    date: entry.date, amount: entry.amount,
-    description: entry.description || null,
-    client: entry.client || null,
-    category: entry.category || null,
-  });
-  if (error) console.error('Save error:', error);
-}
-</script>
-
 </head>
 <body>
-
-<!-- ── PIN MODAL ── -->
-<div id="pinModal">
-  <div class="pin-box">
-    <div class="pin-icon">🔒</div>
-    <div class="pin-title">Management Access</div>
-    <div class="pin-sub">পিন কোড দিন / Enter PIN</div>
-    <div class="pin-dots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="pin-pad">
-      <button class="pin-btn" onclick="pinPress('1')">1</button>
-      <button class="pin-btn" onclick="pinPress('2')">2</button>
-      <button class="pin-btn" onclick="pinPress('3')">3</button>
-      <button class="pin-btn" onclick="pinPress('4')">4</button>
-      <button class="pin-btn" onclick="pinPress('5')">5</button>
-      <button class="pin-btn" onclick="pinPress('6')">6</button>
-      <button class="pin-btn" onclick="pinPress('7')">7</button>
-      <button class="pin-btn" onclick="pinPress('8')">8</button>
-      <button class="pin-btn" onclick="pinPress('9')">9</button>
-      <button class="pin-btn" onclick="pinPress('')" style="visibility:hidden"></button>
-      <button class="pin-btn" onclick="pinPress('0')">0</button>
-      <button class="pin-btn del" onclick="pinDel()">⌫</button>
-    </div>
-    <div class="pin-error" id="pinError">❌ ভুল পিন। আবার চেষ্টা করুন।</div>
-    <button class="pin-cancel" onclick="pinCancel()">বাতিল করুন / Cancel</button>
-  </div>
-</div>
-
-<!-- ═══ ROLE SCREEN ═══ -->
-<div id="roleScreen">
+<div id="screen-role" class="screen">
   <div class="rl-badge">🚚</div>
   <div class="rl-h1">ফ্লিটলেজার</div>
   <div class="rl-sub">আপনার ভূমিকা বেছে নিন / Select your role</div>
   <div class="rl-cards">
-    <div class="rl-card" onclick="askWorkerPin()">
-      <div class="rl-card-icon">👷</div>
-      <div class="rl-card-name">Data Entry Operator</div>
-      <div class="rl-card-desc">দৈনিক ট্রিপ রিপোর্ট ফর্ম পূরণ করুন<br><span style="color:#64748b">Fill the daily trip report form</span></div>
+    <div class="rl-card" onclick="pinAsk('worker')">
+      <div class="rl-icon">👷</div>
+      <div class="rl-name">Data Entry Operator</div>
+      <div class="rl-desc">দৈনিক ট্রিপ রিপোর্ট ফর্ম পূরণ করুন<br><span style="color:#475569">Fill the daily trip report form</span></div>
     </div>
-    <div class="rl-card" onclick="askPin()">
-      <div class="rl-card-icon">📊</div>
-      <div class="rl-card-name">Management</div>
-      <div class="rl-card-desc">সব ট্রাকের ড্যাশবোর্ড ও রিপোর্ট দেখুন<br><span style="color:#64748b">View fleet dashboard &amp; reports</span></div>
+    <div class="rl-card" onclick="pinAsk('owner')">
+      <div class="rl-icon">📊</div>
+      <div class="rl-name">Management</div>
+      <div class="rl-desc">সব ট্রাকের ড্যাশবোর্ড ও রিপোর্ট দেখুন<br><span style="color:#475569">View fleet dashboard &amp; reports</span></div>
     </div>
   </div>
 </div>
 
-<!-- ═══ WORKER TRIP FORM ═══ -->
-<div id="workerScreen">
+<div id="screen-pin" class="screen">
+  <div class="pin-box">
+    <div class="pin-icon" id="pinIcon">🔒</div>
+    <div class="pin-title" id="pinTitle">Enter PIN</div>
+    <div class="pin-sub2">পিন কোড দিন</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-grid">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" style="visibility:hidden"></button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+    <button class="pin-cancel" onclick="showScreen('role')">বাতিল / Cancel</button>
+  </div>
+</div>
+
+<div id="screen-worker" class="screen">
   <div class="wf-hdr">
-    <button class="wf-back-btn" onclick="showRole()">← পিছনে যান</button>
-    <div>
-      <div class="wf-hdr-title">📋 দৈনিক ট্রিপ রিপোর্ট</div>
-      <div class="wf-hdr-sub">Daily Trip Report Form</div>
+    <button class="wf-back" onclick="showScreen('role')">← পিছনে</button>
+    <div style="text-align:center">
+      <div style="font-size:15px;font-weight:700">📋 দৈনিক ট্রিপ রিপোর্ট</div>
+      <div style="font-size:11px;color:#94a3b8">Daily Trip Report</div>
     </div>
-    <div style="width:100px"></div>
+    <div style="width:80px"></div>
   </div>
-
   <div class="wf-wrap">
-
-    <!-- §1 গাড়ির পরিচয় -->
     <div class="wf-sec">
-      <div class="wf-sec-hd">
-        <div class="wf-sec-num">১</div>
-        <div class="wf-sec-title">গাড়ির পরিচয় / Vehicle Identity</div>
-      </div>
-      <div class="wf-body">
-        <div class="wfg4">
-          <div class="wf-field">
-            <label>গাড়ির নম্বর প্লেট <span>/ Plate No.</span></label>
-            <select id="wPlate"><option value="">— বেছে নিন —</option></select>
-          </div>
-          <div class="wf-field">
-            <label>গাড়ির কোড <span>/ Truck Code</span></label>
-            <input type="text" id="wCode" placeholder="যেমন: ট্রাক-০১"/>
-          </div>
-          <div class="wf-field">
-            <label>ড্রাইভারের নাম <span>/ Driver</span></label>
-            <input type="text" id="wDriver" placeholder="নাম লিখুন"/>
-          </div>
-          <div class="wf-field">
-            <label>হেলপারের নাম <span>/ Helper</span></label>
-            <input type="text" id="wHelper" placeholder="নাম লিখুন"/>
-          </div>
-        </div>
-      </div>
+      <div class="wf-sh"><div class="wf-sn">১</div><div class="wf-st">গাড়ির পরিচয় / Vehicle</div></div>
+      <div class="wf-bd"><div class="wfg4">
+        <div class="wf-f"><label>নম্বর প্লেট</label><select id="wPlate"><option value="">— বেছে নিন —</option></select></div>
+        <div class="wf-f"><label>কোড</label><input type="text" id="wCode" placeholder="ট্রাক-০১"/></div>
+        <div class="wf-f"><label>ড্রাইভার</label><input type="text" id="wDriver" placeholder="নাম"/></div>
+        <div class="wf-f"><label>হেলপার</label><input type="text" id="wHelper" placeholder="নাম"/></div>
+      </div></div>
     </div>
-
-    <!-- §2 ট্রিপ তথ্য -->
     <div class="wf-sec">
-      <div class="wf-sec-hd">
-        <div class="wf-sec-num">২</div>
-        <div class="wf-sec-title">ট্রিপের তথ্য / Trip Information</div>
-      </div>
-      <div class="wf-body">
-        <div class="wfg3">
-          <div class="wf-field">
-            <label>তারিখ <span>/ Date</span></label>
-            <input type="date" id="wDate"/>
-          </div>
-          <div class="wf-field">
-            <label>ট্রিপ রুট <span>/ Route (From → To)</span></label>
-            <input type="text" id="wRoute" placeholder="যেমন: ঢাকা → চট্টগ্রাম"/>
-          </div>
-          <div class="wf-field">
-            <label>ভাড়া (৳) <span>/ Fare</span></label>
-            <input type="number" id="wFare" placeholder="০" oninput="wCalc()"/>
-          </div>
-        </div>
-      </div>
+      <div class="wf-sh"><div class="wf-sn">২</div><div class="wf-st">ট্রিপ তথ্য / Trip</div></div>
+      <div class="wf-bd"><div class="wfg3">
+        <div class="wf-f"><label>তারিখ</label><input type="date" id="wDate"/></div>
+        <div class="wf-f"><label>রুট</label><input type="text" id="wRoute" placeholder="ঢাকা → চট্টগ্রাম"/></div>
+        <div class="wf-f"><label>ভাড়া (৳)</label><input type="number" id="wFare" placeholder="০" oninput="wCalc()"/></div>
+      </div></div>
     </div>
-
-    <!-- §3 দৈনিক খরচ -->
     <div class="wf-sec">
-      <div class="wf-sec-hd">
-        <div class="wf-sec-num">৩</div>
-        <div class="wf-sec-title">দৈনিক খরচ / Daily Expenses</div>
-        <div class="wf-sec-hint">কমিশন স্বয়ংক্রিয় হিসাব হবে</div>
-      </div>
+      <div class="wf-sh"><div class="wf-sn">৩</div><div class="wf-st">দৈনিক খরচ / Expenses</div><div class="wf-hint">কমিশন auto</div></div>
       <table class="etbl">
-        <thead>
-          <tr>
-            <th style="width:40px">ক্রম</th>
-            <th>খরচের খাত / Expense Category</th>
-            <th style="width:130px">টাকার পরিমাণ</th>
-          </tr>
-        </thead>
+        <thead><tr><th style="width:36px">ক্রম</th><th>খরচের খাত</th><th style="width:120px">পরিমাণ (৳)</th></tr></thead>
         <tbody id="wExpBody"></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="2" style="font-size:14px;font-weight:700;color:var(--red)">** মোট খরচ / Total Expenses **</td>
-            <td style="text-align:right;padding-right:16px;font-size:16px;font-weight:700;color:var(--red)" id="wExpTotal">৳ ০</td>
-          </tr>
-        </tfoot>
+        <tfoot><tr><td colspan="2" style="font-size:13px;font-weight:700;color:#c81e1e">মোট খরচ</td><td style="text-align:right;padding-right:14px;font-size:16px;font-weight:700;color:#c81e1e" id="wExpTotal">৳০</td></tr></tfoot>
       </table>
     </div>
-
-    <!-- §4 নগদ হিসাব -->
     <div class="wf-sec">
-      <div class="wf-sec-hd">
-        <div class="wf-sec-num">৪</div>
-        <div class="wf-sec-title">নগদ হিসাব / Cash Calculation</div>
-      </div>
+      <div class="wf-sh"><div class="wf-sn">৪</div><div class="wf-st">নগদ হিসাব / Cash</div></div>
       <table class="ctbl">
-        <tr>
-          <td class="ck">মোট আদায়কৃত ক্যাশ<small>Total Collected Cash</small></td>
-          <td class="cv" id="wCGross" style="color:var(--green)">৳ ০</td>
-        </tr>
-        <tr>
-          <td class="ck" style="color:var(--red)">(-) মোট খরচ<small>Total Expenses</small></td>
-          <td class="cv" id="wCExp" style="color:var(--red)">৳ ০</td>
-        </tr>
-        <tr class="crow-net">
-          <td class="ck">নিট আদায়কৃত ক্যাশ<small>Net Collected Cash</small></td>
-          <td class="cv" id="wCNet">৳ ০</td>
-        </tr>
-        <tr>
-          <td class="ck">
-            <div class="wf-field" style="padding: 4px 0">
-              <label>(-) ঐচ্ছিক ছাড় <span>/ Optional Discount (৳)</span></label>
-              <input type="number" id="wDiscount" placeholder="০" oninput="wCalc()" style="background:#fff"/>
-            </div>
-          </td>
-          <td class="cv" id="wCDisc" style="color:var(--muted)">৳ ০</td>
-        </tr>
-        <tr class="crow-final">
-          <td class="ck" style="color:#fff;font-weight:700">নিট ক্যাশ (চূড়ান্ত)<small style="color:#94a3b8">Final Net Cash</small></td>
-          <td class="cv" id="wCFinal" style="color:#fbbf24">৳ ০</td>
-        </tr>
+        <tr><td class="ck">মোট আদায়কৃত ক্যাশ<small>Total Collected</small></td><td class="cv" id="wCGross" style="color:#057a55">৳০</td></tr>
+        <tr><td class="ck" style="color:#c81e1e">(-) মোট খরচ</td><td class="cv" id="wCExp" style="color:#c81e1e">৳০</td></tr>
+        <tr class="crow-net"><td class="ck">নিট ক্যাশ</td><td class="cv" id="wCNet">৳০</td></tr>
+        <tr><td class="ck"><div class="wf-f" style="padding:3px 0"><label>(-) ঐচ্ছিক ছাড়</label><input type="number" id="wDiscount" placeholder="০" oninput="wCalc()" style="background:#fff"/></div></td><td class="cv" id="wCDisc" style="color:#6b7280">৳০</td></tr>
+        <tr class="crow-fin"><td class="ck">নিট ক্যাশ (চূড়ান্ত)<small style="color:#94a3b8">Final</small></td><td class="cv" id="wCFinal" style="color:#fbbf24">৳০</td></tr>
       </table>
     </div>
-
-    <!-- §5 মাইলেজ -->
     <div class="wf-sec">
-      <div class="wf-sec-hd">
-        <div class="wf-sec-num">৫</div>
-        <div class="wf-sec-title">মাইলেজ ও জ্বালানি / Mileage &amp; Fuel</div>
+      <div class="wf-sh"><div class="wf-sn">৫</div><div class="wf-st">মাইলেজ / Mileage</div></div>
+      <div class="wf-bd"><div class="wfg4m">
+        <div class="wf-f"><label>পূর্ববর্তী মিটার</label><input type="number" id="wMPrev" placeholder="০" oninput="wCalcM()"/></div>
+        <div class="wf-f"><label>বর্তমান মিটার</label><input type="number" id="wMCurr" placeholder="০" oninput="wCalcM()"/></div>
+        <div class="wf-f"><label>দূরত্ব (auto)</label><input type="number" id="wMDist" readonly/></div>
+        <div class="wf-f"><label>তেল (লিটার)</label><input type="number" id="wMLiters" placeholder="০" oninput="wCalcM()"/></div>
       </div>
-      <div class="wf-body">
-        <div class="wfg2">
-          <div class="wf-field">
-            <label>পূর্ববর্তী মিটার <span>/ Prev Meter (km)</span></label>
-            <input type="number" id="wMPrev" placeholder="০" oninput="wCalcM()"/>
-          </div>
-          <div class="wf-field">
-            <label>বর্তমান মিটার <span>/ Curr Meter (km)</span></label>
-            <input type="number" id="wMCurr" placeholder="০" oninput="wCalcM()"/>
-          </div>
-          <div class="wf-field">
-            <label>মোট দূরত্ব <span>/ Distance (km)</span></label>
-            <input type="number" id="wMDist" placeholder="স্বয়ংক্রিয়" readonly/>
-          </div>
-          <div class="wf-field">
-            <label>তেল ক্রয় <span>/ Fuel Purchased (L)</span></label>
-            <input type="number" id="wMLiters" placeholder="০" oninput="wCalcM()"/>
-          </div>
-        </div>
-        <div class="mile-box">
-          <span class="mile-box-lbl">মোট মাইলেজ / Fuel Efficiency</span>
-          <span class="mile-box-val" id="wMRes">— কি.মি. / লিটার</span>
-        </div>
+      <div class="mile-box"><span class="mile-lbl">মাইলেজ</span><span class="mile-val" id="wMRes">— কি.মি./লি.</span></div>
       </div>
     </div>
-
-    <!-- §6 স্বাক্ষর -->
     <div class="wf-sec">
-      <div class="wf-sec-hd">
-        <div class="wf-sec-num">৬</div>
-        <div class="wf-sec-title">মন্তব্য ও স্বাক্ষর / Notes &amp; Signatures</div>
-      </div>
-      <div class="wf-body">
-        <div class="wf-field" style="margin-bottom:14px">
-          <label>মন্তব্য <span>/ Notes (optional)</span></label>
-          <input type="text" id="wNote" placeholder="কোনো বিশেষ তথ্য থাকলে লিখুন..."/>
-        </div>
+      <div class="wf-sh"><div class="wf-sn">৬</div><div class="wf-st">স্বাক্ষর / Signatures</div></div>
+      <div class="wf-bd">
+        <div class="wf-f" style="margin-bottom:12px"><label>মন্তব্য</label><input type="text" id="wNote" placeholder="কোনো বিশেষ তথ্য..."/></div>
         <div class="sig-row">
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <div class="sig-lbl">হিসাবগ্রহণকারী<br><small style="color:#9ca3af">Accountant / Supervisor</small></div>
-          </div>
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <div class="sig-lbl">ড্রাইভার<br><small style="color:#9ca3af">Driver</small></div>
-          </div>
-          <div class="sig-box">
-            <div class="sig-line"></div>
-            <div class="sig-lbl">মালিক<br><small style="color:#9ca3af">Owner / Manager</small></div>
-          </div>
+          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">হিসাবগ্রহণকারী</div></div>
+          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">ড্রাইভার</div></div>
+          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">মালিক</div></div>
         </div>
       </div>
     </div>
-
-  </div><!-- /wf-wrap -->
-  <div class="wf-sub-bar">
-    <button class="wf-sub-btn" onclick="wSubmit()">✅ ট্রিপ রিপোর্ট জমা দিন &nbsp;/&nbsp; Submit Trip Report</button>
   </div>
+  <div class="wf-bar"><button class="wf-btn" onclick="wSubmit()">✅ ট্রিপ রিপোর্ট জমা দিন / Submit</button></div>
 </div>
 
-<!-- ═══ MAIN APP ═══ -->
-<div id="mainApp">
+<div id="screen-owner" class="screen">
+
 
 <!-- HEADER -->
 <header>
@@ -771,29 +499,6 @@ async function saveEntry(entry) {
       <div class="section-title">সকল ট্রাকের সংক্ষিপ্ত চিত্র</div>
       <div class="grid4" id="truckGrid"></div>
     </div>
-
-    <!-- CASH FLOW SUMMARY STRIP -->
-    <div class="panel" style="margin-top:0">
-      <div class="section-title">নগদ প্রবাহ সারসংক্ষেপ / Cash Flow Summary</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px" id="cashFlowStrip">
-        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:14px 16px">
-          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:6px">মোট আদায়কৃত ক্যাশ</div>
-          <div style="font-size:20px;font-weight:700;color:#057a55" id="cfGross">৳০</div>
-        </div>
-        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:14px 16px">
-          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:6px">(-) মোট খরচ</div>
-          <div style="font-size:20px;font-weight:700;color:#c81e1e" id="cfExp">৳০</div>
-        </div>
-        <div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:14px 16px">
-          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:6px">নিট আদায়কৃত ক্যাশ</div>
-          <div style="font-size:20px;font-weight:700;color:#1a56db" id="cfNet">৳০</div>
-        </div>
-        <div style="background:#0f172a;border:1.5px solid #334155;border-radius:8px;padding:14px 16px">
-          <div style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:6px">নিট ক্যাশ (চূড়ান্ত)</div>
-          <div style="font-size:20px;font-weight:700;color:#fbbf24" id="cfFinal">৳০</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- TRUCKS -->
@@ -863,18 +568,11 @@ async function saveEntry(entry) {
     <div class="form-row" id="fCategoryRow" style="display:none">
       <label>ব্যয়ের বিভাগ</label>
       <select id="fCategory">
-        <option>তেল</option>
-        <option>লেবার</option>
-        <option>ব্রিজ/টোল</option>
-        <option>চাঁদা/পুলিশ</option>
-        <option>কমিশন (১০%)</option>
-        <option>দৈনিক ভাতা (খোরাকি)</option>
-        <option>টায়ার</option>
-        <option>মেইনটেন্যান্স</option>
-        <option>ড্রাইভার স্যালারি</option>
-        <option>বার্ষিক গাড়ির কাজ</option>
-        <option>কেইস/ফাইন</option>
-        <option>অন্যান্য (৫০০+)</option>
+        <option>জ্বালানি</option>
+        <option>চালকের বেতন</option>
+        <option>টোল ও ফি</option>
+        <option>রক্ষণাবেক্ষণ ও মেরামত</option>
+        <option>অন্যান্য</option>
       </select>
     </div>
     <div class="form-row" id="fClientRow">
@@ -895,7 +593,9 @@ async function saveEntry(entry) {
 <!-- NOTIFICATION -->
 <div class="notif" id="notif"></div>
 
+</div>
 <script>
+
 const TRUCKS = Array.from({length:12},(_,i)=>`ট্রাক ${String(i+1).padStart(2,'০').replace(/0/g,'০').replace(/1/g,'১').replace(/2/g,'২').replace(/3/g,'৩').replace(/4/g,'৪').replace(/5/g,'৫').replace(/6/g,'৬').replace(/7/g,'৭').replace(/8/g,'৮').replace(/9/g,'৯')}`);
 
 // Fix truck names to proper Bangla numerals
@@ -908,7 +608,7 @@ const TRUCK_NAMES = Array.from({length:12},(_,i)=>{
 const MONTHS_BN = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
 const MONTHS_SHORT = ["জান","ফেব","মার","এপ্র","মে","জুন","জুল","আগ","সেপ","অক্ট","নভ","ডিস"];
 const EXP_TYPES_BN = ["তেল","লেবার","ব্রিজ/টোল","চাঁদা/পুলিশ","কমিশন (১০%)","দৈনিক ভাতা (খোরাকি)","টায়ার","মেইনটেন্যান্স","ড্রাইভার স্যালারি","বার্ষিক গাড়ির কাজ","কেইস/ফাইন","অন্যান্য (৫০০+)"];
-const EXP_TYPES_KEY = ["Fuel","Labour","Bridge/Toll","Bribe/Police","Commission 10%","Daily Allowance","Tyre","Maintenance","Driver Salary","Annual Vehicle","Case/Fine","Other 500+"];
+const EXP_TYPES_KEY = ["Fuel","Driver Salary","Tolls & Fees","Maintenance & Repairs","Other"];
 const CAT_COLORS = {"তেল":"#d97706","লেবার":"#7c3aed","ব্রিজ/টোল":"#db2777","চাঁদা/পুলিশ":"#dc2626","কমিশন (১০%)":"#2563eb","দৈনিক ভাতা (খোরাকি)":"#059669","টায়ার":"#9333ea","মেইনটেন্যান্স":"#16a34a","ড্রাইভার স্যালারি":"#0891b2","বার্ষিক গাড়ির কাজ":"#b45309","কেইস/ফাইন":"#b91c1c","অন্যান্য (৫০০+)":"#6b7280"};
 const CLIENTS_BN = ["এবিসি লজিস্টিক্স","প্রাইম ফ্রেইট","ফাস্টমুভ কোং","ডেল্টা কার্গো","সামিট ট্রান্সপোর্ট"];
 
@@ -955,24 +655,19 @@ function genSample() {
           amount:Math.floor(Math.random()*40000)+8000,
           description:`ট্রিপ #${Math.floor(Math.random()*9000)+1000}`,
           client:CLIENTS_BN[Math.floor(Math.random()*CLIENTS_BN.length)] });
-        [["তেল",2000,3000],["লেবার",500,800],["ব্রিজ/টোল",200,600],["চাঁদা/পুলিশ",0,400],["দৈনিক ভাতা (খোরাকি)",300,0],["টায়ার",0,1],["মেইনটেন্যান্স",0,1],["ড্রাইভার স্যালারি",500,500],["কেইস/ফাইন",0,1],["অন্যান্য (৫০০+)",0,1]].forEach(([cat,base,range],ci) => {
-          if((cat==="টায়ার"||cat==="মেইনটেন্যান্স") && Math.random()>0.25) return;
-          if((cat==="চাঁদা/পুলিশ"||cat==="কেইস/ফাইন"||cat==="অন্যান্য (৫০০+)") && Math.random()>0.35) return;
-          const fare = arr[arr.length-1]?.amount || 20000;
-          const comm = cat==="কমিশন (১০%)" ? Math.round(fare*0.1) : 0;
-          const amt = comm > 0 ? comm : Math.round(base + Math.random()*range*(cat==="টায়ার"||cat==="মেইনটেন্যান্স"?5000:1));
+        [["জ্বালানি",2000,6000],["চালকের বেতন",8000,4000],["টোল ও ফি",300,1200],["রক্ষণাবেক্ষণ ও মেরামত",0,1]].forEach(([cat,base,range],ci) => {
+          if(cat==="রক্ষণাবেক্ষণ ও মেরামত" && Math.random()>0.3) return;
+          const amt = Math.round(base + Math.random()*range*(cat==="রক্ষণাবেক্ষণ ও মেরামত"?6000:1));
           if(amt>0) arr.push({ id:`e${ti}${m}${d}${ci}`, type:'expense', truck, date:dt, amount:amt, category:cat, description:cat+' ব্যয়' });
         });
-        // commission separately
-        const lastFare = arr.filter(x=>x.type==='revenue').slice(-1)[0]?.amount || 20000;
-        arr.push({ id:`ec${ti}${m}${d}`, type:'expense', truck, date:dt, amount:Math.round(lastFare*0.1), category:'কমিশন (১০%)', description:'কমিশন ব্যয়' });
       }
     }
   });
   return arr;
 }
 
-async function init() {
+function init() {
+  entries = genSample();
   const now = new Date();
   const tSel = document.getElementById('truckFilter');
   const fTruck = document.getElementById('fTruck');
@@ -986,19 +681,6 @@ async function init() {
     mSel.innerHTML += `<option value="${i}">${m} ${yearBN}</option>`;
   });
   document.getElementById('fDate').value = now.toISOString().split('T')[0];
-
-  // Load from Supabase; fall back to sample data on error
-  const loaded = await loadEntries();
-  if (loaded === null) {
-    // Supabase error — use sample data
-    entries = genSample();
-    console.warn('Using sample data due to Supabase error');
-  } else if (loaded.length === 0) {
-    // Empty table — use sample data until real entries exist
-    entries = genSample();
-  } else {
-    entries = loaded;
-  }
   applyFilters();
 }
 
@@ -1018,18 +700,6 @@ function applyFilters() {
 function renderAll() {
   renderKPIs(); renderMonthlyChart(); renderExpBreakdown();
   renderTruckGrid(); renderTruckTable(); renderEntries(); renderReports();
-  renderCashFlow();
-}
-
-function renderCashFlow() {
-  const rev = filteredEntries.filter(e=>e.type==='revenue').reduce((s,e)=>s+e.amount,0);
-  const exp = filteredEntries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
-  const net = rev - exp;
-  const el = (id,v,col) => { const d=document.getElementById(id); if(d){d.textContent=fmt(Math.abs(v));d.style.color=col;} };
-  el('cfGross', rev,  '#057a55');
-  el('cfExp',   exp,  '#c81e1e');
-  el('cfNet',   net,  net>=0?'#1a56db':'#c81e1e');
-  el('cfFinal', net,  net>=0?'#fbbf24':'#fca5a5');
 }
 
 function getKPIs() {
@@ -1170,12 +840,11 @@ function renderReports() {
   const marginBN = margin.toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
   const truckCountBN = '১২';
   document.getElementById('summaryReport').innerHTML = [
-    ['মোট আদায়কৃত ক্যাশ', fmt(rev)],
-    ['(-) মোট খরচ', fmt(exp)],
-    ['নিট আদায়কৃত ক্যাশ', (profit<0?'-':'')+fmt(Math.abs(profit))],
-    ['নিট ক্যাশ (চূড়ান্ত)', (profit<0?'-':'')+fmt(Math.abs(profit))],
-    ['মুনাফার হার', marginBN+'%'],
     ['সক্রিয় ট্রাক', truckCountBN+'টি'],
+    ['মোট আয়', fmt(rev)],
+    ['মোট ব্যয়', fmt(exp)],
+    ['নিট মুনাফা', (profit<0?'-':'')+fmt(Math.abs(profit))],
+    ['মুনাফার হার', marginBN+'%'],
     ['সেরা পারফরম্যান্স', best?.truck||'—'],
     ['মনোযোগ প্রয়োজন', worst?.truck||'—'],
     ['প্রতি ট্রাকে গড় আয়', fmt(rev/12)],
@@ -1240,7 +909,6 @@ function submitEntry() {
     ...(modalType==='revenue' ? {client:document.getElementById('fClient').value} : {category:catEl.value}),
   };
   entries.unshift(entry);
-  saveEntry(entry);
   applyFilters();
   document.getElementById('modalBg').classList.remove('open');
   showNotif(modalType==='revenue'?'আয়ের এন্ট্রি যোগ হয়েছে!':'ব্যয়ের এন্ট্রি যোগ হয়েছে!', modalType==='revenue'?'var(--green)':'var(--red)');
@@ -1263,152 +931,163 @@ function showNotif(msg, color='var(--green)') {
 }
 
 
-// ═══════════════════════════════════════════════
-//  ROLE SCREEN + WORKER FORM
-// ═══════════════════════════════════════════════
+// ── SCREEN SWITCHER ──
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('screen-'+name).classList.add('active');
+}
+
+// ── PIN ──
+var pinTarget = '', pinVal = '';
+var pinCodes = { worker:'0000', owner:'1234' };
+var pinIcons = { worker:'👷', owner:'📊' };
+var pinTitles= { worker:'Data Entry Access', owner:'Management Access' };
+
+function pinAsk(role) {
+  pinTarget = role; pinVal = '';
+  pinUpdateDots();
+  document.getElementById('pinIcon').textContent  = pinIcons[role];
+  document.getElementById('pinTitle').textContent = pinTitles[role];
+  document.getElementById('pinErr').textContent   = '';
+  showScreen('pin');
+}
+function pinPress(d) {
+  if (pinVal.length >= 4) return;
+  pinVal += d; pinUpdateDots();
+  if (pinVal.length === 4) setTimeout(pinCheck, 130);
+}
+function pinDel() {
+  pinVal = pinVal.slice(0,-1); pinUpdateDots();
+  document.getElementById('pinErr').textContent = '';
+}
+function pinUpdateDots() {
+  for (var i=0;i<4;i++) {
+    document.getElementById('pd'+i).className = 'pin-dot'+(i<pinVal.length?' on':'');
+  }
+}
+function pinCheck() {
+  if (pinVal === pinCodes[pinTarget]) {
+    var t = pinTarget;
+    showScreen(t === 'worker' ? 'worker' : 'owner');
+    if (t === 'worker') wInit();
+    if (t === 'owner')  applyFilters();
+  } else {
+    document.getElementById('pinErr').textContent = '❌ ভুল পিন। আবার চেষ্টা করুন।';
+    pinVal = ''; pinUpdateDots();
+    var b = document.querySelector('.pin-box');
+    b.style.animation='none'; void b.offsetWidth; b.style.animation='shake .3s ease';
+  }
+}
+
+// ── SUPABASE ──
+var S_URL = 'https://ggarbfxekttnimdhioga.supabase.co';
+var S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnYXJiZnhla3R0bmltZGhpb2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzA4ODQsImV4cCI6MjA4ODIwNjg4NH0.u_RD1mtHKRI114gnJEaqLBLK3lTF_2MGG3DmnhqWFYM';
+var S_HDR = {'apikey':S_KEY,'Authorization':'Bearer '+S_KEY,'Content-Type':'application/json'};
+
+async function dbLoad() {
+  try {
+    var r = await fetch(S_URL+'/rest/v1/trips?select=*&order=created_at.desc',{headers:S_HDR});
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+async function dbSave(e) {
+  try {
+    fetch(S_URL+'/rest/v1/trips',{
+      method:'POST',
+      headers:Object.assign({},S_HDR,{'Prefer':'resolution=merge-duplicates'}),
+      body:JSON.stringify(e)
+    });
+  } catch(x) {}
+}
+
+// ── WORKER FORM ──
 var W_EXPS = [
-  {id:'fuel',        bn:'তেল',                         en:'Fuel',             auto:false},
-  {id:'labor',       bn:'লেবার',                       en:'Labour',           auto:false},
-  {id:'toll',        bn:'ব্রিজ/টোল',                   en:'Bridge/Toll',      auto:false},
-  {id:'police',      bn:'চাঁদা/পুলিশ',                 en:'Bribe/Police',     auto:false},
-  {id:'commission',  bn:'কমিশন (১০%)',                  en:'Commission 10%',   auto:true},
-  {id:'allowance',   bn:'দৈনিক ভাতা (খোরাকি)',          en:'Daily Allowance',  auto:false},
-  {id:'tire',        bn:'টায়ার',                       en:'Tyre',             auto:false},
-  {id:'maintenance', bn:'মেইনটেন্যান্স',               en:'Maintenance',      auto:false},
-  {id:'salary',      bn:'ড্রাইভার স্যালারি',            en:'Driver Salary',    auto:false},
-  {id:'annual',      bn:'বার্ষিক গাড়ির কাজ',           en:'Annual Vehicle',   auto:false},
-  {id:'fine',        bn:'কেইস/ফাইন',                   en:'Case/Fine',        auto:false},
-  {id:'other',       bn:'অন্যান্য (৫০০+ টাকা)',          en:'Other (500+)',     auto:false},
+  {id:'fuel',bn:'তেল',en:'Fuel',auto:false},
+  {id:'labor',bn:'লেবার',en:'Labour',auto:false},
+  {id:'toll',bn:'ব্রিজ/টোল',en:'Bridge/Toll',auto:false},
+  {id:'police',bn:'চাঁদা/পুলিশ',en:'Bribe/Police',auto:false},
+  {id:'commission',bn:'কমিশন (১০%)',en:'Commission 10%',auto:true},
+  {id:'allowance',bn:'দৈনিক ভাতা',en:'Daily Allowance',auto:false},
+  {id:'tire',bn:'টায়ার',en:'Tyre',auto:false},
+  {id:'maintenance',bn:'মেইনটেন্যান্স',en:'Maintenance',auto:false},
+  {id:'salary',bn:'ড্রাইভার স্যালারি',en:'Driver Salary',auto:false},
+  {id:'annual',bn:'বার্ষিক গাড়ির কাজ',en:'Annual Vehicle',auto:false},
+  {id:'fine',bn:'কেইস/ফাইন',en:'Case/Fine',auto:false},
+  {id:'other',bn:'অন্যান্য (৫০০+)',en:'Other 500+',auto:false},
 ];
-var W_NUMS = ['১','২','৩','৪','৫','৬','৭','৮','৯','১০','১১'];
+var BNN=['১','২','৩','৪','৫','৬','৭','৮','৯','১০','১১','১২'];
 
-function showRole() {
-  document.getElementById('roleScreen').style.display = 'flex';
-  document.getElementById('workerScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'none';
-}
-function enterWorker() {
-  document.getElementById('roleScreen').style.display = 'none';
-  document.getElementById('workerScreen').style.display = 'block';
-  document.getElementById('mainApp').style.display = 'none';
-  wBuildExpTable();
-  document.getElementById('wDate').value = new Date().toISOString().split('T')[0];
-}
-function enterOwner() {
-  document.getElementById('roleScreen').style.display = 'none';
-  document.getElementById('workerScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-}
-
-function wFmt(n) {
-  var val = Math.abs(Math.round(n)).toString();
-  var r = val.length > 3
-    ? val.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',') + ',' + val.slice(-3)
-    : val;
-  return '৳' + r.replace(/\d/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; });
-}
-function wNv(id) {
-  var el = document.getElementById(id);
-  return el ? (parseFloat(el.value) || 0) : 0;
-}
-function wBuildExpTable() {
-  var tbody = document.getElementById('wExpBody');
-  if (!tbody) return;
-  tbody.innerHTML = W_EXPS.map(function(e, i) {
-    return '<tr>'
-      + '<td style="padding:5px 10px"><div class="enum">' + W_NUMS[i] + '</div></td>'
-      + '<td><div class="elbl">' + e.bn + '<small>' + e.en + '</small></div></td>'
-      + '<td style="padding:5px 12px">'
-      +   '<div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">'
-      +   '<span style="color:var(--muted);font-size:12px">৳</span>'
-      +   '<input type="number" id="we_' + e.id + '" class="einp' + (e.auto ? ' ro' : '') + '" '
-      +   'placeholder="' + (e.auto ? 'স্বয়ংক্রিয়' : '০') + '" '
-      +   (e.auto ? 'readonly' : 'oninput="wCalc()"')
-      +   ' style="width:95px"/>'
-      +   '</div>'
-      + '</td>'
-      + '</tr>';
+function wInit() {
+  var wp=document.getElementById('wPlate');
+  wp.innerHTML='<option value="">— বেছে নিন —</option>';
+  TRUCK_NAMES.forEach(function(t){wp.innerHTML+='<option value="'+t+'">'+t+'</option>';});
+  document.getElementById('wDate').value=new Date().toISOString().split('T')[0];
+  var tb=document.getElementById('wExpBody');
+  tb.innerHTML=W_EXPS.map(function(e,i){
+    return '<tr><td style="padding:4px 9px"><div class="enum">'+BNN[i]+'</div></td>'
+      +'<td><div class="elbl">'+e.bn+'<small>'+e.en+'</small></div></td>'
+      +'<td style="padding:4px 11px"><div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">'
+      +'<span style="color:#9ca3af;font-size:11px">৳</span>'
+      +'<input type="number" id="we_'+e.id+'" class="einp'+(e.auto?' ro':'')+'" '
+      +'placeholder="'+(e.auto?'auto':'০')+'" '+(e.auto?'readonly':'oninput="wCalc()"')
+      +' style="width:90px"/></div></td></tr>';
   }).join('');
-}
-function wCalc() {
-  var fare = wNv('wFare');
-  var comm = Math.round(fare * 0.10);
-  var cEl = document.getElementById('we_commission');
-  if (cEl) cEl.value = comm > 0 ? comm : '';
-  var totalExp = 0;
-  W_EXPS.forEach(function(e) {
-    var el = document.getElementById('we_' + e.id);
-    totalExp += el ? (parseFloat(el.value) || 0) : 0;
-  });
-  var disc = wNv('wDiscount');
-  var net = fare - totalExp;
-  var final = net - disc;
-  document.getElementById('wExpTotal').textContent = wFmt(totalExp);
-  document.getElementById('wCGross').textContent   = wFmt(fare);
-  document.getElementById('wCExp').textContent     = wFmt(totalExp);
-  document.getElementById('wCNet').textContent     = wFmt(net);
-  document.getElementById('wCNet').style.color     = net >= 0 ? 'var(--accent)' : 'var(--red)';
-  document.getElementById('wCDisc').textContent    = wFmt(disc);
-  document.getElementById('wCFinal').textContent   = wFmt(final);
-  document.getElementById('wCFinal').style.color   = final >= 0 ? '#fbbf24' : '#fca5a5';
-}
-function wCalcM() {
-  var prev = wNv('wMPrev'), curr = wNv('wMCurr'), lit = wNv('wMLiters');
-  var dist = curr - prev;
-  if (dist > 0) document.getElementById('wMDist').value = dist;
-  var eff = (lit > 0 && dist > 0) ? (dist / lit).toFixed(2) : null;
-  document.getElementById('wMRes').textContent = eff
-    ? eff.replace(/\d/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }) + ' কি.মি. / লিটার'
-    : '— কি.মি. / লিটার';
-}
-function wSubmit() {
-  var plate = document.getElementById('wPlate').value;
-  var date  = document.getElementById('wDate').value;
-  if (!plate || !date) { showNotif('গাড়ির নম্বর ও তারিখ আবশ্যক', 'var(--red)'); return; }
-  var fare   = wNv('wFare');
-  var route  = document.getElementById('wRoute').value || 'ট্রিপ';
-  var driver = document.getElementById('wDriver').value || '—';
-  var totalExp = 0;
-  W_EXPS.forEach(function(e) {
-    var el = document.getElementById('we_' + e.id);
-    var amt = el ? (parseFloat(el.value) || 0) : 0;
-    totalExp += amt;
-    if (amt > 0) {
-      const expEntry = { id:'wx'+Date.now()+e.id, type:'expense',
-        truck:plate, date:date, amount:amt, category:e.bn, description:e.bn+' ব্যয়' };
-      entries.unshift(expEntry);
-      saveEntry(expEntry);
-    }
-  });
-  const revEntry = { id:'w'+Date.now(), type:'revenue',
-    truck:plate, date:date, amount:fare, description:route, client:driver };
-  entries.unshift(revEntry);
-  saveEntry(revEntry);
-  ['wCode','wDriver','wHelper','wRoute','wNote','wFare','wDiscount','wMPrev','wMCurr','wMLiters','wMDist']
-    .forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  W_EXPS.forEach(function(e){ var el=document.getElementById('we_'+e.id); if(el) el.value=''; });
-  document.getElementById('wDate').value = new Date().toISOString().split('T')[0];
   wCalc(); wCalcM();
-  showNotif('✅ ট্রিপ সফলভাবে জমা হয়েছে!', 'var(--green)');
-  setTimeout(function(){ enterOwner(); applyFilters(); }, 1400);
+}
+function wNv(id){var el=document.getElementById(id);return el?(parseFloat(el.value)||0):0;}
+function wFmt(n){var v=Math.abs(Math.round(n)).toString();var r=v.length>3?v.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+v.slice(-3):v;return '৳'+r.replace(/\d/g,function(d){return'০১২৩৪৫৬৭৮৯'[+d];});}
+function wCalc(){
+  var fare=wNv('wFare'),comm=Math.round(fare*.10);
+  var cel=document.getElementById('we_commission');if(cel)cel.value=comm||'';
+  var tot=0;W_EXPS.forEach(function(e){var el=document.getElementById('we_'+e.id);tot+=el?(parseFloat(el.value)||0):0;});
+  var disc=wNv('wDiscount'),net=fare-tot,fin=net-disc;
+  document.getElementById('wExpTotal').textContent=wFmt(tot);
+  document.getElementById('wCGross').textContent=wFmt(fare);
+  document.getElementById('wCExp').textContent=wFmt(tot);
+  document.getElementById('wCNet').textContent=wFmt(net);
+  document.getElementById('wCNet').style.color=net>=0?'#1a56db':'#c81e1e';
+  document.getElementById('wCDisc').textContent=wFmt(disc);
+  document.getElementById('wCFinal').textContent=wFmt(fin);
+  document.getElementById('wCFinal').style.color=fin>=0?'#fbbf24':'#fca5a5';
+}
+function wCalcM(){
+  var prev=wNv('wMPrev'),curr=wNv('wMCurr'),lit=wNv('wMLiters'),dist=curr-prev;
+  if(dist>0)document.getElementById('wMDist').value=dist;
+  var eff=(lit>0&&dist>0)?(dist/lit).toFixed(2):null;
+  document.getElementById('wMRes').textContent=eff?eff.replace(/\d/g,function(d){return'০১২৩৪৫৬৭৮৯'[+d];})+'  কি.মি./লি.':'— কি.মি./লি.';
+}
+async function wSubmit(){
+  var plate=document.getElementById('wPlate').value;
+  var date=document.getElementById('wDate').value;
+  if(!plate||!date){showNotif('গাড়ির নম্বর ও তারিখ আবশ্যক','var(--red)');return;}
+  var fare=wNv('wFare'),route=document.getElementById('wRoute').value||'ট্রিপ',driver=document.getElementById('wDriver').value||'—';
+  var rev={id:'w'+Date.now(),type:'revenue',truck:plate,date:date,amount:fare,description:route,client:driver};
+  entries.unshift(rev); dbSave(rev);
+  W_EXPS.forEach(function(e){
+    var el=document.getElementById('we_'+e.id),amt=el?(parseFloat(el.value)||0):0;
+    if(amt>0){var exp={id:'wx'+Date.now()+e.id,type:'expense',truck:plate,date:date,amount:amt,category:e.bn,description:e.bn+' ব্যয়'};entries.unshift(exp);dbSave(exp);}
+  });
+  ['wCode','wDriver','wHelper','wRoute','wNote','wFare','wDiscount','wMPrev','wMCurr','wMLiters','wMDist'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  W_EXPS.forEach(function(e){var el=document.getElementById('we_'+e.id);if(el)el.value='';});
+  document.getElementById('wDate').value=new Date().toISOString().split('T')[0];
+  wCalc();wCalcM();
+  showNotif('✅ ট্রিপ সফলভাবে জমা হয়েছে!','var(--green)');
+  setTimeout(function(){showScreen('role');},1400);
 }
 
-// After init runs, populate worker plate dropdown too
-(function() {
-  var _orig = window.init;
-  window.init = function() {
-    _orig();
-    var wp = document.getElementById('wPlate');
-    if (wp && typeof TRUCK_NAMES !== 'undefined') {
-      TRUCK_NAMES.forEach(function(t){
-        wp.innerHTML += '<option value="'+t+'">'+t+'</option>';
-      });
-    }
-  };
-})();
+// ── STARTUP ──
+async function startup() {
+  init();               // original: populates dropdowns, generates sample data, renders dashboard
+  showScreen('role');   // show role screen on top of everything
+  var loaded = await dbLoad();
+  if (loaded && loaded.length > 0) {
+    entries = loaded;
+    applyFilters();
+  }
+}
+startup();
 
-init();
 </script>
-</div><!-- /mainApp -->
 </body>
 </html>
