@@ -1372,7 +1372,7 @@ async function dbSave(e) {
   try {
     fetch(S_URL+'/rest/v1/trips',{
       method:'POST',
-      headers:Object.assign({},S_HDR,{'Prefer':'resolution=merge-duplicates'}),
+      headers:Object.assign({},S_HDR,{'Prefer':'return=minimal'}),
       body:JSON.stringify(e)
     });
   } catch(x) {}
@@ -1490,22 +1490,23 @@ async function depotLoadTrips() {
 
 async function depotSaveRouteToDB(r) {
   try {
-    await fetch(S_URL+'/rest/v1/depot_routes', {
+    var res = await fetch(S_URL+'/rest/v1/depot_routes?on_conflict=id', {
       method: 'POST',
-      headers: Object.assign({}, S_HDR, {'Prefer':'resolution=merge-duplicates'}),
+      headers: Object.assign({}, S_HDR, {'Prefer':'resolution=merge-duplicates,return=minimal'}),
       body: JSON.stringify({
         id: r.id, factory: r.factory, depot: r.depot,
         name: r.name, rate: r.rate, breakeven: r.breakeven
       })
     });
+    if (!res.ok) console.warn('depotSaveRoute failed:', res.status, await res.text());
   } catch(e) { console.warn('depotSaveRoute error:', e); }
 }
 
 async function depotSaveTripToDB(t) {
   try {
-    await fetch(S_URL+'/rest/v1/depot_trips', {
+    var res = await fetch(S_URL+'/rest/v1/depot_trips?on_conflict=id', {
       method: 'POST',
-      headers: Object.assign({}, S_HDR, {'Prefer':'resolution=merge-duplicates'}),
+      headers: Object.assign({}, S_HDR, {'Prefer':'resolution=merge-duplicates,return=minimal'}),
       body: JSON.stringify({
         id: t.id, date: t.date, route_id: t.routeId,
         route: t.route, factory: t.factory, depot: t.depot,
@@ -1513,6 +1514,7 @@ async function depotSaveTripToDB(t) {
         rent: t.rent, profit: t.profit, note: t.note||null
       })
     });
+    if (!res.ok) console.warn('depotSaveTrip failed:', res.status, await res.text());
   } catch(e) { console.warn('depotSaveTrip error:', e); }
 }
 
@@ -1839,7 +1841,7 @@ async function saveDriverToDB(d) {
   try {
     await fetch(S_URL+'/rest/v1/drivers',{
       method:'POST',
-      headers:Object.assign({},S_HDR,{'Prefer':'resolution=merge-duplicates'}),
+      headers:Object.assign({},S_HDR,{'Prefer':'return=minimal'}),
       body:JSON.stringify(d)
     });
   } catch(e){ console.warn(e); }
@@ -1848,7 +1850,7 @@ async function saveMaintenanceToDB(m) {
   try {
     await fetch(S_URL+'/rest/v1/maintenance',{
       method:'POST',
-      headers:Object.assign({},S_HDR,{'Prefer':'resolution=merge-duplicates'}),
+      headers:Object.assign({},S_HDR,{'Prefer':'return=minimal'}),
       body:JSON.stringify(m)
     });
   } catch(e){ console.warn(e); }
