@@ -624,6 +624,15 @@
       </div>
     </div>
 
+    <!-- Saved routes list -->
+    <div class="panel" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:0">সংরক্ষিত রুটসমূহ / Saved Routes</div>
+        <span style="font-size:12px;color:var(--muted)" id="depotRouteCount">০টি রুট</span>
+      </div>
+      <div id="depotRoutesList" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"></div>
+    </div>
+
     <!-- Route table: best & worst -->
     <div class="table-wrap">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface2);border-bottom:2px solid var(--border)">
@@ -1559,9 +1568,33 @@ function depotRender() {
   depotRenderBreakeven(trips);
   depotRenderByFactory(trips);
   depotRenderByDepot(trips);
+  depotRenderRoutesList();
   depotRenderRouteTable(trips);
   depotRenderTripLog(trips);
   depotPopulateFilters();
+}
+
+function depotRenderRoutesList() {
+  var el = document.getElementById('depotRoutesList');
+  var cnt = document.getElementById('depotRouteCount');
+  if (!el) return;
+  var n = depotRoutes.length.toString().replace(/\d/g,function(d){return '০১২৩৪৫৬৭৮৯'[+d];});
+  if (cnt) cnt.textContent = n + 'টি রুট';
+  if (!depotRoutes.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;padding:12px 0">কোনো রুট নেই — রুট যোগ করুন</div>';
+    return;
+  }
+  el.innerHTML = depotRoutes.map(function(r) {
+    return '<div style="background:#f8fafc;border:1.5px solid var(--border);border-radius:9px;padding:12px 14px">'
+      +'<div style="font-weight:700;font-size:13px;color:var(--heading);margin-bottom:5px">'+r.name+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:3px">🏭 '+r.factory+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">📦 '+r.depot+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="background:#eff6ff;color:#1a56db;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700">৳'+r.rate+'/KG</span>'
+      +(r.breakeven?'<span style="font-size:11px;color:var(--muted)">BE: '+Math.round(r.breakeven).toLocaleString()+' KG</span>':'')
+      +'</div>'
+      +'</div>';
+  }).join('');
 }
 
 function depotRenderKPIs(trips) {
