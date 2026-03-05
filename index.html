@@ -381,7 +381,7 @@
       <div style="font-size:15px;font-weight:700">📋 এন্ট্রি ফর্ম</div>
       <div style="font-size:11px;color:#94a3b8">Data Entry</div>
     </div>
-    <div style="width:80px"></div>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔒 লগআউট</button>
   </div>
 
   <!-- Worker tab switcher -->
@@ -450,62 +450,92 @@
         </div>
       </div>
     </div>
-  </div>
   </div><!-- /wf-wrap truck -->
   <div class="wf-bar" id="wbar-truck"><button class="wf-btn" onclick="wSubmit()">✅ ট্রাক ট্রিপ জমা দিন / Submit</button></div>
   </div><!-- /wtab-truck-content -->
 
   <!-- DEPOT TRIP FORM -->
-  <div id="wtab-depot-content" style="display:none">
-  <div class="wf-wrap">
+  <div id="wtab-depot-content" style="display:none;background:#f4f6f9;min-height:calc(100vh - 80px);padding:14px;padding-bottom:90px;box-sizing:border-box">
+  <div style="max-width:700px;margin:0 auto">
 
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">১</div><div class="wf-st">রুট নির্বাচন / Select Route</div></div>
-      <div class="wf-bd">
-        <div class="wfg3">
-          <div class="wf-f"><label>তারিখ / Date</label><input type="date" id="wdDate"/></div>
-          <div class="wf-f"><label>রুট বেছে নিন</label>
-            <select id="wdRoute" onchange="wdFillRate()">
-              <option value="">— রুট বেছে নিন —</option>
-            </select>
+    <div style="background:#fff;border:1.5px solid #dde1e9;border-radius:10px;margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #dde1e9">
+        <div style="width:26px;height:26px;border-radius:50%;background:#1a56db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">১</div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b">রুট নির্বাচন / Select Route</div>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">তারিখ / Date</label>
+            <input type="date" id="wdDate" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit"/></div>
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">রুট বেছে নিন</label>
+            <select id="wdRoute" onchange="wdFillRate()" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit">
+              <option value="">⏳ লোড হচ্ছে...</option>
+            </select></div>
+          <div><label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">হার (৳/KG)</label>
+            <input type="number" id="wdRate" placeholder="auto" step="0.01" oninput="wdCalc()" readonly style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #fcd34d;border-radius:7px;font-size:13px;background:#fffbeb;color:#92400e;font-family:inherit"/></div>
+        </div>
+        <div id="wdRouteInfo" style="padding:10px 12px;background:#f0f2f5;border-radius:8px;font-size:12px;color:#6b7280">রুট বেছে নিলে ফ্যাক্টরি ও ডিপোর তথ্য দেখাবে</div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1.5px solid #dde1e9;border-radius:10px;margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #dde1e9">
+        <div style="width:26px;height:26px;border-radius:50%;background:#1a56db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">২</div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b">পণ্যের বিবরণ / Cargo</div>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">ওজন (KG)</label>
+            <input type="number" id="wdKg" placeholder="০" step="0.01" oninput="wdCalc();wdFmtLive('wdKg','wdKgDisplay')" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit"/>
+            <div id="wdKgDisplay" style="font-size:11px;color:#1a56db;font-weight:600;margin-top:3px;min-height:16px"></div>
           </div>
-          <div class="wf-f"><label>হার (৳/KG) auto</label><input type="number" id="wdRate" placeholder="০.০০" step="0.01" oninput="wdCalc()" readonly style="background:#fffbeb;color:#92400e;border-color:#fcd34d"/></div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">ট্রাক ভাড়া (৳)</label>
+            <input type="number" id="wdRent" placeholder="০" step="0.01" oninput="wdCalc();wdFmtLive('wdRent','wdRentDisplay')" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit"/>
+            <div id="wdRentDisplay" style="font-size:11px;color:#c81e1e;font-weight:600;margin-top:3px;min-height:16px"></div>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">ট্রাক নম্বর</label>
+            <input type="text" id="wdTruck" placeholder="যেমন: ঢাকা-মেট্রো-ট-১৫-০০১" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit"/>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">ড্রাইভার</label>
+            <input type="text" id="wdDriver" placeholder="নাম" style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit"/>
+          </div>
         </div>
-        <div style="margin-top:10px;padding:10px 12px;background:#f0f2f5;border-radius:8px;font-size:12px;color:#6b7280" id="wdRouteInfo">রুট বেছে নিলে ফ্যাক্টরি ও ডিপোর তথ্য দেখাবে</div>
       </div>
     </div>
 
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">২</div><div class="wf-st">পণ্যের বিবরণ / Cargo</div></div>
-      <div class="wf-bd">
-        <div class="wfg4">
-          <div class="wf-f"><label>ওজন (KG)</label><input type="number" id="wdKg" placeholder="০" oninput="wdCalc()"/></div>
-          <div class="wf-f"><label>ট্রাক ভাড়া (৳)</label><input type="number" id="wdRent" placeholder="০" oninput="wdCalc()"/></div>
-          <div class="wf-f"><label>ট্রাক নম্বর</label><select id="wdTruck"><option value="">— বেছে নিন —</option></select></div>
-          <div class="wf-f"><label>ড্রাইভার</label><input type="text" id="wdDriver" placeholder="নাম"/></div>
-        </div>
+    <div style="background:#fff;border:1.5px solid #dde1e9;border-radius:10px;margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #dde1e9">
+        <div style="width:26px;height:26px;border-radius:50%;background:#1a56db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">৩</div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b">হিসাব / Summary</div>
+      </div>
+      <div style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:13px 16px;font-size:13px;color:#374151">মোট রাজস্ব (KG × হার)<br><small style="color:#9ca3af">Revenue</small></td><td style="padding:13px 16px;text-align:right;font-size:16px;font-weight:700;color:#057a55" id="wdRevenue">৳০</td></tr>
+          <tr style="border-bottom:1px solid #f1f5f9"><td style="padding:13px 16px;font-size:13px;color:#c81e1e">(-) ট্রাক ভাড়া<br><small style="color:#9ca3af">Truck Rent</small></td><td style="padding:13px 16px;text-align:right;font-size:16px;font-weight:700;color:#c81e1e" id="wdRentShow">৳০</td></tr>
+          <tr style="background:#fffbeb"><td style="padding:13px 16px;font-size:13px;font-weight:700;color:#374151">নিট মুনাফা<br><small style="color:#9ca3af">Net Profit</small></td><td style="padding:13px 16px;text-align:right;font-size:18px;font-weight:700;color:#fbbf24" id="wdProfit">৳০</td></tr>
+        </table>
       </div>
     </div>
 
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">৩</div><div class="wf-st">হিসাব / Summary</div></div>
-      <table class="ctbl">
-        <tr><td class="ck">মোট রাজস্ব (KG × হার)<small>Revenue</small></td><td class="cv" id="wdRevenue" style="color:#057a55">৳০</td></tr>
-        <tr><td class="ck" style="color:#c81e1e">(-) ট্রাক ভাড়া<small>Truck Rent</small></td><td class="cv" id="wdRentShow" style="color:#c81e1e">৳০</td></tr>
-        <tr class="crow-fin"><td class="ck">নিট মুনাফা<small style="color:#94a3b8">Net Profit</small></td><td class="cv" id="wdProfit" style="color:#fbbf24">৳০</td></tr>
-      </table>
-    </div>
-
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">৪</div><div class="wf-st">মন্তব্য / Note</div></div>
-      <div class="wf-bd">
-        <div class="wf-f"><label>মন্তব্য (ঐচ্ছিক)</label><input type="text" id="wdNote" placeholder="কোনো বিশেষ তথ্য..."/></div>
+    <div style="background:#fff;border:1.5px solid #dde1e9;border-radius:10px;margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #dde1e9">
+        <div style="width:26px;height:26px;border-radius:50%;background:#1a56db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">৪</div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b">মন্তব্য / Note</div>
+      </div>
+      <div style="padding:14px 16px">
+        <input type="text" id="wdNote" placeholder="কোনো বিশেষ তথ্য..." style="width:100%;box-sizing:border-box;padding:9px 10px;border:1.5px solid #dde1e9;border-radius:7px;font-size:13px;font-family:inherit"/>
       </div>
     </div>
 
-  </div><!-- /wf-wrap depot -->
-  <div class="wf-bar"><button class="wf-btn" style="background:#057a55" onclick="wdSubmit()">✅ ডিপো ট্রিপ জমা দিন / Submit</button></div>
-  </div><!-- /wtab-depot-content -->
+  </div>
+  <div style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid #dde1e9;padding:13px 18px;z-index:100">
+    <button onclick="wdSubmit()" style="width:100%;max-width:700px;display:block;margin:0 auto;background:#057a55;color:#fff;border:none;padding:14px;font-size:15px;font-weight:700;border-radius:9px;cursor:pointer;font-family:'Hind Siliguri',sans-serif">✅ ডিপো ট্রিপ জমা দিন / Submit</button>
+  </div>
+</div><!-- /wtab-depot-content -->
 
 </div>
 
@@ -535,6 +565,7 @@
     <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV ডাউনলোড</button>
     <button class="btn btn-rev" onclick="openModal('revenue')">+ আয় যোগ করুন</button>
     <button class="btn btn-exp" onclick="openModal('expense')">+ ব্যয় যোগ করুন</button>
+    <button class="btn btn-ghost" onclick="logout()" style="border-color:#f98080;color:#c81e1e">🔒 লগআউট</button>
   </div>
 </header>
 
@@ -658,7 +689,19 @@
 
     <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px">
 
-      <!-- Monthly trend chart -->
+      <!-- COF Settings -->
+    <div class="panel" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--heading);margin-bottom:2px">তহবিল খরচ (COF) সেটিং</div>
+        <div style="font-size:11px;color:var(--muted)">বিক্রেতা বিল পরিশোধে ৩০ দিন লাগলে সুদের হার অনুযায়ী খরচ হিসাব হবে</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="cofDisplay" style="font-size:15px;font-weight:700;color:var(--accent)">০% বার্ষিক</div>
+        <button onclick="cofShowEdit()" style="background:#eff6ff;border:1.5px solid #1a56db;color:#1a56db;border-radius:20px;padding:5px 14px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">✏️ সম্পাদনা</button>
+      </div>
+    </div>
+
+    <!-- Monthly trend chart -->
       <div class="panel">
         <div class="section-title">মাসিক রাজস্ব বনাম খরচ ট্রেন্ড</div>
         <div class="chart-bars" id="depotMonthChart" style="height:160px"></div>
@@ -670,7 +713,7 @@
 
       <!-- Break-even panel -->
       <div class="panel">
-        <div class="section-title">ব্রেক-ইভেন বিশ্লেষণ</div>
+        <div class="section-title">মুনাফার বিশ্লেষণ</div>
         <div id="depotBreakeven"></div>
       </div>
     </div>
@@ -1041,6 +1084,24 @@
   </div>
 </div>
 
+<!-- COF EDIT MODAL -->
+<div class="modal-bg" id="cofModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">💰 তহবিল খরচ (COF) সেটিং</div>
+    <div class="form-row">
+      <label>বার্ষিক সুদের হার (%) / Annual Interest Rate</label>
+      <input type="number" id="cofRateInput" placeholder="যেমন: 12" step="0.1" style="font-size:18px;font-weight:700;text-align:center"/>
+      <small style="color:var(--muted);font-size:11px;margin-top:5px;display:block">
+        ৩০ দিনের তহবিল খরচ = মোট রাজস্ব × (হার ÷ ১০০) × (৩০ ÷ ৩৬৫)
+      </small>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="cofSave()" style="flex:1">সেভ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('cofModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 </div>
@@ -1087,10 +1148,10 @@ function fmt(n) {
 }
 
 function fmtDate(d) {
-  const [y,m,day] = d.split('-');
-  const dayBN = day.replace(/\d/g,n=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+n]);
-  const yearBN = y.replace(/\d/g,n=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+n]);
-  return `${MONTHS_BN[+m-1]} ${dayBN}, ${yearBN}`;
+  if (!d) return '—';
+  var parts = d.split('-');
+  if (parts.length !== 3) return d;
+  return parts[2]+'/'+parts[1]+'/'+parts[0];
 }
 
 function genSample() {
@@ -1533,6 +1594,7 @@ async function wSubmit(){
 
 var depotRoutes = [];
 var depotTrips  = [];
+var depotCofRate = 0; // annual interest rate %
 
 // ── Supabase DB helpers for depot ──
 async function depotLoadRoutes() {
@@ -1674,7 +1736,8 @@ function depotRenderRoutesList() {
 function depotRenderKPIs(trips) {
   var rev=0, cost=0, kg=0;
   trips.forEach(function(t){ rev+=t.revenue; cost+=t.rent; kg+=t.kg; });
-  var profit = rev - cost;
+  var totalCof = rev * ((depotCofRate||0)/100) * (30/365);
+  var profit = rev - cost - totalCof;
   document.getElementById('dKpiRev').textContent    = dFmt(rev);
   document.getElementById('dKpiCost').textContent   = dFmt(cost);
   document.getElementById('dKpiKg').textContent     = dFmtNum(kg)+' KG';
@@ -1704,26 +1767,45 @@ function depotRenderMonthChart() {
 }
 
 function depotRenderBreakeven(trips) {
-  var rev=0, cost=0, kg=0, trips_n=trips.length;
+  var rev=0, cost=0, kg=0, n=trips.length;
   trips.forEach(function(t){ rev+=t.revenue; cost+=t.rent; kg+=t.kg; });
-  var profit = rev - cost;
-  var margin = rev>0?((profit/rev)*100).toFixed(1):'০';
-  var avgRevenuePerKg = kg>0?(rev/kg).toFixed(3):'—';
-  var avgCostPerTrip = trips_n>0?Math.round(cost/trips_n):0;
-  var beKg = avgRevenuePerKg>0?(avgCostPerTrip/avgRevenuePerKg).toFixed(0):'—';
+  var cofRate = depotCofRate || 0;
+  var totalCof = rev * (cofRate/100) * (30/365);
+  var totalCost = cost + totalCof;
+  var profit = rev - totalCost;
+  var margin = rev>0?((profit/rev)*100).toFixed(1):'0';
+  var avgProfit = n>0?Math.round(profit/n):0;
 
-  document.getElementById('depotBreakeven').innerHTML = [
-    ['মোট ট্রিপ', trips_n+' টি'],
-    ['গড় রাজস্ব (৳/KG)', avgRevenuePerKg],
-    ['গড় ট্রাক ভাড়া/ট্রিপ', dFmt(avgCostPerTrip)],
-    ['ব্রেক-ইভেন KG/ট্রিপ', beKg ? dFmtNum(+beKg)+' KG' : '—'],
-    ['মুনাফার হার', margin+'%'],
-    ['নিট মুনাফা', (profit<0?'-':'')+dFmt(Math.abs(profit))],
-  ].map(function(row) {
-    return '<div class="d-be-row"><span class="d-be-key">'+row[0]+'</span>'
-      +'<span class="d-be-val" style="color:'+(row[0]==='নিট মুনাফা'?(profit>=0?'var(--green)':'var(--red)'):'var(--heading)')+'">'+row[1]+'</span></div>';
+  // best & worst route by profit
+  var routeMap = {};
+  trips.forEach(function(t){
+    if(!routeMap[t.route]) routeMap[t.route]={rev:0,cost:0};
+    routeMap[t.route].rev+=t.revenue; routeMap[t.route].cost+=t.rent;
+  });
+  var routeArr = Object.keys(routeMap).map(function(k){
+    return {name:k, profit:routeMap[k].rev-routeMap[k].cost};
+  }).sort(function(a,b){return b.profit-a.profit;});
+  var bestRoute  = routeArr.length ? routeArr[0].name : '—';
+  var worstRoute = routeArr.length > 1 ? routeArr[routeArr.length-1].name : (routeArr.length===1?routeArr[0].name:'—');
+
+  var rows = [
+    {label:'মোট রাজস্ব',              val:dFmt(rev),                        color:'var(--green)'},
+    {label:'মোট ট্রাক ভাড়া',          val:dFmt(cost),                       color:'var(--red)'},
+    {label:'তহবিল খরচ (COF)',          val:dFmt(Math.round(totalCof)),        color:'var(--red)'},
+    {label:'নিট মুনাফা',              val:(profit<0?'-':'')+dFmt(Math.abs(profit)), color:profit>=0?'var(--green)':'var(--red)'},
+    {label:'মুনাফার হার',             val:margin+'%',                        color:'var(--accent2)'},
+    {label:'গড় মুনাফা/ট্রিপ',         val:(avgProfit<0?'-':'')+dFmt(Math.abs(avgProfit)), color:avgProfit>=0?'var(--green)':'var(--red)'},
+    {label:'মোট কেজি পরিবহন',         val:kg.toLocaleString()+' কেজি',      color:'var(--heading)'},
+    {label:'সর্বোচ্চ লাভজনক রুট',     val:bestRoute,                         color:'var(--green)'},
+    {label:'সর্বনিম্ন লাভজনক রুট',    val:worstRoute,                        color:'var(--red)'},
+  ];
+
+  document.getElementById('depotBreakeven').innerHTML = rows.map(function(r){
+    return '<div class="d-be-row"><span class="d-be-key">'+r.label+'</span>'
+      +'<span class="d-be-val" style="color:'+r.color+'">'+r.val+'</span></div>';
   }).join('');
 }
+
 
 function depotRenderByFactory(trips) {
   var map = {};
@@ -1798,7 +1880,7 @@ function depotRenderTripLog(trips) {
   var sorted = trips.slice().sort(function(a,b){ return b.date.localeCompare(a.date); }).slice(0,30);
   document.getElementById('depotTripLog').innerHTML = sorted.length ? sorted.map(function(t) {
     return '<tr style="border-bottom:1px solid var(--border)">'
-      +'<td style="padding:10px 14px;color:var(--muted)">'+t.date+'</td>'
+      +'<td style="padding:10px 14px;color:var(--muted)">'+fmtDate(t.date)+'</td>'
       +'<td style="padding:10px 14px;font-weight:600;color:var(--heading)">'+t.route+'</td>'
       +'<td style="padding:10px 14px;color:var(--muted)">'+t.factory+'</td>'
       +'<td style="padding:10px 14px;color:var(--muted)">'+t.depot+'</td>'
@@ -1926,6 +2008,21 @@ async function depotDeleteRoute(id) {
     await fetch(S_URL+'/rest/v1/depot_routes?id=eq.'+id, {method:'DELETE', headers:S_HDR});
     showNotif('রুট মুছে ফেলা হয়েছে','var(--red)');
   } catch(e) { showNotif('মুছতে সমস্যা হয়েছে','var(--red)'); }
+  depotRender();
+}
+
+function cofShowEdit() {
+  document.getElementById('cofRateInput').value = depotCofRate || '';
+  document.getElementById('cofModal').classList.add('open');
+}
+
+function cofSave() {
+  var rate = parseFloat(document.getElementById('cofRateInput').value)||0;
+  depotCofRate = rate;
+  var rateDisplay = rate.toString().replace(/\d/g,function(d){return '০১২৩৪৫৬৭৮৯'[+d];});
+  document.getElementById('cofDisplay').textContent = rateDisplay+'% বার্ষিক';
+  document.getElementById('cofModal').classList.remove('open');
+  showNotif('COF হার আপডেট হয়েছে ✓','var(--green)');
   depotRender();
 }
 
@@ -2106,7 +2203,7 @@ function driversRender() {
       +'<td class="td"><div style="font-weight:700">'+d.name+'</div><div style="font-size:11px;color:var(--muted)">'+d.phone+'</div></td>'
       +'<td class="td" style="font-size:12px;color:var(--muted)">'+d.phone+'</td>'
       +'<td class="td" style="font-size:12px;color:var(--muted)">'+(d.nid||'—')+'<br><span style="font-size:10px">'+(d.license||'')+'</span></td>'
-      +'<td class="td" style="font-size:12px">'+(d.joining_date||'—')+'</td>'
+      +'<td class="td" style="font-size:12px">'+fmtDate(d.joining_date||'')+'</td>'
       +'<td class="td" style="font-weight:600">'+dFmtMoney(d.salary)+'</td>'
       +'<td class="td"><span class="tag" style="background:#eff6ff;color:#1a56db">'+(d.truck||'—')+'</span></td>'
       +'<td class="td" style="text-align:center;font-weight:700">'+s.trips+'</td>'
@@ -2192,7 +2289,7 @@ function maintenanceRender() {
   document.getElementById('maintenanceTable').innerHTML = filtered.length ? filtered.map(function(m){
     var bg = TYPE_COLORS[m.type]||'#eff6ff';
     return '<tr style="border-bottom:1px solid var(--border)">'
-      +'<td class="td">'+m.date+'</td>'
+      +'<td class="td">'+fmtDate(m.date)+'</td>'
       +'<td class="td"><span class="tag" style="background:#eff6ff;color:#1a56db">'+m.truck+'</span></td>'
       +'<td class="td"><span class="tag-mtype" style="background:'+bg+'">'+m.type+'</span></td>'
       +'<td class="td" style="color:var(--muted)">'+(m.description||'—')+'</td>'
@@ -2337,13 +2434,10 @@ function wSwitchTab(tab) {
 function wdInit() {
   // populate route dropdown from depotRoutes (loaded from DB)
   var sel = document.getElementById('wdRoute');
-  var tsel = document.getElementById('wdTruck');
   sel.innerHTML = '<option value="">— রুট বেছে নিন —</option>';
   depotRoutes.forEach(function(r){
     sel.innerHTML += '<option value="'+r.id+'">'+r.name+' ('+r.factory+')</option>';
   });
-  tsel.innerHTML = '<option value="">— বেছে নিন —</option>';
-  TRUCK_NAMES.forEach(function(t){ tsel.innerHTML += '<option value="'+t+'">'+t+'</option>'; });
   document.getElementById('wdDate').value = new Date().toISOString().split('T')[0];
   wdCalc();
 }
@@ -2363,6 +2457,22 @@ function wdFillRate() {
 }
 
 function wdNv(id){ var el=document.getElementById(id); return el?(parseFloat(el.value)||0):0; }
+function wdFmtLive(inputId, displayId) {
+  var n = parseFloat(document.getElementById(inputId).value)||0;
+  if (!n) { document.getElementById(displayId).textContent=''; return; }
+  // Bengali number format with commas: 0,00,00,000
+  var intPart = Math.round(n).toString();
+  var formatted = '';
+  if (intPart.length > 3) {
+    formatted = intPart.slice(-3);
+    var rest = intPart.slice(0, -3);
+    while (rest.length > 2) { formatted = rest.slice(-2) + ',' + formatted; rest = rest.slice(0,-2); }
+    if (rest) formatted = rest + ',' + formatted;
+  } else { formatted = intPart; }
+  var bn = formatted.replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; });
+  document.getElementById(displayId).textContent = bn;
+}
+
 function wdCalc() {
   var kg=wdNv('wdKg'), rate=wdNv('wdRate'), rent=wdNv('wdRent');
   var rev=Math.round(kg*rate), profit=rev-rent;
@@ -2398,7 +2508,22 @@ async function wdSubmit() {
   document.getElementById('wdDate').value  = new Date().toISOString().split('T')[0];
   wdCalc();
   showNotif('✅ ডিপো ট্রিপ জমা হয়েছে!','var(--green)');
-  setTimeout(function(){ showScreen('role'); }, 1400);
+  setTimeout(logout, 300000);
+}
+
+// ── LOGOUT ──
+function logout() {
+  pinVal = '';
+  pinTarget = '';
+  // reset worker tab back to truck on next login
+  document.getElementById('wtab-truck-content').style.display = 'block';
+  document.getElementById('wtab-depot-content').style.display = 'none';
+  document.getElementById('wbar-truck').style.display = 'block';
+  document.getElementById('wtab-truck').style.background = '#1a56db';
+  document.getElementById('wtab-truck').style.color = '#fff';
+  document.getElementById('wtab-depot').style.background = 'transparent';
+  document.getElementById('wtab-depot').style.color = '#94a3b8';
+  showScreen('role');
 }
 
 // ── STARTUP ──
