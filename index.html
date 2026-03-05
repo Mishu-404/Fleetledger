@@ -2316,6 +2316,7 @@ function wSwitchTab(tab) {
   var isTruck = tab === 'truck';
   document.getElementById('wtab-truck-content').style.display = isTruck ? 'block' : 'none';
   document.getElementById('wtab-depot-content').style.display = isTruck ? 'none'  : 'block';
+  document.getElementById('wbar-truck').style.display         = isTruck ? 'block' : 'none';
   document.getElementById('wtab-truck').style.background = isTruck ? '#1a56db' : 'transparent';
   document.getElementById('wtab-truck').style.color      = isTruck ? '#fff'    : '#94a3b8';
   document.getElementById('wtab-depot').style.background = isTruck ? 'transparent' : '#1a56db';
