@@ -1498,8 +1498,15 @@ async function depotSaveRouteToDB(r) {
         name: r.name, rate: r.rate, breakeven: r.breakeven
       })
     });
-    if (!res.ok) console.warn('depotSaveRoute failed:', res.status, await res.text());
-  } catch(e) { console.warn('depotSaveRoute error:', e); }
+    if (!res.ok) {
+      var errText = await res.text();
+      showNotif('DB Error '+res.status+': '+errText.slice(0,80), 'var(--red)');
+    } else {
+      showNotif('রুট সেভ হয়েছে ✓', 'var(--green)');
+    }
+  } catch(e) {
+    showNotif('Network error: '+e.message, 'var(--red)');
+  }
 }
 
 async function depotSaveTripToDB(t) {
