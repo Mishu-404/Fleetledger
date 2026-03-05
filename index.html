@@ -325,7 +325,120 @@
   .btn-blue   { background:#1a56db;color:#fff;border:none; }
   .btn-blue:hover { background:#1e429f; }
 
-</style>
+
+  /* ═══════════════════════════════════════
+     MOBILE RESPONSIVE — max-width: 768px
+  ═══════════════════════════════════════ */
+  @media (max-width: 768px) {
+
+    /* HEADER */
+    header {
+      padding: 0 12px;
+      height: auto;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .logo { padding: 10px 0 6px; }
+    .logo-text { font-size: 16px; }
+    .logo-sub  { display: none; }
+    .logo-icon { width: 30px; height: 30px; font-size: 16px; }
+
+    /* NAV — scrollable horizontal strip */
+    nav {
+      order: 3;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      border-top: 1px solid var(--border);
+      gap: 0;
+      padding-bottom: 2px;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    .nav-btn {
+      font-size: 12px;
+      padding: 8px 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* HEADER ACTIONS */
+    .header-actions {
+      order: 2;
+      gap: 4px;
+      padding: 6px 0;
+    }
+    .header-actions .btn {
+      font-size: 11px;
+      padding: 6px 10px;
+    }
+    .header-actions .btn-ghost:first-child { display: none; } /* hide CSV on mobile */
+
+    /* FILTERS */
+    .filters {
+      padding: 8px 12px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filters select.sel { min-width: 110px; font-size: 12px; }
+
+    /* KPI STRIP */
+    .kpi-strip.visible {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 12px 0;
+    }
+    .kpi-card { padding: 14px 14px; }
+    .kpi-value { font-size: 20px; }
+
+    /* MAIN CONTENT PADDING */
+    .view-content, #viewDepot > div, #viewDrivers > div,
+    #viewMaintenance > div, #viewPayroll > div {
+      padding: 12px !important;
+    }
+
+    /* PANELS */
+    .panel { padding: 14px; }
+
+    /* TABLES — horizontal scroll */
+    .table-wrap { overflow-x: auto; }
+    .table-wrap table { min-width: 600px; }
+
+    /* TWO-COLUMN → ONE COLUMN panels */
+    .depot-grid-2,
+    div[style*="grid-template-columns: 1fr 1fr"],
+    div[style*="grid-template-columns:1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* DEPOT route cards 3-col → 1-col */
+    #depotRoutesList {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* DEPOT filter row */
+    #viewDepot .filters { gap: 6px; }
+
+    /* MODAL */
+    .modal {
+      width: 95vw !important;
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: 20px auto;
+    }
+
+    /* SECTION TITLES */
+    .section-title { font-size: 13px; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-strip.visible { grid-template-columns: 1fr 1fr; }
+    .header-actions .btn-rev,
+    .header-actions .btn-exp { font-size: 11px; padding: 6px 8px; }
+    nav .nav-btn { font-size: 11px; padding: 7px 10px; }
+  }
+
+  </style>
 </head>
 <body>
 <div id="screen-role" class="screen">
@@ -393,6 +506,8 @@
   <!-- TRUCK TRIP FORM -->
   <div id="wtab-truck-content">
   <div class="wf-wrap">
+
+    <!-- SECTION 1: VEHICLE -->
     <div class="wf-sec">
       <div class="wf-sh"><div class="wf-sn">১</div><div class="wf-st">গাড়ির পরিচয় / Vehicle</div></div>
       <div class="wf-bd"><div class="wfg4">
@@ -402,34 +517,10 @@
         <div class="wf-f"><label>হেলপার</label><input type="text" id="wHelper" placeholder="নাম"/></div>
       </div></div>
     </div>
+
+    <!-- SECTION 2: MILEAGE -->
     <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">২</div><div class="wf-st">ট্রিপ তথ্য / Trip</div></div>
-      <div class="wf-bd"><div class="wfg3">
-        <div class="wf-f"><label>তারিখ</label><input type="date" id="wDate"/></div>
-        <div class="wf-f"><label>রুট</label><input type="text" id="wRoute" placeholder="ঢাকা → চট্টগ্রাম"/></div>
-        <div class="wf-f"><label>ভাড়া (৳)</label><input type="number" id="wFare" placeholder="০" oninput="wCalc()"/></div>
-      </div></div>
-    </div>
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">৩</div><div class="wf-st">দৈনিক খরচ / Expenses</div><div class="wf-hint">কমিশন auto</div></div>
-      <table class="etbl">
-        <thead><tr><th style="width:36px">ক্রম</th><th>খরচের খাত</th><th style="width:120px">পরিমাণ (৳)</th></tr></thead>
-        <tbody id="wExpBody"></tbody>
-        <tfoot><tr><td colspan="2" style="font-size:13px;font-weight:700;color:#c81e1e">মোট খরচ</td><td style="text-align:right;padding-right:14px;font-size:16px;font-weight:700;color:#c81e1e" id="wExpTotal">৳০</td></tr></tfoot>
-      </table>
-    </div>
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">৪</div><div class="wf-st">নগদ হিসাব / Cash</div></div>
-      <table class="ctbl">
-        <tr><td class="ck">মোট আদায়কৃত ক্যাশ<small>Total Collected</small></td><td class="cv" id="wCGross" style="color:#057a55">৳০</td></tr>
-        <tr><td class="ck" style="color:#c81e1e">(-) মোট খরচ</td><td class="cv" id="wCExp" style="color:#c81e1e">৳০</td></tr>
-        <tr class="crow-net"><td class="ck">নিট ক্যাশ</td><td class="cv" id="wCNet">৳০</td></tr>
-        <tr><td class="ck"><div class="wf-f" style="padding:3px 0"><label>(-) ঐচ্ছিক ছাড়</label><input type="number" id="wDiscount" placeholder="০" oninput="wCalc()" style="background:#fff"/></div></td><td class="cv" id="wCDisc" style="color:#6b7280">৳০</td></tr>
-        <tr class="crow-fin"><td class="ck">নিট ক্যাশ (চূড়ান্ত)<small style="color:#94a3b8">Final</small></td><td class="cv" id="wCFinal" style="color:#fbbf24">৳০</td></tr>
-      </table>
-    </div>
-    <div class="wf-sec">
-      <div class="wf-sh"><div class="wf-sn">৫</div><div class="wf-st">মাইলেজ / Mileage</div></div>
+      <div class="wf-sh"><div class="wf-sn">২</div><div class="wf-st">মাইলেজ / Mileage</div></div>
       <div class="wf-bd"><div class="wfg4m">
         <div class="wf-f"><label>পূর্ববর্তী মিটার</label><input type="number" id="wMPrev" placeholder="০" oninput="wCalcM()"/></div>
         <div class="wf-f"><label>বর্তমান মিটার</label><input type="number" id="wMCurr" placeholder="০" oninput="wCalcM()"/></div>
@@ -439,6 +530,60 @@
       <div class="mile-box"><span class="mile-lbl">মাইলেজ</span><span class="mile-val" id="wMRes">— কি.মি./লি.</span></div>
       </div>
     </div>
+
+    <!-- SECTION 3: MULTI-TRIP ROWS -->
+    <div class="wf-sec">
+      <div class="wf-sh">
+        <div class="wf-sn">৩</div>
+        <div class="wf-st">ট্রিপ তালিকা / Trips</div>
+        <button onclick="wAddTripRow()" style="margin-left:auto;background:#eff6ff;border:1.5px solid #1a56db;color:#1a56db;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">+ ট্রিপ যোগ</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:520px">
+          <thead>
+            <tr style="background:#f8fafc;font-size:11px;color:#64748b;font-weight:700">
+              <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #e2e8f0;width:30px">#</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #e2e8f0">তারিখ</th>
+              <th style="padding:8px 10px;text-align:left;border-bottom:1.5px solid #e2e8f0">রুট/গন্তব্য</th>
+              <th style="padding:8px 10px;text-align:right;border-bottom:1.5px solid #e2e8f0">ভাড়া (৳)</th>
+              <th style="padding:8px 10px;text-align:right;border-bottom:1.5px solid #e2e8f0;width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="wTripRows"></tbody>
+          <tfoot>
+            <tr style="background:#f0fdf4;font-weight:700">
+              <td colspan="3" style="padding:10px;font-size:13px;color:#374151">মোট আদায়কৃত ক্যাশ</td>
+              <td style="padding:10px;text-align:right;font-size:15px;color:#057a55" id="wCGross">৳০</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 4: EXPENSES -->
+    <div class="wf-sec">
+      <div class="wf-sh"><div class="wf-sn">৪</div><div class="wf-st">মোট খরচ / Expenses</div><div class="wf-hint">কমিশন auto</div></div>
+      <table class="etbl">
+        <thead><tr><th style="width:36px">ক্রম</th><th>খরচের খাত</th><th style="width:120px">পরিমাণ (৳)</th></tr></thead>
+        <tbody id="wExpBody"></tbody>
+        <tfoot><tr><td colspan="2" style="font-size:13px;font-weight:700;color:#c81e1e">মোট খরচ</td><td style="text-align:right;padding-right:14px;font-size:16px;font-weight:700;color:#c81e1e" id="wExpTotal">৳০</td></tr></tfoot>
+      </table>
+    </div>
+
+    <!-- SECTION 5: CASH SUMMARY -->
+    <div class="wf-sec">
+      <div class="wf-sh"><div class="wf-sn">৫</div><div class="wf-st">নগদ হিসাব / Cash</div></div>
+      <table class="ctbl">
+        <tr><td class="ck">মোট আদায়কৃত ক্যাশ<small>Total Collected</small></td><td class="cv" id="wCGross2" style="color:#057a55">৳০</td></tr>
+        <tr><td class="ck" style="color:#c81e1e">(-) মোট খরচ</td><td class="cv" id="wCExp" style="color:#c81e1e">৳০</td></tr>
+        <tr class="crow-net"><td class="ck">নিট ক্যাশ</td><td class="cv" id="wCNet">৳০</td></tr>
+        <tr><td class="ck"><div class="wf-f" style="padding:3px 0"><label>(-) ঐচ্ছিক ছাড়</label><input type="number" id="wDiscount" placeholder="০" oninput="wCalc()" style="background:#fff"/></div></td><td class="cv" id="wCDisc" style="color:#6b7280">৳০</td></tr>
+        <tr class="crow-fin"><td class="ck">নিট ক্যাশ (চূড়ান্ত)<small style="color:#94a3b8">Final</small></td><td class="cv" id="wCFinal" style="color:#fbbf24">৳০</td></tr>
+      </table>
+    </div>
+
+    <!-- SECTION 6: NOTE + SIGNATURES -->
     <div class="wf-sec">
       <div class="wf-sh"><div class="wf-sn">৬</div><div class="wf-st">স্বাক্ষর / Signatures</div></div>
       <div class="wf-bd">
@@ -450,8 +595,9 @@
         </div>
       </div>
     </div>
+
   </div><!-- /wf-wrap truck -->
-  <div class="wf-bar" id="wbar-truck"><button class="wf-btn" onclick="wSubmit()">✅ ট্রাক ট্রিপ জমা দিন / Submit</button></div>
+  <div class="wf-bar" id="wbar-truck"><button class="wf-btn" onclick="wSubmit()">✅ শিট জমা দিন / Submit All</button></div>
   </div><!-- /wtab-truck-content -->
 
   <!-- DEPOT TRIP FORM -->
@@ -560,6 +706,7 @@
     <button class="nav-btn" onclick="switchView('maintenance',this)">🔧 মেইনটেন্যান্স</button>
     <button class="nav-btn" onclick="switchView('payroll',this)">💰 বেতন শিট</button>
     <button class="nav-btn" onclick="switchView('depot',this)">🏭 ডিপো</button>
+    <button class="nav-btn" onclick="switchView('outstanding',this)">💳 বাকি হিসাব</button>
   </nav>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV ডাউনলোড</button>
@@ -620,6 +767,9 @@
         <div id="expBreakdown"></div>
       </div>
     </div>
+    <!-- FUEL ALERT STRIP -->
+    <div id="fuelAlertStrip" style="display:none;margin-bottom:12px"></div>
+
     <div class="panel">
       <div class="section-title">সকল ট্রাকের সংক্ষিপ্ত চিত্র</div>
       <div class="grid4" id="truckGrid"></div>
@@ -628,13 +778,60 @@
 
   <!-- TRUCKS -->
   <div id="view-trucks" class="view">
-    <div class="table-wrap" style="margin-top:8px;">
-      <table>
-        <thead><tr>
-          <th>ক্রম</th><th>ট্রাক</th><th>মোট আয়</th><th>মোট ব্যয়</th><th>নিট মুনাফা</th><th>মুনাফার হার</th><th>কার্যক্রম</th>
-        </tr></thead>
-        <tbody id="truckTableBody"></tbody>
-      </table>
+
+    <!-- TRUCK DETAIL PANEL (hidden by default) -->
+    <div id="truckDetailPanel" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 0 12px;border-bottom:2px solid var(--border);margin-bottom:16px">
+        <button onclick="closeTruckDetail()" style="background:#f1f5f9;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);font-family:inherit">← ফিরে যান</button>
+        <div id="truckDetailTitle" style="font-size:18px;font-weight:700;color:var(--heading)"></div>
+        <button onclick="openTruckEditModal()" style="margin-left:auto;background:#eff6ff;border:1.5px solid #1a56db;color:#1a56db;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">✏️ তথ্য সম্পাদনা</button>
+      </div>
+
+      <!-- KPI row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px" id="truckDetailKPI"></div>
+
+      <!-- Info + Driver row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div class="panel" id="truckInfoPanel"></div>
+        <div class="panel" id="truckDriverPanel"></div>
+      </div>
+
+      <!-- This month trips -->
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface2);border-bottom:2px solid var(--border)">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">এই মাসের ট্রিপ</div>
+          <span id="truckMonthTripCount" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+        <table><thead><tr><th>তারিখ</th><th>বিবরণ</th><th>আয়</th><th>ব্যয়</th></tr></thead>
+        <tbody id="truckMonthTrips"></tbody></table>
+      </div>
+
+      <!-- Maintenance history -->
+      <div class="table-wrap" style="margin-bottom:16px">
+        <div style="padding:14px 18px;background:var(--surface2);border-bottom:2px solid var(--border)">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">মেইনটেন্যান্স হিস্ট্রি</div>
+        </div>
+        <table><thead><tr><th>তারিখ</th><th>ধরন</th><th>বিবরণ</th><th>খরচ</th></tr></thead>
+        <tbody id="truckMaintHistory"></tbody></table>
+      </div>
+
+      <!-- Mileage track -->
+      <div class="panel" style="margin-bottom:16px">
+        <div class="section-title" style="margin-bottom:12px">মাইলেজ ট্র্যাক</div>
+        <div id="truckMileageTrack" style="color:var(--muted);font-size:13px">কোনো মাইলেজ ডেটা নেই</div>
+      </div>
+    </div>
+
+    <!-- DEFAULT: truck table -->
+    <div id="truckTableWrap">
+      <div class="table-wrap" style="margin-top:8px;">
+        <table>
+          <thead><tr>
+            <th>ক্রম</th><th>ট্রাক</th><th>মোট আয়</th><th>মোট ব্যয়</th><th>নিট মুনাফা</th><th>মুনাফার হার</th><th>কার্যক্রম</th>
+          </tr></thead>
+          <tbody id="truckTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -643,7 +840,7 @@
     <div class="table-wrap" style="margin-top:8px;">
       <table>
         <thead><tr>
-          <th>ধরন</th><th>ট্রাক</th><th>তারিখ</th><th>পরিমাণ</th><th>বিবরণ</th><th>ক্লায়েন্ট / বিভাগ</th>
+          <th>ধরন</th><th>ট্রাক</th><th>তারিখ</th><th>পরিমাণ</th><th>বিবরণ</th><th>ক্লায়েন্ট / বিভাগ</th><th>অ্যাকশন</th>
         </tr></thead>
         <tbody id="entriesTableBody"></tbody>
       </table>
@@ -653,7 +850,22 @@
 
   <!-- REPORTS -->
   <div id="view-reports" class="view">
-    <div class="grid2" style="margin-top:8px;">
+
+    <!-- Report toolbar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:12px;color:var(--muted);font-weight:600">মাস:</label>
+        <select id="reportMonth" class="sel" style="min-width:130px" onchange="renderReports()"></select>
+        <label style="font-size:12px;color:var(--muted);font-weight:600">ট্রাক:</label>
+        <select id="reportTruckFilter" class="sel" style="min-width:130px" onchange="renderReports()"></select>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV</button>
+        <button class="btn btn-blue" onclick="printMonthlyReport()">🖨️ PDF প্রিন্ট</button>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:0">
       <div class="panel">
         <div class="section-title">ট্রাক অনুযায়ী মুনাফা তুলনা</div>
         <div id="profitBars"></div>
@@ -661,11 +873,67 @@
       <div class="panel">
         <div class="section-title">সামগ্রিক প্রতিবেদন</div>
         <div id="summaryReport"></div>
-        <button class="btn btn-blue" style="margin-top:20px;width:100%" onclick="exportCSV()">সম্পূর্ণ প্রতিবেদন ডাউনলোড করুন (CSV)</button>
       </div>
+    </div>
+
+    <!-- Per-truck detail table for report -->
+    <div class="table-wrap" style="margin-top:16px">
+      <div style="padding:14px 18px;background:var(--surface2);border-bottom:2px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">ট্রাক বিস্তারিত</div>
+      </div>
+      <table>
+        <thead><tr><th>ট্রাক</th><th>মোট আয়</th><th>মোট ব্যয়</th><th>নিট মুনাফা</th><th>মুনাফার হার</th><th>ট্রিপ সংখ্যা</th></tr></thead>
+        <tbody id="reportTruckTable"></tbody>
+      </table>
+    </div>
+
+    <!-- Entry list for report -->
+    <div class="table-wrap" style="margin-top:16px">
+      <div style="padding:14px 18px;background:var(--surface2);border-bottom:2px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">এন্ট্রি তালিকা</div>
+      </div>
+      <table>
+        <thead><tr><th>তারিখ</th><th>ট্রাক</th><th>ধরন</th><th>পরিমাণ</th><th>বিবরণ</th></tr></thead>
+        <tbody id="reportEntryTable"></tbody>
+      </table>
     </div>
   </div>
 
+
+  <!-- OUTSTANDING BALANCE TRACKER -->
+  <div id="view-outstanding" class="view">
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="font-size:20px;font-weight:700;color:var(--heading)">💳 বাকি হিসাব</div>
+      <button class="btn btn-blue" onclick="openOutstandingModal()">+ নতুন বাকি যোগ</button>
+    </div>
+
+    <!-- Summary KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px" id="outstandingKPIs"></div>
+
+    <!-- Client table -->
+    <div class="table-wrap" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface2);border-bottom:2px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">ক্লায়েন্ট অনুযায়ী বাকি</div>
+        <select id="outStatusFilter" class="sel" style="font-size:12px;min-width:120px" onchange="renderOutstanding()">
+          <option value="">সব</option>
+          <option value="pending">বাকি আছে</option>
+          <option value="paid">পরিশোধিত</option>
+          <option value="overdue">মেয়াদ পেরিয়েছে</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr>
+          <th>ক্লায়েন্ট</th><th>ট্রাক</th><th>তারিখ</th><th>মেয়াদ</th>
+          <th style="text-align:right">বিল পরিমাণ</th><th style="text-align:right">প্রাপ্ত</th>
+          <th style="text-align:right">বাকি</th><th>অবস্থা</th><th>অ্যাকশন</th>
+        </tr></thead>
+        <tbody id="outstandingTable"></tbody>
+      </table>
+    </div>
+
+  </div>
 
   <!-- DEPOT FEASIBILITY DASHBOARD -->
   <div id="view-depot" class="view">
@@ -821,6 +1089,26 @@
         <tbody id="driverTable"></tbody>
       </table>
     </div>
+
+    <!-- CASH SETTLEMENT SECTION -->
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <div style="font-size:16px;font-weight:700;color:var(--heading)">💵 ক্যাশ সেটেলমেন্ট</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:12px;color:var(--muted);font-weight:600">পিরিয়ড:</label>
+          <select id="settlePeriod" class="sel" style="font-size:12px" onchange="renderSettlement()">
+            <option value="month">এই মাস</option>
+            <option value="all">সব সময়</option>
+          </select>
+          <label style="font-size:12px;color:var(--muted);font-weight:600">ট্রাক:</label>
+          <select id="settleTruck" class="sel" style="font-size:12px;min-width:130px" onchange="renderSettlement()">
+            <option value="">সকল ট্রাক</option>
+          </select>
+        </div>
+      </div>
+      <div id="settlementCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px"></div>
+    </div>
+
   </div>
 
   <!-- ░░ MAINTENANCE ░░ -->
@@ -1102,6 +1390,131 @@
   </div>
 </div>
 
+<!-- TRUCK EDIT MODAL -->
+<div class="modal-bg" id="truckEditModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">🚚 ট্রাকের তথ্য সম্পাদনা</div>
+    <input type="hidden" id="teMeta_truck"/>
+    <div class="form-row"><label>মডেল / Model</label><input type="text" id="teMeta_model" placeholder="যেমন: Hino 300"/></div>
+    <div class="form-row"><label>বছর / Year</label><input type="number" id="teMeta_year" placeholder="যেমন: 2019"/></div>
+    <div class="form-row"><label>রঙ / Color</label><input type="text" id="teMeta_color" placeholder="যেমন: সাদা"/></div>
+    <div class="form-row"><label>মন্তব্য / Note</label><input type="text" id="teMeta_note" placeholder="যেকোনো তথ্য..."/></div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="saveTruckMeta()" style="flex:1">সেভ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('truckEditModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN EDIT ENTRY MODAL -->
+<div class="modal-bg" id="adminEditModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:440px">
+    <div class="modal-title">✏️ এন্ট্রি সম্পাদনা / Edit Entry</div>
+    <input type="hidden" id="aeId"/>
+    <div class="form-row">
+      <label>ধরন / Type</label>
+      <select id="aeType">
+        <option value="revenue">আয় (Revenue)</option>
+        <option value="expense">ব্যয় (Expense)</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>ট্রাক / Truck</label>
+      <select id="aeTruck"></select>
+    </div>
+    <div class="form-row"><label>তারিখ / Date</label><input type="date" id="aeDate"/></div>
+    <div class="form-row"><label>পরিমাণ (৳) / Amount</label><input type="number" id="aeAmount" placeholder="০"/></div>
+    <div class="form-row"><label>বিবরণ / Description</label><input type="text" id="aeDesc" placeholder="বিবরণ..."/></div>
+    <div class="form-row"><label>ক্লায়েন্ট / বিভাগ</label><input type="text" id="aeClient" placeholder="ক্লায়েন্ট বা ক্যাটাগরি"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="adminSaveEntry()" style="flex:1">সেভ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('adminEditModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEPOT TRIP EDIT MODAL -->
+<div class="modal-bg" id="depotTripEditModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:440px">
+    <div class="modal-title">✏️ ডিপো ট্রিপ সম্পাদনা</div>
+    <input type="hidden" id="dte_id"/>
+    <div class="form-row"><label>রুট</label><select id="dte_route"></select></div>
+    <div class="form-row"><label>তারিখ</label><input type="date" id="dte_date"/></div>
+    <div class="form-row"><label>ওজন (KG)</label><input type="number" id="dte_kg" placeholder="০" step="0.01"/></div>
+    <div class="form-row"><label>হার (৳/KG)</label><input type="number" id="dte_rate" placeholder="০.০০" step="0.01"/></div>
+    <div class="form-row"><label>ট্রাক ভাড়া (৳)</label><input type="number" id="dte_rent" placeholder="০"/></div>
+    <div class="form-row"><label>মন্তব্য</label><input type="text" id="dte_note" placeholder="..."/></div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="depotSaveEditedTrip()" style="flex:1">সেভ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('depotTripEditModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
+<!-- FUEL ALERT SETTINGS MODAL -->
+<div class="modal-bg" id="fuelAlertSettingsModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:400px">
+    <div class="modal-title">⚙️ তেল সতর্কতার সীমা</div>
+    <div class="form-row">
+      <label>মাসওয়ারি বৃদ্ধির সীমা (গুণ)</label>
+      <input type="number" id="fas_multiplier" step="0.1" min="1.1" max="5" placeholder="১.৫"/>
+      <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block">এই মাসের তেল খরচ গড়ের কত গুণ হলে alert দেবে। যেমন: ১.৫ মানে ৫০% বেশি হলে alert।</small>
+    </div>
+    <div class="form-row">
+      <label>মোট ব্যয়ের অনুপাত সীমা (%)</label>
+      <input type="number" id="fas_ratio" step="1" min="10" max="100" placeholder="৬০"/>
+      <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block">তেল খরচ মোট ব্যয়ের কত % হলে alert দেবে। যেমন: ৬০ মানে ৬০% এর বেশি হলে।</small>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="saveFuelAlertSettings()" style="flex:1">সেভ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('fuelAlertSettingsModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
+<!-- OUTSTANDING BALANCE MODAL -->
+<div class="modal-bg" id="outstandingModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:460px">
+    <div class="modal-title">💳 বাকি হিসাব</div>
+    <input type="hidden" id="om_id"/>
+    <div class="form-row"><label>ক্লায়েন্টের নাম</label><input type="text" id="om_client" placeholder="নাম লিখুন..."/></div>
+    <div class="form-row"><label>ট্রাক</label><select id="om_truck_sel"><option value="">— বেছে নিন —</option></select><input type="hidden" id="om_truck"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-row"><label>বিলের তারিখ</label><input type="date" id="om_date"/></div>
+      <div class="form-row"><label>পরিশোধের মেয়াদ</label><input type="date" id="om_due"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-row"><label>বিল পরিমাণ (৳)</label><input type="number" id="om_billed" placeholder="০"/></div>
+      <div class="form-row"><label>প্রাপ্ত পরিমাণ (৳)</label><input type="number" id="om_received" placeholder="০"/></div>
+    </div>
+    <div class="form-row"><label>মন্তব্য</label><input type="text" id="om_note" placeholder="..."/></div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="saveOutstanding()" style="flex:1">সেভ করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('outstandingModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
+<!-- CASH SETTLEMENT MODAL -->
+<div class="modal-bg" id="settleModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">💵 ক্যাশ জমা নথিভুক্ত করুন</div>
+    <input type="hidden" id="sm_truck"/>
+    <input type="hidden" id="sm_driver"/>
+    <div style="background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:8px;padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:2px">বকেয়া পরিমাণ</div>
+      <div style="font-size:20px;font-weight:800;color:var(--green)" id="sm_outstanding">৳০</div>
+    </div>
+    <div class="form-row"><label>জমার পরিমাণ (৳)</label><input type="number" id="sm_amount" placeholder="০"/></div>
+    <div class="form-row"><label>তারিখ</label><input type="date" id="sm_date"/></div>
+    <div class="form-row"><label>মন্তব্য</label><input type="text" id="sm_note" placeholder="যেমন: ৫ ট্রিপের ক্যাশ জমা..."/></div>
+    <div class="modal-actions">
+      <button class="btn btn-blue" onclick="saveSettlement()" style="flex:1">জমা নিশ্চিত করুন</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('settleModal').classList.remove('open')">বাতিল</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 </div>
@@ -1211,6 +1624,86 @@ function applyFilters() {
 function renderAll() {
   renderKPIs(); renderMonthlyChart(); renderExpBreakdown();
   renderTruckGrid(); renderTruckTable(); renderEntries(); renderReports();
+  renderFuelAlerts();
+}
+
+function renderFuelAlerts() {
+  var strip = document.getElementById('fuelAlertStrip');
+  if (!strip) return;
+
+  // For each truck, compute monthly fuel cost
+  // An alert fires if this month's fuel > 1.5x the avg of previous months
+  var now = new Date();
+  var thisMonth = now.getFullYear()+'-'+(now.getMonth()+1<10?'0':'')+(now.getMonth()+1);
+
+  var alerts = [];
+
+  TRUCK_NAMES.forEach(function(truck) {
+    var te = entries.filter(function(e){ return e.truck===truck && e.type==='expense'; });
+
+    // group fuel entries by month
+    var monthlyFuel = {};
+    te.forEach(function(e) {
+      if (!e.category || e.category.indexOf('তেল')===-1) return;
+      var m = e.date ? e.date.slice(0,7) : null;
+      if (!m) return;
+      monthlyFuel[m] = (monthlyFuel[m]||0) + e.amount;
+    });
+
+    var months = Object.keys(monthlyFuel).sort();
+    if (months.length < 2) return; // need at least 2 months to compare
+
+    var thisFuel = monthlyFuel[thisMonth] || 0;
+    if (!thisFuel) return;
+
+    // avg of all previous months (exclude this month)
+    var prevMonths = months.filter(function(m){ return m !== thisMonth; });
+    if (!prevMonths.length) return;
+    var prevTotal = prevMonths.reduce(function(s,m){ return s+monthlyFuel[m]; }, 0);
+    var prevAvg = prevTotal / prevMonths.length;
+
+    if (prevAvg > 0 && thisFuel > prevAvg * fuelAlertMultiplier) {
+      var pct = Math.round((thisFuel/prevAvg - 1)*100);
+      var threshold = Math.round((fuelAlertMultiplier-1)*100);
+      alerts.push({truck:truck, thisFuel:thisFuel, prevAvg:prevAvg, pct:pct});
+    }
+  });
+
+  // also check fuel vs total expense ratio per truck this month
+  TRUCK_NAMES.forEach(function(truck) {
+    var te = entries.filter(function(e){
+      return e.truck===truck && e.type==='expense' && e.date && e.date.slice(0,7)===thisMonth;
+    });
+    var totalExp = te.reduce(function(s,e){return s+e.amount;},0);
+    var fuelExp  = te.filter(function(e){return e.category && e.category.indexOf('তেল')!==-1;})
+                     .reduce(function(s,e){return s+e.amount;},0);
+    if (totalExp>0 && fuelExp/totalExp > fuelAlertRatioPct/100) {
+      // avoid duplicate
+      if (!alerts.find(function(a){return a.truck===truck;})) {
+        alerts.push({truck:truck, thisFuel:fuelExp, prevAvg:null, pct:null, ratioAlert:true, ratio:Math.round(fuelExp/totalExp*100)});
+      }
+    }
+  });
+
+  if (!alerts.length) {
+    strip.style.display = 'none';
+    return;
+  }
+
+  strip.style.display = 'block';
+  strip.innerHTML = '<div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:14px 18px">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+    +'<span style="font-size:18px">⚠️</span>'
+    +'<span style="font-size:13px;font-weight:700;color:#92400e">তেলের খরচ সতর্কতা</span>'
+    +'<button onclick="openFuelAlertSettings()" style="margin-left:auto;background:transparent;border:1px solid #f59e0b;color:#92400e;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">⚙️ সেটিং</button>'
+    +'</div>'
+    + alerts.map(function(a){
+        var msg = a.ratioAlert
+          ? '🚚 <strong>'+a.truck+'</strong> — এই মাসে তেল খরচ মোট ব্যয়ের <strong style="color:#c81e1e">'+a.ratio+'%</strong> (স্বাভাবিকের চেয়ে বেশি)'
+          : '🚚 <strong>'+a.truck+'</strong> — এই মাসে তেল খরচ <strong style="color:#c81e1e">'+fmt(a.thisFuel)+'</strong>, গড়ের চেয়ে <strong style="color:#c81e1e">+'+a.pct+'%</strong> বেশি (গড়: '+fmt(a.prevAvg)+')';
+        return '<div style="font-size:12px;color:#78350f;padding:5px 0;border-top:1px solid #fde68a">'+msg+'</div>';
+      }).join('')
+    +'</div>';
 }
 
 function getKPIs() {
@@ -1284,7 +1777,7 @@ function renderExpBreakdown() {
 function renderTruckGrid() {
   const summaries = getTruckSummaries();
   document.getElementById('truckGrid').innerHTML = summaries.map(t=>`
-    <div class="truck-mini" onclick="goTruck('${t.truck}')">
+    <div class="truck-mini" onclick="openTruckDetail('${t.truck}')">
       <div class="truck-mini-name">🚚 ${t.truck}</div>
       <div class="truck-mini-profit" style="color:${t.profit>=0?'var(--green)':'var(--red)'}">${t.profit<0?'-':''}${fmt(Math.abs(t.profit))}</div>
       <div class="truck-mini-sub">আয়: ${fmt(t.revenue)} | ব্যয়: ${fmt(t.expenses)}</div>
@@ -1301,7 +1794,7 @@ function renderTruckTable() {
     const mBN = m.replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
     return `<tr>
       <td style="color:var(--muted);font-weight:600">#${rankBN}</td>
-      <td style="color:var(--heading);font-weight:600">🚚 ${t.truck}</td>
+      <td style="color:var(--accent);font-weight:600;cursor:pointer" onclick="openTruckDetail('${t.truck}')">🚚 ${t.truck}</td>
       <td style="color:var(--green);font-weight:600">${fmt(t.revenue)}</td>
       <td style="color:var(--red);font-weight:600">${fmt(t.expenses)}</td>
       <td style="color:${t.profit>=0?'var(--green)':'var(--red)'};font-size:16px;font-weight:700">${t.profit<0?'-':''}${fmt(Math.abs(t.profit))}</td>
@@ -1312,7 +1805,11 @@ function renderTruckTable() {
 }
 
 function renderEntries() {
-  const sorted = [...filteredEntries].sort((a,b)=>b.date.localeCompare(a.date));
+  // আয় উপরে, ব্যয় নিচে — তারপর তারিখ অনুযায়ী
+  const sorted = [...filteredEntries].sort((a,b)=>{
+    if (a.type !== b.type) return a.type==='revenue' ? -1 : 1;
+    return b.date.localeCompare(a.date);
+  });
   const shown = sorted.slice(0,30);
   document.getElementById('entriesTableBody').innerHTML = shown.map(e=>`
     <tr>
@@ -1322,6 +1819,10 @@ function renderEntries() {
       <td style="color:${e.type==='revenue'?'var(--green)':'var(--red)'};font-weight:700">${e.type==='revenue'?'+':'-'}${fmt(Math.abs(e.amount))}</td>
       <td style="color:var(--heading)">${e.description}</td>
       <td style="color:var(--muted)">${e.client||e.category||'—'}</td>
+      <td style="white-space:nowrap">
+        <button onclick="adminEditEntry('${e.id}')" style="background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:4px">✏️</button>
+        <button onclick="adminDeleteEntry('${e.id}')" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🗑️</button>
+      </td>
     </tr>
   `).join('');
   const more = document.getElementById('moreInfo');
@@ -1334,33 +1835,223 @@ function renderEntries() {
 }
 
 function renderReports() {
-  const summaries = getTruckSummaries();
-  const maxP = Math.max(...summaries.map(t=>Math.abs(t.profit)),1);
-  document.getElementById('profitBars').innerHTML = summaries.map(t=>`
-    <div class="profit-row">
-      <div class="profit-label" style="font-size:10px">${t.truck}</div>
-      <div class="profit-track">
-        <div class="profit-bar" style="width:${(Math.abs(t.profit)/maxP)*100}%;background:${t.profit>=0?'var(--green)':'var(--red)'};opacity:.8"></div>
-      </div>
-      <div class="profit-amt" style="color:${t.profit>=0?'var(--green)':'var(--red)'}">${t.profit<0?'-':''}${fmt(Math.abs(t.profit))}</div>
-    </div>
-  `).join('');
+  // populate month dropdown
+  var rmEl = document.getElementById('reportMonth');
+  var rtEl = document.getElementById('reportTruckFilter');
+  if (rmEl && rmEl.options.length <= 1) {
+    var months = {};
+    entries.forEach(function(e){ if(e.date) months[e.date.slice(0,7)]=true; });
+    var curM = rmEl.value;
+    rmEl.innerHTML = '<option value="">সকল মাস</option>' +
+      Object.keys(months).sort().reverse().map(function(m){
+        var d=new Date(m+'-01');
+        return '<option value="'+m+'"'+(m===curM?' selected':'')+'>'+MONTHS_BN[d.getMonth()]+' '+d.getFullYear()+'</option>';
+      }).join('');
+  }
+  if (rtEl && rtEl.options.length <= 1) {
+    var curT = rtEl.value;
+    rtEl.innerHTML = '<option value="">সকল ট্রাক</option>' +
+      TRUCK_NAMES.map(function(t){ return '<option value="'+t+'"'+(t===curT?' selected':'')+'>'+t+'</option>'; }).join('');
+  }
 
-  const {rev,exp,profit,margin} = getKPIs();
-  const best = summaries[0]; const worst = summaries[summaries.length-1];
-  const marginBN = margin.toString().replace(/\d/g,d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]);
-  const truckCountBN = '১২';
+  var selMonth = rmEl ? rmEl.value : '';
+  var selTruck = rtEl ? rtEl.value : '';
+
+  // filter entries
+  var rEntries = entries.filter(function(e){
+    var okM = !selMonth || (e.date && e.date.slice(0,7)===selMonth);
+    var okT = !selTruck || e.truck===selTruck;
+    return okM && okT;
+  });
+
+  // per-truck summaries
+  var tMap = {};
+  TRUCK_NAMES.forEach(function(t){ tMap[t]={rev:0,exp:0,trips:0}; });
+  rEntries.forEach(function(e){
+    if(!tMap[e.truck]) tMap[e.truck]={rev:0,exp:0,trips:0};
+    if(e.type==='revenue'){tMap[e.truck].rev+=e.amount; tMap[e.truck].trips++;}
+    else tMap[e.truck].exp+=e.amount;
+  });
+  var summaries = Object.keys(tMap).map(function(t){
+    return {truck:t, revenue:tMap[t].rev, expenses:tMap[t].exp,
+            profit:tMap[t].rev-tMap[t].exp, trips:tMap[t].trips};
+  }).filter(function(t){return t.revenue>0||t.expenses>0;})
+    .sort(function(a,b){return b.profit-a.profit;});
+
+  // profit bars
+  var maxP = Math.max.apply(null, summaries.map(function(t){return Math.abs(t.profit);}).concat([1]));
+  document.getElementById('profitBars').innerHTML = summaries.length ? summaries.map(function(t){
+    return '<div class="profit-row">'
+      +'<div class="profit-label" style="font-size:10px">'+t.truck+'</div>'
+      +'<div class="profit-track"><div class="profit-bar" style="width:'+(Math.abs(t.profit)/maxP*100)+'%;background:'+(t.profit>=0?'var(--green)':'var(--red)')+';opacity:.8"></div></div>'
+      +'<div class="profit-amt" style="color:'+(t.profit>=0?'var(--green)':'var(--red)')+'">'+(t.profit<0?'-':'')+fmt(Math.abs(t.profit))+'</div>'
+      +'</div>';
+  }).join('') : '<p style="color:var(--muted);font-size:13px;padding:16px 0">কোনো ডেটা নেই</p>';
+
+  // summary panel
+  var rev=rEntries.filter(function(e){return e.type==='revenue';}).reduce(function(s,e){return s+e.amount;},0);
+  var exp=rEntries.filter(function(e){return e.type==='expense';}).reduce(function(s,e){return s+e.amount;},0);
+  var profit=rev-exp;
+  var margin=rev>0?((profit/rev)*100).toFixed(1):'0';
+  var best=summaries[0]; var worst=summaries[summaries.length-1];
   document.getElementById('summaryReport').innerHTML = [
-    ['সক্রিয় ট্রাক', truckCountBN+'টি'],
+    ['নির্বাচিত মাস', selMonth ? (function(){var d=new Date(selMonth+'-01');return MONTHS_BN[d.getMonth()]+' '+d.getFullYear();})() : 'সকল'],
     ['মোট আয়', fmt(rev)],
     ['মোট ব্যয়', fmt(exp)],
     ['নিট মুনাফা', (profit<0?'-':'')+fmt(Math.abs(profit))],
-    ['মুনাফার হার', marginBN+'%'],
-    ['সেরা পারফরম্যান্স', best?.truck||'—'],
-    ['মনোযোগ প্রয়োজন', worst?.truck||'—'],
-    ['প্রতি ট্রাকে গড় আয়', fmt(rev/12)],
-    ['প্রতি ট্রাকে গড় মুনাফা', fmt(profit/12)],
-  ].map(([k,v])=>`<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`).join('');
+    ['মুনাফার হার', margin+'%'],
+    ['সক্রিয় ট্রাক', summaries.length+'টি'],
+    ['সেরা পারফরম্যান্স', best?best.truck:'—'],
+    ['মনোযোগ প্রয়োজন', worst?worst.truck:'—'],
+  ].map(function(r){
+    return '<div class="summary-row"><span class="summary-key">'+r[0]+'</span><span class="summary-val">'+r[1]+'</span></div>';
+  }).join('');
+
+  // truck detail table
+  document.getElementById('reportTruckTable').innerHTML = summaries.length ? summaries.map(function(t,i){
+    var m=t.revenue>0?((t.profit/t.revenue)*100).toFixed(1):'0';
+    return '<tr>'
+      +'<td style="font-weight:600">🚚 '+t.truck+'</td>'
+      +'<td style="color:var(--green);font-weight:600">'+fmt(t.revenue)+'</td>'
+      +'<td style="color:var(--red);font-weight:600">'+fmt(t.expenses)+'</td>'
+      +'<td style="color:'+(t.profit>=0?'var(--green)':'var(--red)')+';font-weight:700">'+(t.profit<0?'-':'')+fmt(Math.abs(t.profit))+'</td>'
+      +'<td><span class="tag '+(parseFloat(m)>=20?'tag-good':parseFloat(m)>=0?'tag-mid':'tag-bad')+'">'+m+'%</span></td>'
+      +'<td style="color:var(--muted)">'+t.trips+'টি</td>'
+      +'</tr>';
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">কোনো ডেটা নেই</td></tr>';
+
+  // entry list
+  var sortedE = rEntries.slice().sort(function(a,b){
+    if(a.type!==b.type) return a.type==='revenue'?-1:1;
+    return b.date.localeCompare(a.date);
+  });
+  document.getElementById('reportEntryTable').innerHTML = sortedE.length ? sortedE.map(function(e){
+    return '<tr>'
+      +'<td style="color:var(--muted)">'+fmtDate(e.date)+'</td>'
+      +'<td style="color:var(--muted)">'+e.truck+'</td>'
+      +'<td><span class="tag '+(e.type==='revenue'?'tag-rev':'tag-exp')+'">'+(e.type==='revenue'?'আয়':'ব্যয়')+'</span></td>'
+      +'<td style="color:'+(e.type==='revenue'?'var(--green)':'var(--red)')+';font-weight:600">'+(e.type==='revenue'?'+':'-')+fmt(Math.abs(e.amount))+'</td>'
+      +'<td>'+e.description+'</td>'
+      +'</tr>';
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">কোনো ডেটা নেই</td></tr>';
+}
+
+function printMonthlyReport() {
+  var selMonth = document.getElementById('reportMonth').value;
+  var selTruck = document.getElementById('reportTruckFilter').value;
+  var monthLabel = selMonth ? (function(){var d=new Date(selMonth+'-01');return MONTHS_BN[d.getMonth()]+' '+d.getFullYear();})() : 'সকল মাস';
+  var truckLabel = selTruck || 'সকল ট্রাক';
+
+  // gather data
+  var rEntries = entries.filter(function(e){
+    var okM = !selMonth || (e.date && e.date.slice(0,7)===selMonth);
+    var okT = !selTruck || e.truck===selTruck;
+    return okM && okT;
+  });
+  var rev=rEntries.filter(function(e){return e.type==='revenue';}).reduce(function(s,e){return s+e.amount;},0);
+  var exp=rEntries.filter(function(e){return e.type==='expense';}).reduce(function(s,e){return s+e.amount;},0);
+  var profit=rev-exp;
+  var margin=rev>0?((profit/rev)*100).toFixed(1):'0';
+
+  // per-truck for print
+  var tMap={};
+  TRUCK_NAMES.forEach(function(t){tMap[t]={rev:0,exp:0,trips:0};});
+  rEntries.forEach(function(e){
+    if(!tMap[e.truck]) tMap[e.truck]={rev:0,exp:0,trips:0};
+    if(e.type==='revenue'){tMap[e.truck].rev+=e.amount;tMap[e.truck].trips++;}
+    else tMap[e.truck].exp+=e.amount;
+  });
+  var truckRows = Object.keys(tMap).filter(function(t){return tMap[t].rev>0||tMap[t].exp>0;})
+    .sort(function(a,b){return (tMap[b].rev-tMap[b].exp)-(tMap[a].rev-tMap[a].exp);})
+    .map(function(t){
+      var p=tMap[t].rev-tMap[t].exp;
+      var m=tMap[t].rev>0?((p/tMap[t].rev)*100).toFixed(1):'0';
+      return '<tr><td>'+t+'</td><td class="num green">'+fmtP(tMap[t].rev)+'</td><td class="num red">'+fmtP(tMap[t].exp)+'</td>'
+        +'<td class="num '+(p>=0?'green':'red')+'">'+(p<0?'-':'')+fmtP(Math.abs(p))+'</td>'
+        +'<td class="num">'+m+'%</td><td class="num">'+tMap[t].trips+'</td></tr>';
+    }).join('');
+
+  var entryRows = rEntries.slice().sort(function(a,b){
+    if(a.type!==b.type) return a.type==='revenue'?-1:1;
+    return b.date.localeCompare(a.date);
+  }).map(function(e){
+    return '<tr><td>'+fmtDate(e.date)+'</td><td>'+e.truck+'</td>'
+      +'<td class="'+(e.type==='revenue'?'green':'red')+'">'+(e.type==='revenue'?'আয়':'ব্যয়')+'</td>'
+      +'<td class="num '+(e.type==='revenue'?'green':'red')+'">'+(e.type==='revenue'?'+':'-')+fmtP(Math.abs(e.amount))+'</td>'
+      +'<td>'+e.description+'</td></tr>';
+  }).join('');
+
+  function fmtP(n){ return '৳'+Math.round(n).toLocaleString('en-IN'); }
+
+  var win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head>
+<meta charset="UTF-8"/>
+<title>মাসিক প্রতিবেদন — ${monthLabel}</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Hind Siliguri',sans-serif; font-size:12px; color:#1e293b; background:#fff; padding:24px 32px; }
+  .header { border-bottom:3px solid #1a56db; padding-bottom:12px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end; }
+  .header h1 { font-size:22px; font-weight:700; color:#1a56db; }
+  .header .sub { font-size:12px; color:#64748b; margin-top:4px; }
+  .header .date { font-size:11px; color:#94a3b8; text-align:right; }
+  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .kpi { border:1.5px solid #e2e8f0; border-radius:8px; padding:12px 14px; }
+  .kpi .lbl { font-size:10px; color:#64748b; font-weight:600; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; }
+  .kpi .val { font-size:18px; font-weight:700; }
+  .kpi.green .val { color:#057a55; }
+  .kpi.red   .val { color:#c81e1e; }
+  .kpi.blue  .val { color:#1a56db; }
+  .kpi.orange .val { color:#d97706; }
+  h2 { font-size:13px; font-weight:700; color:#374151; background:#f8fafc; padding:8px 12px; border-left:4px solid #1a56db; margin:20px 0 8px; }
+  table { width:100%; border-collapse:collapse; margin-bottom:8px; }
+  th { background:#f1f5f9; padding:7px 10px; text-align:left; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.04em; border-bottom:2px solid #e2e8f0; }
+  td { padding:6px 10px; border-bottom:1px solid #f1f5f9; font-size:11px; }
+  tr:last-child td { border-bottom:none; }
+  .num { text-align:right; font-weight:600; }
+  .green { color:#057a55; }
+  .red   { color:#c81e1e; }
+  .footer { margin-top:24px; border-top:1px solid #e2e8f0; padding-top:10px; display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; }
+  @media print {
+    body { padding:16px; }
+    @page { margin:12mm; size:A4; }
+  }
+</style>
+</head><body>
+<div class="header">
+  <div>
+    <div class="h1" style="font-size:22px;font-weight:700;color:#1a56db">🚛 FleetLedger</div>
+    <div class="sub">মাসিক প্রতিবেদন — ${monthLabel} | ${truckLabel}</div>
+  </div>
+  <div class="date">মুদ্রণের তারিখ: ${new Date().toLocaleDateString('en-GB')}</div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi green"><div class="lbl">মোট আয়</div><div class="val">${fmtP(rev)}</div></div>
+  <div class="kpi red"><div class="lbl">মোট ব্যয়</div><div class="val">${fmtP(exp)}</div></div>
+  <div class="kpi ${profit>=0?'blue':'red'}"><div class="lbl">নিট মুনাফা</div><div class="val">${(profit<0?'-':'')+fmtP(Math.abs(profit))}</div></div>
+  <div class="kpi orange"><div class="lbl">মুনাফার হার</div><div class="val">${margin}%</div></div>
+</div>
+
+<h2>ট্রাক বিস্তারিত</h2>
+<table>
+  <thead><tr><th>ট্রাক</th><th class="num">মোট আয়</th><th class="num">মোট ব্যয়</th><th class="num">নিট মুনাফা</th><th class="num">মুনাফার হার</th><th class="num">ট্রিপ</th></tr></thead>
+  <tbody>${truckRows}</tbody>
+</table>
+
+<h2>এন্ট্রি তালিকা</h2>
+<table>
+  <thead><tr><th>তারিখ</th><th>ট্রাক</th><th>ধরন</th><th class="num">পরিমাণ</th><th>বিবরণ</th></tr></thead>
+  <tbody>${entryRows}</tbody>
+</table>
+
+<div class="footer">
+  <span>FleetLedger — স্বয়ংক্রিয়ভাবে তৈরি প্রতিবেদন</span>
+  <span>${monthLabel} | ${truckLabel}</span>
+</div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  win.document.close();
 }
 
 function switchView(v, btn) {
@@ -1370,12 +2061,176 @@ function switchView(v, btn) {
   btn.classList.add('active');
 }
 
+// Truck metadata store
+var truckMeta = {}; // keyed by truck name: {model, year, color, note}
+var fuelAlertMultiplier = 1.5;  // alert if this month > avg * multiplier
+var fuelAlertRatioPct   = 60;   // alert if fuel > X% of total expenses
+
 function goTruck(truck) {
-  document.getElementById('truckFilter').value = truck;
-  applyFilters();
-  document.querySelectorAll('.nav-btn').forEach((b,i)=>{ if(i===1) b.classList.add('active'); else b.classList.remove('active'); });
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-trucks').classList.add('active');
+  openTruckDetail(truck);
+}
+
+function openTruckDetail(truck) {
+  // switch to trucks view first
+  switchView('trucks', document.querySelectorAll('.nav-btn')[1]);
+  // hide table, show detail
+  document.getElementById('truckTableWrap').style.display = 'none';
+  document.getElementById('truckDetailPanel').style.display = 'block';
+  document.getElementById('truckDetailTitle').textContent = '🚚 ' + truck;
+
+  var meta = truckMeta[truck] || {};
+
+  // KPI
+  var te = entries.filter(function(e){ return e.truck===truck; });
+  var rev = te.filter(function(e){return e.type==='revenue';}).reduce(function(s,e){return s+e.amount;},0);
+  var exp = te.filter(function(e){return e.type==='expense';}).reduce(function(s,e){return s+e.amount;},0);
+  var profit = rev - exp;
+  var margin = rev>0?((profit/rev)*100).toFixed(1):'0';
+  document.getElementById('truckDetailKPI').innerHTML = [
+    {label:'মোট আয়', val:fmt(rev), color:'var(--green)'},
+    {label:'মোট ব্যয়', val:fmt(exp), color:'var(--red)'},
+    {label:'নিট মুনাফা', val:(profit<0?'-':'')+fmt(Math.abs(profit)), color:profit>=0?'var(--green)':'var(--red)'},
+  ].map(function(k){
+    return '<div class="kpi-card '+( k.color.includes('green')?'green':k.color.includes('red')?'red':'blue')+'">'
+      +'<div class="kpi-label">'+k.label+'</div>'
+      +'<div class="kpi-value" style="color:'+k.color+'">'+k.val+'</div></div>';
+  }).join('');
+
+  // Truck info
+  document.getElementById('truckInfoPanel').innerHTML =
+    '<div class="section-title" style="margin-bottom:10px">ট্রাকের তথ্য</div>'
+    +'<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    +'<tr><td style="color:var(--muted);padding:5px 0;width:40%">নম্বর প্লেট</td><td style="font-weight:600">'+truck+'</td></tr>'
+    +'<tr><td style="color:var(--muted);padding:5px 0">মডেল</td><td style="font-weight:600">'+(meta.model||'—')+'</td></tr>'
+    +'<tr><td style="color:var(--muted);padding:5px 0">বছর</td><td style="font-weight:600">'+(meta.year||'—')+'</td></tr>'
+    +'<tr><td style="color:var(--muted);padding:5px 0">রঙ</td><td style="font-weight:600">'+(meta.color||'—')+'</td></tr>'
+    +'<tr><td style="color:var(--muted);padding:5px 0">মন্তব্য</td><td style="font-weight:600">'+(meta.note||'—')+'</td></tr>'
+    +'</table>';
+
+  // Driver info
+  var driver = drivers.find(function(d){ return d.truck===truck; });
+  document.getElementById('truckDriverPanel').innerHTML =
+    '<div class="section-title" style="margin-bottom:10px">অ্যাসাইন করা ড্রাইভার</div>'
+    +(driver
+      ? '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+        +'<div style="width:42px;height:42px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>'
+        +'<div><div style="font-weight:700;font-size:15px">'+driver.name+'</div>'
+        +'<div style="font-size:12px;color:var(--muted)">'+driver.phone+'</div></div></div>'
+        +'<table style="width:100%;font-size:13px;border-collapse:collapse">'
+        +'<tr><td style="color:var(--muted);padding:4px 0;width:45%">বেতন</td><td style="font-weight:600">'+fmt(driver.salary||0)+'/মাস</td></tr>'
+        +'<tr><td style="color:var(--muted);padding:4px 0">NID</td><td style="font-weight:600">'+(driver.nid||'—')+'</td></tr>'
+        +'<tr><td style="color:var(--muted);padding:4px 0">লাইসেন্স</td><td style="font-weight:600">'+(driver.license||'—')+'</td></tr>'
+        +'</table>'
+      : '<div style="color:var(--muted);font-size:13px;padding:10px 0">কোনো ড্রাইভার অ্যাসাইন নেই</div>');
+
+  // This month trips
+  var now = new Date(); var thisM = now.getFullYear()+'-'+(now.getMonth()+1<10?'0':'')+(now.getMonth()+1);
+  var monthTrips = te.filter(function(e){ return e.date && e.date.slice(0,7)===thisM; })
+    .sort(function(a,b){return b.date.localeCompare(a.date);});
+  document.getElementById('truckMonthTripCount').textContent = monthTrips.length+'টি এন্ট্রি';
+  document.getElementById('truckMonthTrips').innerHTML = monthTrips.length
+    ? monthTrips.map(function(e){
+        return '<tr><td style="color:var(--muted)">'+fmtDate(e.date)+'</td>'
+          +'<td>'+e.description+'</td>'
+          +'<td style="color:var(--green);font-weight:600">'+(e.type==='revenue'?fmt(e.amount):'—')+'</td>'
+          +'<td style="color:var(--red);font-weight:600">'+(e.type==='expense'?fmt(e.amount):'—')+'</td></tr>';
+      }).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">এই মাসে কোনো ট্রিপ নেই</td></tr>';
+
+  // Maintenance history
+  var mhist = maintenanceItems.filter(function(m){ return m.truck===truck; })
+    .sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,10);
+  document.getElementById('truckMaintHistory').innerHTML = mhist.length
+    ? mhist.map(function(m){
+        return '<tr><td style="color:var(--muted)">'+fmtDate(m.date)+'</td>'
+          +'<td>'+m.type+'</td><td>'+m.description+'</td>'
+          +'<td style="color:var(--red);font-weight:600">'+fmt(m.cost)+'</td></tr>';
+      }).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">কোনো মেইনটেন্যান্স রেকর্ড নেই</td></tr>';
+
+  // Mileage
+  var mileageEntries = te.filter(function(e){ return e.mileage && e.mileage>0; })
+    .sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,5);
+  document.getElementById('truckMileageTrack').innerHTML = mileageEntries.length
+    ? '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+      +'<tr style="color:var(--muted);font-size:11px"><th style="text-align:left;padding:4px 0">তারিখ</th><th style="text-align:right">কি.মি./লি.</th></tr>'
+      +mileageEntries.map(function(e){
+        return '<tr><td style="padding:5px 0">'+fmtDate(e.date)+'</td>'
+          +'<td style="text-align:right;font-weight:600;color:var(--accent)">'+e.mileage.toFixed(2)+' কি.মি./লি.</td></tr>';
+      }).join('')+'</table>'
+    : '<div style="color:var(--muted);font-size:13px">কোনো মাইলেজ ডেটা নেই</div>';
+}
+
+function closeTruckDetail() {
+  document.getElementById('truckDetailPanel').style.display = 'none';
+  document.getElementById('truckTableWrap').style.display = 'block';
+}
+
+function openTruckEditModal() {
+  var title = document.getElementById('truckDetailTitle').textContent.replace('🚚 ','');
+  var meta = truckMeta[title] || {};
+  document.getElementById('teMeta_truck').value = title;
+  document.getElementById('teMeta_model').value = meta.model||'';
+  document.getElementById('teMeta_year').value  = meta.year||'';
+  document.getElementById('teMeta_color').value = meta.color||'';
+  document.getElementById('teMeta_note').value  = meta.note||'';
+  document.getElementById('truckEditModal').classList.add('open');
+}
+
+function openFuelAlertSettings() {
+  document.getElementById('fas_multiplier').value = fuelAlertMultiplier;
+  document.getElementById('fas_ratio').value      = fuelAlertRatioPct;
+  document.getElementById('fuelAlertSettingsModal').classList.add('open');
+}
+
+function saveFuelAlertSettings() {
+  fuelAlertMultiplier = parseFloat(document.getElementById('fas_multiplier').value) || 1.5;
+  fuelAlertRatioPct   = parseFloat(document.getElementById('fas_ratio').value)      || 60;
+  document.getElementById('fuelAlertSettingsModal').classList.remove('open');
+  renderFuelAlerts();
+  showNotif('সতর্কতার সীমা আপডেট হয়েছে ✓','var(--green)');
+}
+
+async function saveTruckMeta() {
+  var truck = document.getElementById('teMeta_truck').value;
+  var meta = {
+    model: document.getElementById('teMeta_model').value,
+    year:  document.getElementById('teMeta_year').value,
+    color: document.getElementById('teMeta_color').value,
+    note:  document.getElementById('teMeta_note').value,
+  };
+  truckMeta[truck] = meta;
+  // save to Supabase truck_meta table
+  try {
+    var res = await fetch(S_URL+'/rest/v1/truck_meta?on_conflict=truck_name', {
+      method: 'POST',
+      headers: Object.assign({}, S_HDR, {'Prefer':'resolution=merge-duplicates,return=minimal'}),
+      body: JSON.stringify({
+        truck_name: truck,
+        model: meta.model,
+        year: meta.year ? parseInt(meta.year) : null,
+        color: meta.color,
+        note: meta.note
+      })
+    });
+    if (!res.ok) console.warn('truck_meta save failed:', res.status);
+  } catch(e) { console.warn('truck_meta save error:', e); }
+  document.getElementById('truckEditModal').classList.remove('open');
+  openTruckDetail(truck);
+  showNotif('ট্রাকের তথ্য সেভ হয়েছে ✓','var(--green)');
+}
+
+async function loadTruckMeta() {
+  try {
+    var res = await fetch(S_URL+'/rest/v1/truck_meta?select=*', {headers: S_HDR});
+    if (!res.ok) return;
+    var data = await res.json();
+    data.forEach(function(r) {
+      truckMeta[r.truck_name] = {
+        model: r.model||'', year: r.year||'', color: r.color||'', note: r.note||''
+      };
+    });
+  } catch(e) { console.warn('loadTruckMeta error:', e); }
 }
 
 function goTruckEntries(truck) {
@@ -1384,6 +2239,59 @@ function goTruckEntries(truck) {
   document.querySelectorAll('.nav-btn').forEach((b,i)=>{ if(i===2) b.classList.add('active'); else b.classList.remove('active'); });
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-entries').classList.add('active');
+}
+
+function adminDeleteEntry(id) {
+  if (!confirm('এই এন্ট্রিটি মুছে ফেলবেন?')) return;
+  entries = entries.filter(function(e){ return e.id !== id; });
+  // delete from Supabase
+  fetch(S_URL+'/rest/v1/trips?id=eq.'+id, {method:'DELETE', headers:S_HDR})
+    .catch(function(e){ console.warn('delete failed',e); });
+  applyFilters();
+  showNotif('এন্ট্রি মুছে ফেলা হয়েছে','var(--red)');
+}
+
+function adminEditEntry(id) {
+  // populate truck dropdown
+  var ts = document.getElementById('aeTruck');
+  ts.innerHTML = '';
+  TRUCK_NAMES.forEach(function(t){ ts.innerHTML += '<option value="'+t+'">'+t+'</option>'; });
+  var e = entries.find(function(x){ return x.id===id; });
+  if (!e) return;
+  document.getElementById('aeId').value    = id;
+  document.getElementById('aeType').value  = e.type;
+  document.getElementById('aeTruck').value = e.truck;
+  document.getElementById('aeDate').value  = e.date;
+  document.getElementById('aeAmount').value= e.amount;
+  document.getElementById('aeDesc').value  = e.description;
+  document.getElementById('aeClient').value= e.client||e.category||'';
+  document.getElementById('adminEditModal').classList.add('open');
+}
+
+function adminSaveEntry() {
+  var id     = document.getElementById('aeId').value;
+  var e      = entries.find(function(x){ return x.id===id; });
+  if (!e) return;
+  e.type        = document.getElementById('aeType').value;
+  e.truck       = document.getElementById('aeTruck').value;
+  e.date        = document.getElementById('aeDate').value;
+  e.amount      = parseFloat(document.getElementById('aeAmount').value)||0;
+  e.description = document.getElementById('aeDesc').value;
+  e.client      = document.getElementById('aeClient').value;
+  e.category    = e.client;
+  // save to Supabase
+  fetch(S_URL+'/rest/v1/trips?id=eq.'+id, {
+    method:'PATCH',
+    headers: Object.assign({}, S_HDR, {'Prefer':'return=minimal'}),
+    body: JSON.stringify({
+      type:e.type, truck:e.truck, date:e.date,
+      amount:e.amount, description:e.description,
+      client:e.client, category:e.category
+    })
+  }).catch(function(err){ console.warn('patch failed',err); });
+  document.getElementById('adminEditModal').classList.remove('open');
+  applyFilters();
+  showNotif('এন্ট্রি আপডেট হয়েছে ✓','var(--green)');
 }
 
 function openModal(type) {
@@ -1529,11 +2437,13 @@ var W_EXPS = [
 ];
 var BNN=['১','২','৩','৪','৫','৬','৭','৮','৯','১০','১১','১২'];
 
+// Multi-trip rows array
+var wTripData = [];
+
 function wInit() {
   var wp=document.getElementById('wPlate');
   wp.innerHTML='<option value="">— বেছে নিন —</option>';
   TRUCK_NAMES.forEach(function(t){wp.innerHTML+='<option value="'+t+'">'+t+'</option>';});
-  document.getElementById('wDate').value=new Date().toISOString().split('T')[0];
   var tb=document.getElementById('wExpBody');
   tb.innerHTML=W_EXPS.map(function(e,i){
     return '<tr><td style="padding:4px 9px"><div class="enum">'+BNN[i]+'</div></td>'
@@ -1544,7 +2454,39 @@ function wInit() {
       +'placeholder="'+(e.auto?'auto':'০')+'" '+(e.auto?'readonly':'oninput="wCalc()"')
       +' style="width:90px"/></div></td></tr>';
   }).join('');
+  // start with 5 empty trip rows
+  wTripData = [];
+  for (var i=0; i<5; i++) wTripData.push({date:'', route:'', fare:0});
+  wRenderTripRows();
   wCalc(); wCalcM();
+}
+
+function wRenderTripRows() {
+  var today = new Date().toISOString().split('T')[0];
+  var tbody = document.getElementById('wTripRows');
+  tbody.innerHTML = wTripData.map(function(t, i) {
+    var bn = (i+1).toString().replace(/\d/g,function(d){return '০১২৩৪৫৬৭৮৯'[+d];});
+    return '<tr style="border-bottom:1px solid #f1f5f9">'
+      +'<td style="padding:6px 10px;font-size:12px;color:#94a3b8;font-weight:700">'+bn+'</td>'
+      +'<td style="padding:4px 6px"><input type="date" value="'+(t.date||today)+'" onchange="wTripData['+i+'].date=this.value;wCalc()" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:130px"/></td>'
+      +'<td style="padding:4px 6px"><input type="text" value="'+t.route+'" placeholder="রুট/গন্তব্য" oninput="wTripData['+i+'].route=this.value" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:100%;min-width:120px"/></td>'
+      +'<td style="padding:4px 6px"><input type="number" value="'+(t.fare||'')+'" placeholder="০" oninput="wTripData['+i+'].fare=parseFloat(this.value)||0;wCalc()" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:90px;text-align:right"/></td>'
+      +'<td style="padding:4px 6px;text-align:center">'
+      +(wTripData.length>1?'<button onclick="wRemoveTripRow('+i+')" style="background:#fde8e8;border:none;border-radius:4px;width:22px;height:22px;cursor:pointer;color:#c81e1e;font-size:14px;line-height:1">×</button>':'')
+      +'</td>'
+      +'</tr>';
+  }).join('');
+  wCalc();
+}
+
+function wAddTripRow() {
+  wTripData.push({date:'', route:'', fare:0});
+  wRenderTripRows();
+}
+
+function wRemoveTripRow(i) {
+  wTripData.splice(i, 1);
+  wRenderTripRows();
 }
 function wNv(id){var el=document.getElementById(id);return el?(parseFloat(el.value)||0):0;}
 function wFmt(n){var v=Math.abs(Math.round(n)).toString();var r=v.length>3?v.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+v.slice(-3):v;return '৳'+r.replace(/\d/g,function(d){return'০১২৩৪৫৬৭৮৯'[+d];});}
@@ -1889,8 +2831,67 @@ function depotRenderTripLog(trips) {
       +'<td style="padding:10px 14px;text-align:right;color:var(--green);font-weight:600">'+dFmt(t.revenue)+'</td>'
       +'<td style="padding:10px 14px;text-align:right;color:var(--red);font-weight:600">'+dFmt(t.rent)+'</td>'
       +'<td style="padding:10px 14px;text-align:right;font-weight:700;color:'+(t.profit>=0?'var(--green)':'var(--red)')+'">'+(t.profit<0?'-':'')+dFmt(Math.abs(t.profit))+'</td>'
+      +'<td style="padding:6px 10px;white-space:nowrap">'
+      +'<button onclick="depotEditTrip(\''+t.id+'\')\" style=\"background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:inherit;margin-right:3px\">✏️</button>'
+      +'<button onclick="depotDeleteTrip(\''+t.id+'\')\" style=\"background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:inherit\">🗑️</button>'
+      +'</td>'
       +'</tr>';
-  }).join('') : '<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--muted)">কোনো ডেটা নেই</td></tr>';
+  }).join('') : '<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--muted)">কোনো ডেটা নেই</td></tr>';
+}
+
+function depotEditTrip(id) {
+  var t = depotTrips.find(function(x){ return x.id===id; });
+  if (!t) return;
+  document.getElementById('dte_id').value   = id;
+  document.getElementById('dte_date').value  = t.date;
+  document.getElementById('dte_kg').value    = t.kg;
+  document.getElementById('dte_rate').value  = t.rate;
+  document.getElementById('dte_rent').value  = t.rent;
+  document.getElementById('dte_note').value  = t.note||'';
+  // populate route dropdown
+  var sel = document.getElementById('dte_route');
+  sel.innerHTML = depotRoutes.map(function(r){
+    return '<option value="'+r.id+'"'+(r.id===t.routeId?' selected':'')+'>'+r.name+'</option>';
+  }).join('');
+  document.getElementById('depotTripEditModal').classList.add('open');
+}
+
+async function depotSaveEditedTrip() {
+  var id   = document.getElementById('dte_id').value;
+  var t    = depotTrips.find(function(x){ return x.id===id; });
+  if (!t) return;
+  var routeId = document.getElementById('dte_route').value;
+  var route   = depotRoutes.find(function(r){ return r.id===routeId; });
+  t.date    = document.getElementById('dte_date').value;
+  t.kg      = parseFloat(document.getElementById('dte_kg').value)||0;
+  t.rate    = parseFloat(document.getElementById('dte_rate').value)||0;
+  t.rent    = parseFloat(document.getElementById('dte_rent').value)||0;
+  t.note    = document.getElementById('dte_note').value;
+  if (route) { t.routeId=route.id; t.route=route.name; t.factory=route.factory; t.depot=route.depot; }
+  t.revenue = Math.round(t.kg * t.rate);
+  t.profit  = t.revenue - t.rent;
+  try {
+    await fetch(S_URL+'/rest/v1/depot_trips?id=eq.'+id, {
+      method:'PATCH',
+      headers: Object.assign({}, S_HDR, {'Prefer':'return=minimal'}),
+      body: JSON.stringify({date:t.date, kg:t.kg, rate:t.rate, rent:t.rent,
+        revenue:t.revenue, profit:t.profit, note:t.note, route_id:t.routeId,
+        route:t.route, factory:t.factory, depot:t.depot})
+    });
+  } catch(e){ console.warn('depot trip patch error',e); }
+  document.getElementById('depotTripEditModal').classList.remove('open');
+  depotRender();
+  showNotif('ট্রিপ আপডেট হয়েছে ✓','var(--green)');
+}
+
+async function depotDeleteTrip(id) {
+  if (!confirm('এই ট্রিপটি মুছে ফেলবেন?')) return;
+  depotTrips = depotTrips.filter(function(x){ return x.id!==id; });
+  try {
+    await fetch(S_URL+'/rest/v1/depot_trips?id=eq.'+id, {method:'DELETE', headers:S_HDR});
+    showNotif('ট্রিপ মুছে ফেলা হয়েছে','var(--red)');
+  } catch(e){ showNotif('মুছতে সমস্যা হয়েছে','var(--red)'); }
+  depotRender();
 }
 
 function depotPopulateFilters() {
@@ -2024,6 +3025,117 @@ function cofSave() {
   document.getElementById('cofModal').classList.remove('open');
   showNotif('COF হার আপডেট হয়েছে ✓','var(--green)');
   depotRender();
+}
+
+// Outstanding balance tracker
+var outstandingItems = [];
+
+function renderOutstanding() {
+  var filter = document.getElementById('outStatusFilter') ? document.getElementById('outStatusFilter').value : '';
+  var items = outstandingItems.filter(function(o){
+    if (!filter) return true;
+    return o.status === filter;
+  });
+
+  // KPIs
+  var totalBilled  = outstandingItems.reduce(function(s,o){return s+o.billed;},0);
+  var totalReceived= outstandingItems.reduce(function(s,o){return s+o.received;},0);
+  var totalOwed    = totalBilled - totalReceived;
+  var overdue      = outstandingItems.filter(function(o){return o.status==='overdue';}).reduce(function(s,o){return s+(o.billed-o.received);},0);
+
+  document.getElementById('outstandingKPIs').innerHTML = [
+    {label:'মোট বিল', val:fmt(totalBilled), color:'var(--green)', bg:'green'},
+    {label:'মোট বাকি', val:fmt(totalOwed), color:'var(--red)', bg:'red'},
+    {label:'মেয়াদ পেরিয়েছে', val:fmt(overdue), color:'#d97706', bg:'orange'},
+  ].map(function(k){
+    return '<div class="kpi-card '+k.bg+'"><div class="kpi-label">'+k.label+'</div>'
+      +'<div class="kpi-value" style="color:'+k.color+'">'+k.val+'</div></div>';
+  }).join('');
+
+  // auto-update overdue status
+  var today = new Date().toISOString().split('T')[0];
+  outstandingItems.forEach(function(o){
+    if (o.status==='pending' && o.dueDate && o.dueDate < today) o.status='overdue';
+  });
+
+  document.getElementById('outstandingTable').innerHTML = items.length ? items.map(function(o){
+    var owed = o.billed - o.received;
+    var statusLabel = o.status==='paid'?'✅ পরিশোধিত':o.status==='overdue'?'🔴 মেয়াদ পেরিয়েছে':'🟡 বাকি আছে';
+    var statusColor = o.status==='paid'?'var(--green)':o.status==='overdue'?'var(--red)':'#d97706';
+    return '<tr>'
+      +'<td style="font-weight:600">'+o.client+'</td>'
+      +'<td style="color:var(--muted)">'+o.truck+'</td>'
+      +'<td style="color:var(--muted)">'+fmtDate(o.date)+'</td>'
+      +'<td style="color:'+(o.dueDate&&o.dueDate<today&&o.status!=='paid'?'var(--red)':'var(--muted)')+'">'+fmtDate(o.dueDate||'')+'</td>'
+      +'<td style="text-align:right;font-weight:600">'+fmt(o.billed)+'</td>'
+      +'<td style="text-align:right;color:var(--green);font-weight:600">'+fmt(o.received)+'</td>'
+      +'<td style="text-align:right;font-weight:700;color:'+(owed>0?'var(--red)':'var(--green)')+'">'+fmt(owed)+'</td>'
+      +'<td><span style="color:'+statusColor+';font-size:12px;font-weight:600">'+statusLabel+'</span></td>'
+      +'<td style="white-space:nowrap">'
+      +(o.status!=='paid'?('<button onclick="markOutstandingPaid(\'' +o.id+ '\')" style="background:#f0fdf4;border:1.5px solid #a7f3d0;color:#057a55;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:3px">✅ পরিশোধ</button>'):'')
+      +('<button onclick="editOutstanding(\'' +o.id+ '\')" style="background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:inherit;margin-right:3px">✏️</button>')
+      +('<button onclick="deleteOutstanding(\'' +o.id+ '\')" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-family:inherit">🗑️</button>')
+      +'</td>'
+      +'</tr>';
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">কোনো বাকি হিসাব নেই</td></tr>';
+}
+
+function openOutstandingModal(id) {
+  var o = id ? outstandingItems.find(function(x){return x.id===id;}) : null;
+  document.getElementById('om_id').value      = o ? o.id : '';
+  document.getElementById('om_client').value  = o ? o.client : '';
+  document.getElementById('om_truck').value   = o ? o.truck : '';
+  document.getElementById('om_date').value    = o ? o.date : new Date().toISOString().split('T')[0];
+  document.getElementById('om_due').value     = o ? (o.dueDate||'') : '';
+  document.getElementById('om_billed').value  = o ? o.billed : '';
+  document.getElementById('om_received').value= o ? o.received : '';
+  document.getElementById('om_note').value    = o ? (o.note||'') : '';
+  // populate truck dropdown
+  var ts = document.getElementById('om_truck_sel');
+  ts.innerHTML = '<option value="">— বেছে নিন —</option>';
+  TRUCK_NAMES.forEach(function(t){ts.innerHTML+='<option value="'+t+'"'+(o&&o.truck===t?' selected':'')+'>'+t+'</option>';});
+  document.getElementById('outstandingModal').classList.add('open');
+}
+
+function editOutstanding(id) { openOutstandingModal(id); }
+
+function saveOutstanding() {
+  var id      = document.getElementById('om_id').value;
+  var client  = document.getElementById('om_client').value.trim();
+  var truck   = document.getElementById('om_truck_sel').value;
+  var date    = document.getElementById('om_date').value;
+  var dueDate = document.getElementById('om_due').value;
+  var billed  = parseFloat(document.getElementById('om_billed').value)||0;
+  var received= parseFloat(document.getElementById('om_received').value)||0;
+  var note    = document.getElementById('om_note').value;
+  if (!client || !billed) { showNotif('ক্লায়েন্ট ও বিল পরিমাণ দিন','var(--red)'); return; }
+  var today = new Date().toISOString().split('T')[0];
+  var status = received>=billed ? 'paid' : (dueDate&&dueDate<today?'overdue':'pending');
+  if (id) {
+    var o = outstandingItems.find(function(x){return x.id===id;});
+    if (o) { o.client=client; o.truck=truck; o.date=date; o.dueDate=dueDate; o.billed=billed; o.received=received; o.note=note; o.status=status; }
+  } else {
+    outstandingItems.push({id:'ob'+Date.now(), client:client, truck:truck, date:date, dueDate:dueDate, billed:billed, received:received, note:note, status:status});
+  }
+  document.getElementById('outstandingModal').classList.remove('open');
+  renderOutstanding();
+  showNotif((id?'আপডেট':'যোগ')+' হয়েছে ✓','var(--green)');
+}
+
+function markOutstandingPaid(id) {
+  var o = outstandingItems.find(function(x){return x.id===id;});
+  if (!o) return;
+  o.received = o.billed;
+  o.status   = 'paid';
+  renderOutstanding();
+  showNotif('পরিশোধ হিসেবে চিহ্নিত হয়েছে ✓','var(--green)');
+}
+
+function deleteOutstanding(id) {
+  if (!confirm('এই হিসাবটি মুছে ফেলবেন?')) return;
+  outstandingItems = outstandingItems.filter(function(x){return x.id!==id;});
+  renderOutstanding();
+  showNotif('মুছে ফেলা হয়েছে','var(--red)');
 }
 
 function depotExportCSV() {
@@ -2215,6 +3327,104 @@ function driversRender() {
 }
 
 // ════════════════════════════════════════════════════════
+//  CASH SETTLEMENT
+// ════════════════════════════════════════════════════════
+var settlements = []; // {id, truck, driver, date, trips, fare, expenses, netCash, note}
+
+function renderSettlement() {
+  // populate truck filter
+  var stEl = document.getElementById('settleTruck');
+  if (stEl) {
+    var curT = stEl.value;
+    stEl.innerHTML = '<option value="">সকল ট্রাক</option>';
+    TRUCK_NAMES.forEach(function(t){ stEl.innerHTML += '<option value="'+t+'"'+(t===curT?' selected':'')+'>'+t+'</option>'; });
+  }
+  var period  = document.getElementById('settlePeriod') ? document.getElementById('settlePeriod').value : 'month';
+  var selTruck= stEl ? stEl.value : '';
+  var now     = new Date();
+  var thisMonth = now.getFullYear()+'-'+(now.getMonth()+1<10?'0':'')+(now.getMonth()+1);
+
+  // Build settlement data per truck (from entries)
+  var trucks = selTruck ? [selTruck] : TRUCK_NAMES;
+  var cards = trucks.map(function(truck) {
+    var te = entries.filter(function(e){
+      var okT = e.truck === truck;
+      var okP = period==='month' ? (e.date && e.date.slice(0,7)===thisMonth) : true;
+      return okT && okP;
+    });
+    var fare    = te.filter(function(e){return e.type==='revenue';}).reduce(function(s,e){return s+e.amount;},0);
+    var expenses= te.filter(function(e){return e.type==='expense';}).reduce(function(s,e){return s+e.amount;},0);
+    var trips   = te.filter(function(e){return e.type==='revenue';}).length;
+    var netCash = fare - expenses;
+    var driver  = drivers.find(function(d){return d.truck===truck;});
+    // settled amount from settlements array
+    var settled = settlements.filter(function(s){ return s.truck===truck && (period==='month'?s.date.slice(0,7)===thisMonth:true); })
+      .reduce(function(s,x){return s+x.settled;},0);
+    var outstanding = netCash - settled;
+    return {truck:truck, driver:driver?driver.name:'—', fare:fare, expenses:expenses, trips:trips, netCash:netCash, settled:settled, outstanding:outstanding};
+  }).filter(function(c){ return c.fare>0 || c.settled>0; });
+
+  if (!cards.length) {
+    document.getElementById('settlementCards').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px">এই পিরিয়ডে কোনো ট্রিপ ডেটা নেই</div>';
+    return;
+  }
+
+  document.getElementById('settlementCards').innerHTML = cards.map(function(c){
+    var pct = c.netCash>0 ? Math.round(c.settled/c.netCash*100) : 0;
+    var statusColor = c.outstanding<=0 ? 'var(--green)' : c.outstanding < c.netCash*0.5 ? '#d97706' : 'var(--red)';
+    var statusLabel = c.outstanding<=0 ? '✅ সম্পূর্ণ পরিশোধ' : c.settled>0 ? '⚠️ আংশিক পরিশোধ' : '🔴 অপরিশোধিত';
+    return '<div class="panel" style="position:relative">'
+      // header
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div><div style="font-size:15px;font-weight:700;color:var(--heading)">🚚 '+c.truck+'</div>'
+      +'<div style="font-size:11px;color:var(--muted)">ড্রাইভার: '+c.driver+'</div></div>'
+      +'<span style="font-size:11px;font-weight:600;color:'+statusColor+'">'+statusLabel+'</span>'
+      +'</div>'
+      // rows
+      +'<table style="width:100%;font-size:12px;border-collapse:collapse">'
+      +'<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--muted)">মোট ট্রিপ</td><td style="text-align:right;font-weight:600">'+c.trips+'টি</td></tr>'
+      +'<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--muted)">মোট ভাড়া আদায়</td><td style="text-align:right;font-weight:600;color:var(--green)">'+fmt(c.fare)+'</td></tr>'
+      +'<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--muted)">(-) মোট খরচ</td><td style="text-align:right;font-weight:600;color:var(--red)">'+fmt(c.expenses)+'</td></tr>'
+      +'<tr style="border-bottom:2px solid var(--border);background:#f8fafc"><td style="padding:7px 4px;font-weight:700">মালিককে জমা দেওয়ার পরিমাণ</td><td style="text-align:right;font-size:16px;font-weight:800;color:var(--accent)">'+fmt(c.netCash)+'</td></tr>'
+      +'<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px 0;color:var(--muted)">ইতিমধ্যে জমা</td><td style="text-align:right;font-weight:600;color:var(--green)">'+fmt(c.settled)+'</td></tr>'
+      +'<tr><td style="padding:5px 0;font-weight:700;color:'+statusColor+'">এখনও বাকি</td><td style="text-align:right;font-size:15px;font-weight:800;color:'+statusColor+'">'+(c.outstanding>0?fmt(c.outstanding):'—')+'</td></tr>'
+      +'</table>'
+      // progress bar
+      +(c.netCash>0?'<div style="margin:10px 0 4px;background:#e2e8f0;border-radius:4px;height:6px"><div style="height:6px;border-radius:4px;background:'+(pct>=100?'var(--green)':'#1a56db')+';width:'+Math.min(pct,100)+'%"></div></div>'
+        +'<div style="font-size:10px;color:var(--muted);text-align:right">'+pct+'% পরিশোধিত</div>':'')
+      // settle button
+      +(c.outstanding>0
+        ?'<button onclick="openSettleModal(\'' +c.truck+ '\',' +c.outstanding+ ',\'' +c.driver+ '\')" style="margin-top:12px;width:100%;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💵 জমা নথিভুক্ত করুন</button>'
+        :'<div style="margin-top:12px;text-align:center;font-size:12px;color:var(--green);font-weight:600">সম্পূর্ণ পরিশোধিত ✓</div>')
+      +'</div>';
+  }).join('');
+}
+
+function openSettleModal(truck, outstanding, driver) {
+  document.getElementById('sm_truck').value     = truck;
+  document.getElementById('sm_driver').value    = driver;
+  document.getElementById('sm_outstanding').textContent = fmt(outstanding);
+  document.getElementById('sm_amount').value    = outstanding;
+  document.getElementById('sm_date').value      = new Date().toISOString().split('T')[0];
+  document.getElementById('sm_note').value      = '';
+  document.getElementById('settleModal').classList.add('open');
+}
+
+function saveSettlement() {
+  var truck   = document.getElementById('sm_truck').value;
+  var amount  = parseFloat(document.getElementById('sm_amount').value)||0;
+  var date    = document.getElementById('sm_date').value;
+  var note    = document.getElementById('sm_note').value;
+  var driver  = document.getElementById('sm_driver').value;
+  if (!amount || !date) { showNotif('পরিমাণ ও তারিখ দিন','var(--red)'); return; }
+  settlements.push({id:'st'+Date.now(), truck:truck, driver:driver, date:date, settled:amount, note:note});
+  document.getElementById('settleModal').classList.remove('open');
+  renderSettlement();
+  renderDriversView();
+  showNotif('ক্যাশ জমা নথিভুক্ত হয়েছে ✓','var(--green)');
+}
+
+// ════════════════════════════════════════════════════════
 //  MAINTENANCE
 // ════════════════════════════════════════════════════════
 function maintenanceShowModal() {
@@ -2393,6 +3603,7 @@ switchView = function(v, btn) {
   if (v === 'drivers') {
     showNotif('লোড হচ্ছে...','var(--accent)');
     loadDrivers().then(function(){ driversRender(); });
+    renderSettlement();
   }
   if (v === 'maintenance') {
     showNotif('লোড হচ্ছে...','var(--accent)');
@@ -2532,8 +3743,9 @@ async function startup() {
   var kpiStrip = document.getElementById('mainKpiStrip');
   if (kpiStrip) kpiStrip.classList.add('visible');
   showScreen('role');
-  // load trips at startup
-  var loaded = await dbLoad();
+  // load everything at startup
+  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadDrivers(), loadMaintenanceItems()]);
+  var loaded = results[0].status==='fulfilled' ? results[0].value : null;
   if (loaded && loaded.length > 0) {
     entries = loaded;
     applyFilters();
