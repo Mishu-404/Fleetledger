@@ -1090,7 +1090,49 @@ function pinUpdateDots() {
     document.getElementById('pd' + i).className = 'pin-dot' + (i < pinVal.length ? ' on' : '');
   }
 }
-// pinCheck is defined below as async function (user-based auth)
+async function pinCheck() {
+  if (!selectedUserId) return;
+  var hash = await sha256(pinVal);
+  try {
+    var r = await fetch(S_URL + '/rest/v1/users?id=eq.' + selectedUserId + '&pin_hash=eq.' + hash + '&select=id,username,role', { headers: S_HDR });
+    var matched = await r.json();
+    if (matched && matched.length > 0) {
+      currentUser = matched[0];
+      await logActivity(currentUser.username, currentUser.role, 'login');
+      var role = currentUser.role;
+      if (role === 'operator') {
+        showScreen('worker');
+        wInit();
+      } else {
+        var umBtn = document.getElementById('userMgmtNavBtn');
+        if (umBtn) umBtn.style.display = role === 'admin' ? 'inline-flex' : 'none';
+        showScreen('owner');
+        Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenance()])
+          .then(function(results) {
+            var loaded = results[0];
+            if (loaded && loaded.length > 0) {
+              entries = loaded;
+              var addedNew = false;
+              entries.forEach(function(e) {
+                if (e.truck && TRUCK_NAMES.indexOf(e.truck) === -1) { TRUCK_NAMES.push(e.truck); addedNew = true; }
+              });
+              if (addedNew) { saveTruckList(); truckNamesChanged(true); }
+            } else { entries = []; }
+            applyFilters(); renderAll();
+          }).catch(function(err) { console.error('load error:', err); applyFilters(); });
+      }
+    } else {
+      document.getElementById('pinErr').textContent = '❌ ভুল পিন। আবার চেষ্টা করুন।';
+      pinVal = ''; pinUpdateDots();
+      var b = document.querySelector('.pin-box');
+      b.style.animation = 'none'; void b.offsetWidth; b.style.animation = 'shake .3s ease';
+    }
+  } catch(e) {
+    console.error('pinCheck error:', e);
+    document.getElementById('pinErr').textContent = '❌ সংযোগ ব্যর্থ। আবার চেষ্টা করুন।';
+    pinVal = ''; pinUpdateDots();
+  }
+}
 
 // ── SUPABASE ──
 var S_URL = 'https://ggarbfxekttnimdhioga.supabase.co';
