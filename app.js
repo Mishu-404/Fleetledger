@@ -281,10 +281,11 @@ function renderTruckTable() {
 function renderEntries() {
   const groups = {};
   filteredEntries.forEach(e => {
-    const key = e.date + '|' + e.truck;
+    const key = e.sheet_ref ? e.sheet_ref : (e.date + '|' + e.truck);
     if (!groups[key]) {
-      groups[key] = { date: e.date, truck: e.truck, entries: [], revenue: 0, expense: 0, discount: 0 };
+      groups[key] = { date: e.date, truck: e.truck, entries: [], revenue: 0, expense: 0, discount: 0, sheet_ref: e.sheet_ref || null };
     }
+    if (e.date < groups[key].date) groups[key].date = e.date;
     groups[key].entries.push(e);
     if (e.type === 'revenue') {
       groups[key].revenue += e.amount;
@@ -311,7 +312,7 @@ function renderEntries() {
     html += `
     <tr style="background:#f8fafc;border-top:2px solid var(--border);border-bottom:2px solid var(--border);cursor:pointer" onclick="toggleSheetRows('${idx}')">
       <td><span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700">শিট</span></td>
-      <td style="font-weight:700;color:var(--heading)">${g.truck}</td>
+      <td style="font-weight:700;color:var(--heading)">${g.truck}${g.sheet_ref ? '<span style=\"font-size:10px;background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd;border-radius:4px;padding:2px 7px;font-weight:700;margin-left:8px\"># ' + g.sheet_ref + '</span>' : ''}</td>
       <td style="font-weight:600;color:var(--muted)">${fmtDate(g.date)}</td>
       <td style="color:${netClass};font-weight:800;font-size:15px">${netSign}${fmt(Math.abs(net))}</td>
       <td style="color:var(--muted);font-size:12px">আয়: ${fmt(g.revenue)} | ব্যয়: ${fmt(g.expense)}${g.discount > 0 ? ' | ছাড়: ' + fmt(g.discount) : ''}</td>
