@@ -1,4 +1,3 @@
-
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -280,33 +279,91 @@ function renderTruckTable() {
 }
 
 function renderEntries() {
-  // আয় উপরে, ব্যয় নিচে — তারপর তারিখ অনুযায়ী
-  const sorted = [...filteredEntries].sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'revenue' ? -1 : 1;
-    return b.date.localeCompare(a.date);
+  const groups = {};
+  filteredEntries.forEach(e => {
+    const key = e.date + '|' + e.truck;
+    if (!groups[key]) {
+      groups[key] = { date: e.date, truck: e.truck, entries: [], revenue: 0, expense: 0, discount: 0 };
+    }
+    groups[key].entries.push(e);
+    if (e.type === 'revenue') {
+      groups[key].revenue += e.amount;
+    } else {
+      if (e.category === 'ঐচ্ছিক ছাড়' || (e.description && e.description.includes('ঐচ্ছিক ছাড়'))) {
+        groups[key].discount += e.amount;
+      } else {
+        groups[key].expense += e.amount;
+      }
+    }
   });
-  const shown = sorted.slice(0, 30);
-  document.getElementById('entriesTableBody').innerHTML = shown.map(e => `
-    <tr>
-      <td><span class="tag ${e.type === 'revenue' ? 'tag-rev' : 'tag-exp'}">${e.type === 'revenue' ? 'আয়' : 'ব্যয়'}</span></td>
-      <td style="color:var(--muted)">${e.truck}</td>
-      <td style="color:var(--muted)">${fmtDate(e.date)}</td>
-      <td style="color:${e.type === 'revenue' ? 'var(--green)' : 'var(--red)'};font-weight:700">${e.type === 'revenue' ? '+' : '-'}${fmt(Math.abs(e.amount))}</td>
-      <td style="color:var(--heading)">${e.description}</td>
-      <td style="color:var(--muted)">${e.client || e.category || '—'}</td>
-      <td style="white-space:nowrap">
-        <button onclick="adminEditEntry('${e.id}')" style="background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:4px">✏️</button>
-        <button onclick="adminDeleteEntry('${e.id}')" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🗑️</button>
+
+  const groupKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+  const shownGroups = groupKeys.slice(0, 30);
+
+  let html = '';
+  shownGroups.forEach((key, idx) => {
+    const g = groups[key];
+    const net = g.revenue - g.expense - g.discount;
+    const isPos = net >= 0;
+    const netClass = isPos ? 'var(--green)' : 'var(--red)';
+    const netSign = isPos ? '+' : '';
+
+    html += `
+    <tr style="background:#f8fafc;border-top:2px solid var(--border);border-bottom:2px solid var(--border);cursor:pointer" onclick="toggleSheetRows('${idx}')">
+      <td><span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700">শিট</span></td>
+      <td style="font-weight:700;color:var(--heading)">${g.truck}</td>
+      <td style="font-weight:600;color:var(--muted)">${fmtDate(g.date)}</td>
+      <td style="color:${netClass};font-weight:800;font-size:15px">${netSign}${fmt(Math.abs(net))}</td>
+      <td style="color:var(--muted);font-size:12px">আয়: ${fmt(g.revenue)} | ব্যয়: ${fmt(g.expense)}${g.discount > 0 ? ' | ছাড়: ' + fmt(g.discount) : ''}</td>
+      <td style="color:var(--muted)">${g.entries.length}টি এন্ট্রি</td>
+      <td>
+        <button id="btn_toggle_${idx}" style="background:#fff;border:1.5px solid #cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#475569">▼ বিস্তারিত</button>
       </td>
     </tr>
-  `).join('');
+    `;
+
+    g.entries.sort((a, b) => (a.type === 'revenue' ? -1 : 1)).forEach(e => {
+      html += `
+        <tr class="sheet-row-${idx}" style="display:none;background:#fff">
+          <td style="padding-left:24px"><span class="tag ${e.type === 'revenue' ? 'tag-rev' : 'tag-exp'}">${e.type === 'revenue' ? 'আয়' : 'ব্যয়'}</span></td>
+          <td style="color:var(--muted)">${e.truck}</td>
+          <td style="color:var(--muted)">${fmtDate(e.date)}</td>
+          <td style="color:${e.type === 'revenue' ? 'var(--green)' : 'var(--red)'};font-weight:700">${e.type === 'revenue' ? '+' : '-'}${fmt(Math.abs(e.amount))}</td>
+          <td style="color:var(--heading)">${e.description}</td>
+          <td style="color:var(--muted)">${e.client || e.category || '—'}</td>
+          <td style="white-space:nowrap">
+            <button onclick="event.stopPropagation();adminEditEntry('${e.id}')" style="background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:4px">✏️</button>
+            <button onclick="event.stopPropagation();adminDeleteEntry('${e.id}')" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🗑️</button>
+          </td>
+        </tr>
+        `;
+    });
+  });
+
+  document.getElementById('entriesTableBody').innerHTML = html;
   const more = document.getElementById('moreInfo');
-  if (sorted.length > 30) {
-    const extraBN = (sorted.length - 30).toString().replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
-    const totalBN = sorted.length.toString().replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
+  if (groupKeys.length > 30) {
+    const extraBN = (groupKeys.length - 30).toString().replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
+    const totalBN = groupKeys.length.toString().replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
     more.style.display = 'block';
-    more.textContent = `${totalBN} টি এন্ট্রির মধ্যে ৩০টি দেখানো হচ্ছে। আরো ${extraBN}টি আছে। ফিল্টার ব্যবহার করুন।`;
+    more.textContent = `${totalBN} টি শিটের মধ্যে ৩০টি দেখানো হচ্ছে। আরো ${extraBN}টি আছে। ফিল্টার ব্যবহার করুন।`;
   } else { more.style.display = 'none'; }
+}
+
+function toggleSheetRows(idx) {
+  const rows = document.querySelectorAll('.sheet-row-' + idx);
+  const btn = document.getElementById('btn_toggle_' + idx);
+  let isHidden = false;
+  rows.forEach(r => {
+    if (r.style.display === 'none') {
+      r.style.display = 'table-row';
+      isHidden = true;
+    } else {
+      r.style.display = 'none';
+      isHidden = false;
+    }
+  });
+  if (btn) btn.innerHTML = isHidden ? '▲ লুকান' : '▼ বিস্তারিত';
 }
 
 function renderReports() {
@@ -978,6 +1035,29 @@ var S_URL = 'https://ggarbfxekttnimdhioga.supabase.co';
 var S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdnYXJiZnhla3R0bmltZGhpb2dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzA4ODQsImV4cCI6MjA4ODIwNjg4NH0.u_RD1mtHKRI114gnJEaqLBLK3lTF_2MGG3DmnhqWFYM';
 var S_HDR = { 'apikey': S_KEY, 'Authorization': 'Bearer ' + S_KEY, 'Content-Type': 'application/json' };
 
+// ── SHEET REFERENCE NUMBER ──
+// Format: lastPart(truck)/YYYY/MM/SEQ  e.g. 9862/2026/01/003
+function generateSheetRef(truck, date) {
+  // extract last segment of truck name (digits after last -)
+  var truckCode = truck.replace(/[^0-9]/g, '').slice(-4) || truck.slice(-4);
+  var yr  = date.slice(0, 4);
+  var mo  = date.slice(5, 7);
+  // count existing sheets for this truck+month
+  var existing = entries.filter(function(e) {
+    return e.truck === truck && e.sheet_ref && e.sheet_ref.startsWith(truckCode + '/' + yr + '/' + mo + '/');
+  });
+  // find max seq
+  var maxSeq = 0;
+  existing.forEach(function(e) {
+    var parts = e.sheet_ref.split('/');
+    var seq = parseInt(parts[3]) || 0;
+    if (seq > maxSeq) maxSeq = seq;
+  });
+  var seq = maxSeq + 1;
+  var seqStr = seq < 10 ? '00' + seq : seq < 100 ? '0' + seq : '' + seq;
+  return truckCode + '/' + yr + '/' + mo + '/' + seqStr;
+}
+
 async function dbLoad() {
   try {
     var r = await fetch(S_URL + '/rest/v1/trips?select=*&order=date.desc', { headers: S_HDR });
@@ -997,13 +1077,14 @@ async function dbSave(e) {
   try {
     // only save fields that exist in Supabase trips table
     var payload = {
-      type: e.type,
-      truck: e.truck,
-      date: e.date,
-      amount: e.amount,
-      description: e.description,
-      client: e.client || null,
-      category: e.category || null
+      type:       e.type,
+      truck:      e.truck,
+      date:       e.date,
+      amount:     e.amount,
+      description:e.description,
+      client:     e.client     || null,
+      category:   e.category   || null,
+      sheet_ref:  e.sheet_ref  || null
     };
     var res = await fetch(S_URL + '/rest/v1/trips', {
       method: 'POST',
@@ -1167,10 +1248,13 @@ async function wSubmit() {
   // use first valid trip date for expenses
   var expDate = validTrips[0].date;
 
+  // generate one sheet reference for this entire submission
+  var sheetRef = generateSheetRef(plate, expDate);
+
   var savePromises = [];
 
   validTrips.forEach(function (t, ti) {
-    var rev = { id: 'w' + Date.now() + ti, type: 'revenue', truck: plate, date: t.date, amount: t.fare, description: t.route, client: driver };
+    var rev = { id: 'w' + Date.now() + ti, type: 'revenue', truck: plate, date: t.date, amount: t.fare, description: t.route, client: driver, sheet_ref: sheetRef };
     entries.unshift(rev);
     savePromises.push(dbSave(rev));
   });
@@ -1178,7 +1262,7 @@ async function wSubmit() {
   W_EXPS.forEach(function (e) {
     var el = document.getElementById('we_' + e.id), amt = el ? (parseFloat(el.value) || 0) : 0;
     if (amt > 0) {
-      var exp = { id: 'wx' + Date.now() + e.id, type: 'expense', truck: plate, date: expDate, amount: amt, category: e.bn, description: e.bn + ' ব্যয়' };
+      var exp = { id: 'wx' + Date.now() + e.id, type: 'expense', truck: plate, date: expDate, amount: amt, category: e.bn, description: e.bn + ' ব্যয়', sheet_ref: sheetRef };
       entries.unshift(exp);
       savePromises.push(dbSave(exp));
     }
@@ -1187,7 +1271,7 @@ async function wSubmit() {
   // ঐচ্ছিক ছাড় — save as expense
   var disc = wNv('wDiscount');
   if (disc > 0) {
-    var discExp = { id: 'wd' + Date.now(), type: 'expense', truck: plate, date: expDate, amount: disc, category: 'ঐচ্ছিক ছাড়', description: 'ঐচ্ছিক ছাড় ব্যয়' };
+    var discExp = { id: 'wd' + Date.now(), type: 'expense', truck: plate, date: expDate, amount: disc, category: 'ঐচ্ছিক ছাড়', description: 'ঐচ্ছিক ছাড় ব্যয়', sheet_ref: sheetRef };
     entries.unshift(discExp);
     savePromises.push(dbSave(discExp));
   }
@@ -1210,7 +1294,7 @@ async function wSubmit() {
     // big success message for operator
     var btn = document.getElementById('wSubmitBtn');
     if (btn) { btn.textContent = '✅ সফলভাবে জমা হয়েছে!'; btn.style.background = '#057a55'; }
-    showNotif('✅ ' + validTrips.length + 'টি ট্রিপ সফলভাবে জমা হয়েছে!', 'var(--green)');
+    showNotif('✅ শিট #' + sheetRef + ' সফলভাবে জমা হয়েছে!', 'var(--green)');
     setTimeout(function () {
       if (btn) { btn.textContent = '✅ শিট জমা দিন / Submit All'; btn.style.background = ''; }
       showScreen('role');
@@ -2471,4 +2555,3 @@ async function startup() {
   renderAll();
 }
 startup();
-
