@@ -694,7 +694,7 @@
     <div class="logo-icon">🚚</div>
     <div>
       <div class="logo-text">ফ্লিটলেজার</div>
-      <div class="logo-sub">১২টি ট্রাক · আয় ও ব্যয় ট্র্যাকার</div>
+
     </div>
   </div>
   <nav>
@@ -778,6 +778,12 @@
 
   <!-- TRUCKS -->
   <div id="view-trucks" class="view">
+
+    <!-- TRUCK MANAGEMENT TOOLBAR -->
+    <div id="truckMgmtBar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--muted)" id="truckCountLabel"></div>
+      <button class="btn btn-blue" onclick="openTruckMgmtModal()">⚙️ ট্রাক পরিচালনা</button>
+    </div>
 
     <!-- TRUCK DETAIL PANEL (hidden by default) -->
     <div id="truckDetailPanel" style="display:none">
@@ -1515,26 +1521,62 @@
   </div>
 </div>
 
+<!-- TRUCK MANAGEMENT MODAL -->
+<div class="modal-bg" id="truckMgmtModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">⚙️ ট্রাক পরিচালনা</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.04em">বর্তমান ট্রাকসমূহ</div>
+      <div id="truckMgmtList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
+    </div>
+    <div style="border-top:1.5px solid var(--border);padding-top:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">নতুন ট্রাক যোগ করুন</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="newTruckName" placeholder="যেমন: ঢাকা-মেট্রো-ট-১৫-০০১" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit"/>
+        <button class="btn btn-blue" onclick="addTruck()">+ যোগ করুন</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 </div>
 <script>
 
-const TRUCKS = Array.from({length:12},(_,i)=>`ট্রাক ${String(i+1).padStart(2,'০').replace(/0/g,'০').replace(/1/g,'১').replace(/2/g,'২').replace(/3/g,'৩').replace(/4/g,'৪').replace(/5/g,'৫').replace(/6/g,'৬').replace(/7/g,'৭').replace(/8/g,'৮').replace(/9/g,'৯')}`);
+// Dynamic, editable truck list — starts with one truck
+var TRUCK_NAMES = ['ট্রাক-০১'];
 
-// Fix truck names to proper Bangla numerals
-const TRUCK_NAMES = Array.from({length:12},(_,i)=>{
-  const n = i+1;
-  const bn = n.toString().split('').map(d=>['০','১','২','৩','৪','৫','৬','৭','৮','৯'][+d]).join('');
-  return `ট্রাক-${bn.padStart(2,'০')}`;
-});
+function truckNamesChanged() {
+  // refresh all dropdowns that depend on TRUCK_NAMES
+  var selIds = ['truckFilter','fTruck','wPlate','aeTruck','om_truck_sel','settleTruck','reportTruckFilter','mFilterTruck'];
+  selIds.forEach(function(id){
+    var el = document.getElementById(id); if (!el) return;
+    var cur = el.value;
+    var hasAll = el.options[0] && (el.options[0].value===''||el.options[0].value==='All Trucks');
+    el.innerHTML = '';
+    if (hasAll) {
+      var allOpt = document.createElement('option');
+      allOpt.value = el.id==='truckFilter' ? 'All Trucks' : '';
+      allOpt.textContent = 'সকল ট্রাক';
+      el.appendChild(allOpt);
+    }
+    TRUCK_NAMES.forEach(function(t){
+      var o = document.createElement('option');
+      o.value = t; o.textContent = t;
+      if (t===cur) o.selected = true;
+      el.appendChild(o);
+    });
+  });
+  renderAll();
+}
 
 const MONTHS_BN = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
 const MONTHS_SHORT = ["জান","ফেব","মার","এপ্র","মে","জুন","জুল","আগ","সেপ","অক্ট","নভ","ডিস"];
 const EXP_TYPES_BN = ["তেল","লেবার","ব্রিজ/টোল","চাঁদা/পুলিশ","কমিশন (১০%)","দৈনিক ভাতা (খোরাকি)","টায়ার","মেইনটেন্যান্স","ড্রাইভার স্যালারি","বার্ষিক গাড়ির কাজ","কেইস/ফাইন","অন্যান্য (৫০০+)"];
 const EXP_TYPES_KEY = ["Fuel","Driver Salary","Tolls & Fees","Maintenance & Repairs","Other"];
 const CAT_COLORS = {"তেল":"#d97706","লেবার":"#7c3aed","ব্রিজ/টোল":"#db2777","চাঁদা/পুলিশ":"#dc2626","কমিশন (১০%)":"#2563eb","দৈনিক ভাতা (খোরাকি)":"#059669","টায়ার":"#9333ea","মেইনটেন্যান্স":"#16a34a","ড্রাইভার স্যালারি":"#0891b2","বার্ষিক গাড়ির কাজ":"#b45309","কেইস/ফাইন":"#b91c1c","অন্যান্য (৫০০+)":"#6b7280"};
-const CLIENTS_BN = ["এবিসি লজিস্টিক্স","প্রাইম ফ্রেইট","ফাস্টমুভ কোং","ডেল্টা কার্গো","সামিট ট্রান্সপোর্ট"];
+const CLIENTS_BN = [];
 
 let entries = [];
 let filteredEntries = [];
@@ -1567,37 +1609,15 @@ function fmtDate(d) {
   return parts[2]+'/'+parts[1]+'/'+parts[0];
 }
 
-function genSample() {
-  const now = new Date(); const arr = [];
-  TRUCK_NAMES.forEach((truck, ti) => {
-    for (let m = 0; m < 3; m++) {
-      const month = now.getMonth() - m;
-      for (let d = 0; d < 7; d++) {
-        const day = Math.floor(Math.random()*28)+1;
-        const dt = new Date(now.getFullYear(), month, day).toISOString().split('T')[0];
-        arr.push({ id:`r${ti}${m}${d}`, type:'revenue', truck, date:dt,
-          amount:Math.floor(Math.random()*40000)+8000,
-          description:`ট্রিপ #${Math.floor(Math.random()*9000)+1000}`,
-          client:CLIENTS_BN[Math.floor(Math.random()*CLIENTS_BN.length)] });
-        [["জ্বালানি",2000,6000],["চালকের বেতন",8000,4000],["টোল ও ফি",300,1200],["রক্ষণাবেক্ষণ ও মেরামত",0,1]].forEach(([cat,base,range],ci) => {
-          if(cat==="রক্ষণাবেক্ষণ ও মেরামত" && Math.random()>0.3) return;
-          const amt = Math.round(base + Math.random()*range*(cat==="রক্ষণাবেক্ষণ ও মেরামত"?6000:1));
-          if(amt>0) arr.push({ id:`e${ti}${m}${d}${ci}`, type:'expense', truck, date:dt, amount:amt, category:cat, description:cat+' ব্যয়' });
-        });
-      }
-    }
-  });
-  return arr;
-}
 
 function init() {
-  entries = genSample();
+  entries = [];
   const now = new Date();
   const tSel = document.getElementById('truckFilter');
   const fTruck = document.getElementById('fTruck');
-  TRUCK_NAMES.forEach(t => {
-    tSel.innerHTML += `<option value="${t}">${t}</option>`;
-    fTruck.innerHTML += `<option value="${t}">${t}</option>`;
+  TRUCK_NAMES.forEach(function(t) {
+    tSel.innerHTML += '<option value="'+t+'">'+t+'</option>';
+    if(fTruck) fTruck.innerHTML += '<option value="'+t+'">'+t+'</option>';
   });
   const mSel = document.getElementById('monthFilter');
   MONTHS_BN.forEach((m,i) => {
@@ -2063,6 +2083,63 @@ function switchView(v, btn) {
 
 // Truck metadata store
 var truckMeta = {}; // keyed by truck name: {model, year, color, note}
+
+function openTruckMgmtModal() {
+  renderTruckMgmtList();
+  document.getElementById('newTruckName').value = '';
+  document.getElementById('truckMgmtModal').classList.add('open');
+}
+
+function renderTruckMgmtList() {
+  var list = document.getElementById('truckMgmtList');
+  list.innerHTML = TRUCK_NAMES.length ? TRUCK_NAMES.map(function(t, i){
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px">'
+      +'<span style="font-size:14px">🚚</span>'
+      +'<input type="text" value="'+t+'" id="te_truck_'+i+'" style="flex:1;border:none;background:transparent;font-size:13px;font-family:inherit;font-weight:600;color:var(--heading)" onchange="renameTruck('+i+', this.value)"/>'
+      +'<button onclick="deleteTruck('+i+')" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">🗑️ মুছুন</button>'
+      +'</div>';
+  }).join('') : '<div style="color:var(--muted);font-size:13px;padding:10px">কোনো ট্রাক নেই</div>';
+  // update count label
+  var lbl = document.getElementById('truckCountLabel');
+  if (lbl) lbl.textContent = TRUCK_NAMES.length + 'টি ট্রাক নিবন্ধিত';
+}
+
+function addTruck() {
+  var name = document.getElementById('newTruckName').value.trim();
+  if (!name) { showNotif('ট্রাকের নাম দিন','var(--red)'); return; }
+  if (TRUCK_NAMES.indexOf(name) !== -1) { showNotif('এই নামে ট্রাক আছে','var(--red)'); return; }
+  TRUCK_NAMES.push(name);
+  document.getElementById('newTruckName').value = '';
+  renderTruckMgmtList();
+  truckNamesChanged();
+  showNotif('ট্রাক যোগ হয়েছে ✓','var(--green)');
+}
+
+function renameTruck(i, newName) {
+  newName = newName.trim();
+  if (!newName) return;
+  var old = TRUCK_NAMES[i];
+  TRUCK_NAMES[i] = newName;
+  // update existing entries
+  entries.forEach(function(e){ if(e.truck===old) e.truck=newName; });
+  if (truckMeta[old]) { truckMeta[newName]=truckMeta[old]; delete truckMeta[old]; }
+  truckNamesChanged();
+  showNotif('ট্রাকের নাম পরিবর্তন হয়েছে ✓','var(--green)');
+}
+
+function deleteTruck(i) {
+  var name = TRUCK_NAMES[i];
+  var hasData = entries.some(function(e){ return e.truck===name; });
+  if (hasData) {
+    if (!confirm(name+' এর এন্ট্রি ডেটা আছে। তবুও মুছবেন?')) return;
+  } else {
+    if (!confirm(name+' মুছে ফেলবেন?')) return;
+  }
+  TRUCK_NAMES.splice(i, 1);
+  renderTruckMgmtList();
+  truckNamesChanged();
+  showNotif(name+' মুছে ফেলা হয়েছে','var(--red)');
+}
 var fuelAlertMultiplier = 1.5;  // alert if this month > avg * multiplier
 var fuelAlertRatioPct   = 60;   // alert if fuel > X% of total expenses
 
