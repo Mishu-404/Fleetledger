@@ -318,8 +318,10 @@ function renderEntries() {
       <td style="color:${netClass};font-weight:800;font-size:15px">${netSign}${fmt(Math.abs(net))}</td>
       <td style="color:var(--muted);font-size:12px">আয়: ${fmt(g.revenue)} | ব্যয়: ${fmt(g.expense)}${g.discount > 0 ? ' | ছাড়: ' + fmt(g.discount) : ''}</td>
       <td style="color:var(--muted)">${g.entries.length}টি এন্ট্রি</td>
-      <td>
+      <td style="white-space:nowrap;display:flex;gap:6px;align-items:center">
         <button id="btn_toggle_${idx}" style="background:#fff;border:1.5px solid #cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#475569">▼ বিস্তারিত</button>
+        <button onclick="event.stopPropagation();openModal('revenue','${g.sheet_ref||''}','${g.truck}','${g.date}')" style="background:#dcfce7;border:1.5px solid #86efac;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:700;color:#15803d">+ আয়</button>
+        <button onclick="event.stopPropagation();openModal('expense','${g.sheet_ref||''}','${g.truck}','${g.date}')" style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:700;color:#b91c1c">+ ব্যয়</button>
       </td>
     </tr>
     `;
@@ -916,12 +918,27 @@ function adminSaveEntry() {
   showNotif('এন্ট্রি আপডেট হয়েছে ✓', 'var(--green)');
 }
 
-function openModal(type) {
+function openModal(type, sheetRef, truck, date) {
   setModalType(type);
   document.getElementById('modalBg').classList.add('open');
   document.getElementById('fAmount').value = '';
   document.getElementById('fDesc').value = '';
   document.getElementById('fClient').value = '';
+  // pre-fill sheet context if provided
+  var srEl = document.getElementById('fSheetRef');
+  if (srEl) srEl.value = sheetRef || '';
+  if (truck) {
+    var ft = document.getElementById('fTruck');
+    if (ft) ft.value = truck;
+  }
+  if (date) {
+    var fd = document.getElementById('fDate');
+    if (fd) fd.value = date;
+  }
+  // update modal title to show sheet ref
+  var title = document.getElementById('modalTitle');
+  if (title && sheetRef) title.textContent = 'শিট #' + sheetRef + ' এ যোগ করুন';
+  else if (title) title.textContent = 'নতুন এন্ট্রি';
 }
 
 function closeModal(e) { if (e.target === document.getElementById('modalBg')) document.getElementById('modalBg').classList.remove('open'); }
@@ -937,22 +954,31 @@ function setModalType(type) {
   submitBtn.className = 'btn ' + (type === 'revenue' ? 'btn-rev' : 'btn-exp');
 }
 
-function submitEntry() {
+async function submitEntry() {
   const amt = parseFloat(document.getElementById('fAmount').value);
   if (!amt || amt <= 0) { showNotif('সঠিক পরিমাণ লিখুন', 'var(--red)'); return; }
   const catEl = document.getElementById('fCategory');
+  const srEl = document.getElementById('fSheetRef');
+  const sheetRef = srEl ? srEl.value || null : null;
   const entry = {
     id: 'm' + Date.now(), type: modalType,
     truck: document.getElementById('fTruck').value,
     date: document.getElementById('fDate').value,
     amount: Math.round(amt),
     description: document.getElementById('fDesc').value || (modalType === 'revenue' ? 'আয় এন্ট্রি' : catEl.value + ' ব্যয়'),
+    sheet_ref: sheetRef,
     ...(modalType === 'revenue' ? { client: document.getElementById('fClient').value } : { category: catEl.value }),
   };
   entries.unshift(entry);
   applyFilters();
   document.getElementById('modalBg').classList.remove('open');
-  showNotif(modalType === 'revenue' ? 'আয়ের এন্ট্রি যোগ হয়েছে!' : 'ব্যয়ের এন্ট্রি যোগ হয়েছে!', modalType === 'revenue' ? 'var(--green)' : 'var(--red)');
+  showNotif('⏳ সেভ হচ্ছে...', 'var(--accent)');
+  try {
+    await dbSave(entry);
+    showNotif(modalType === 'revenue' ? '✅ আয়ের এন্ট্রি যোগ হয়েছে!' : '✅ ব্যয়ের এন্ট্রি যোগ হয়েছে!', modalType === 'revenue' ? 'var(--green)' : 'var(--red)');
+  } catch(err) {
+    showNotif('❌ সেভ ব্যর্থ হয়েছে!', 'var(--red)');
+  }
 }
 
 function exportCSV() {
