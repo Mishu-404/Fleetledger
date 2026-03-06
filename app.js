@@ -1,3 +1,4 @@
+
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -311,8 +312,8 @@ function renderEntries() {
 
     html += `
     <tr style="background:#f8fafc;border-top:2px solid var(--border);border-bottom:2px solid var(--border);cursor:pointer" onclick="toggleSheetRows('${idx}')">
-      <td><span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700">শিট</span>${g.sheet_ref ? '<span style=\"font-size:10px;background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd;border-radius:4px;padding:2px 7px;font-weight:700;margin-left:6px\"># ' + g.sheet_ref + '</span>' : ''}</td>
-      <td style="font-weight:700;color:var(--heading)">${g.truck}</td>
+      <td><span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700">শিট</span></td>
+      <td style="font-weight:700;color:var(--heading)">${g.truck}${g.sheet_ref ? '<span style=\"font-size:10px;background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd;border-radius:4px;padding:2px 7px;font-weight:700;margin-left:8px\"># ' + g.sheet_ref + '</span>' : ''}</td>
       <td style="font-weight:600;color:var(--muted)">${fmtDate(g.date)}</td>
       <td style="color:${netClass};font-weight:800;font-size:15px">${netSign}${fmt(Math.abs(net))}</td>
       <td style="color:var(--muted);font-size:12px">আয়: ${fmt(g.revenue)} | ব্যয়: ${fmt(g.expense)}${g.discount > 0 ? ' | ছাড়: ' + fmt(g.discount) : ''}</td>
@@ -1116,6 +1117,7 @@ var W_EXPS = [
   { id: 'annual', bn: 'বার্ষিক গাড়ির কাজ', en: 'Annual Vehicle', auto: false },
   { id: 'fine', bn: 'কেইস/ফাইন', en: 'Case/Fine', auto: false },
   { id: 'other', bn: 'অন্যান্য (৫০০+)', en: 'Other 500+', auto: false },
+  { id: 'discount', bn: 'ঐচ্ছিক ছাড়', en: 'Optional Discount', auto: false },
 ];
 var BNN = ['১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯', '১০', '১১', '১২'];
 
@@ -1214,7 +1216,7 @@ function wCalc() {
   var comm = Math.round(fare * .10);
   var cel = document.getElementById('we_commission'); if (cel) cel.value = comm || '';
   var tot = 0; W_EXPS.forEach(function (e) { var el = document.getElementById('we_' + e.id); tot += el ? (parseFloat(el.value) || 0) : 0; });
-  var disc = wNv('wDiscount'), net = fare - tot, fin = net - disc;
+  var disc = wNv('we_discount'), net = fare - tot, fin = net;
   // update trip total row
   var tg = document.getElementById('wCGross'); if (tg) tg.textContent = wFmt(fare);
   var tg2 = document.getElementById('wCGross2'); if (tg2) tg2.textContent = wFmt(fare);
@@ -1269,20 +1271,14 @@ async function wSubmit() {
     }
   });
 
-  // ঐচ্ছিক ছাড় — save as expense
-  var disc = wNv('wDiscount');
-  if (disc > 0) {
-    var discExp = { id: 'wd' + Date.now(), type: 'expense', truck: plate, date: expDate, amount: disc, category: 'ঐচ্ছিক ছাড়', description: 'ঐচ্ছিক ছাড় ব্যয়', sheet_ref: sheetRef };
-    entries.unshift(discExp);
-    savePromises.push(dbSave(discExp));
-  }
+  // ঐচ্ছিক ছাড় is now part of W_EXPS — handled above
 
   // wait for all saves — show clear result to operator
   showNotif('⏳ সেভ হচ্ছে...', 'var(--accent)');
   try {
     await Promise.all(savePromises);
     // reset form
-    ['wCode', 'wDriver', 'wHelper', 'wDiscount', 'wMPrev', 'wMCurr', 'wMLiters', 'wMDist'].forEach(function (id) {
+    ['wCode', 'wDriver', 'wHelper', 'wMPrev', 'wMCurr', 'wMLiters', 'wMDist'].forEach(function (id) {
       var el = document.getElementById(id); if (el) el.value = '';
     });
     W_EXPS.forEach(function (e) { var el = document.getElementById('we_' + e.id); if (el) el.value = ''; });
@@ -2556,3 +2552,4 @@ async function startup() {
   renderAll();
 }
 startup();
+
