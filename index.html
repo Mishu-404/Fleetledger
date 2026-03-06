@@ -1552,7 +1552,7 @@
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
-function truckNamesChanged() {
+function truckNamesChanged(skipRender) {
   // refresh all dropdowns that depend on TRUCK_NAMES
   var selIds = ['truckFilter','fTruck','wPlate','aeTruck','om_truck_sel','settleTruck','reportTruckFilter','mFilterTruck'];
   selIds.forEach(function(id){
@@ -1573,7 +1573,7 @@ function truckNamesChanged() {
       el.appendChild(o);
     });
   });
-  renderAll();
+  if (!skipRender) renderAll();
 }
 
 const MONTHS_BN = ["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
@@ -2338,7 +2338,7 @@ async function loadTruckList() {
       if (Array.isArray(list) && list.length > 0) {
         TRUCK_NAMES.length = 0;
         list.forEach(function(n){ TRUCK_NAMES.push(n); });
-        truckNamesChanged();
+        truckNamesChanged(true); // skip render — entries not loaded yet
       }
     }
   } catch(e) { console.warn('loadTruckList error:', e); }
@@ -2501,26 +2501,17 @@ function pinCheck() {
     showScreen(t === 'worker' ? 'worker' : 'owner');
     if (t === 'worker') wInit();
     if (t === 'owner') {
-      // show loading overlay while fetching fresh data
-      showScreen('loading');
-      Promise.all([
-        dbLoad(),
-        loadTruckList(),
-        loadTruckMeta(),
-        loadDrivers(),
-        loadMaintenanceItems()
-      ]).then(function(results) {
-        var loaded = results[0];
-        entries = (loaded && loaded.length > 0) ? loaded : [];
-        applyFilters();
-        renderAll();
-        showScreen('owner');
-      }).catch(function(err) {
-        console.error('load error:', err);
-        entries = [];
-        applyFilters();
-        showScreen('owner');
-      });
+      showScreen('owner');
+      Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenanceItems()])
+        .then(function(results) {
+          var loaded = results[0];
+          entries = (loaded && loaded.length > 0) ? loaded : [];
+          applyFilters();
+          renderAll();
+        }).catch(function(err) {
+          console.error('load error:', err);
+          applyFilters();
+        });
     }
   } else {
     document.getElementById('pinErr').textContent = '❌ ভুল পিন। আবার চেষ্টা করুন।';
