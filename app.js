@@ -954,7 +954,7 @@ function pinCheck() {
     if (t === 'worker') wInit();
     if (t === 'owner') {
       showScreen('owner');
-      Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenanceItems()])
+      Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenance()])
         .then(function (results) {
           var loaded = results[0];
           entries = (loaded && loaded.length > 0) ? loaded : [];
@@ -2447,7 +2447,7 @@ async function startup() {
   // load truck list FIRST so dropdowns are ready, then load entries
   await loadTruckList();
 
-  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadDrivers(), loadMaintenanceItems()]);
+  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadDrivers(), loadMaintenance()]);
   var loaded = results[0].status === 'fulfilled' ? results[0].value : null;
   console.log('startup: entries loaded =', loaded ? loaded.length : 0);
   if (loaded && loaded.length > 0) {
