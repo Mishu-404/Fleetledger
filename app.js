@@ -311,8 +311,8 @@ function renderEntries() {
 
     html += `
     <tr style="background:#f8fafc;border-top:2px solid var(--border);border-bottom:2px solid var(--border);cursor:pointer" onclick="toggleSheetRows('${idx}')">
-      <td><span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700">শিট</span></td>
-      <td style="font-weight:700;color:var(--heading)">${g.truck}${g.sheet_ref ? '<span style=\"font-size:10px;background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd;border-radius:4px;padding:2px 7px;font-weight:700;margin-left:8px\"># ' + g.sheet_ref + '</span>' : ''}</td>
+      <td><span class="tag" style="background:#e0e7ff;color:#4338ca;font-weight:700">শিট</span>${g.sheet_ref ? '<span style=\"font-size:10px;background:#f0f9ff;color:#0284c7;border:1px solid #bae6fd;border-radius:4px;padding:2px 7px;font-weight:700;margin-left:6px\"># ' + g.sheet_ref + '</span>' : ''}</td>
+      <td style="font-weight:700;color:var(--heading)">${g.truck}</td>
       <td style="font-weight:600;color:var(--muted)">${fmtDate(g.date)}</td>
       <td style="color:${netClass};font-weight:800;font-size:15px">${netSign}${fmt(Math.abs(net))}</td>
       <td style="color:var(--muted);font-size:12px">আয়: ${fmt(g.revenue)} | ব্যয়: ${fmt(g.expense)}${g.discount > 0 ? ' | ছাড়: ' + fmt(g.discount) : ''}</td>
