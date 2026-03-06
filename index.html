@@ -9,20 +9,12 @@
 </head>
 <body>
 <div id="screen-role" class="screen">
-  <div class="rl-badge">🚚</div>
-  <div class="rl-h1">ফ্লিটলেজার</div>
-  <div class="rl-sub">আপনার ভূমিকা বেছে নিন / Select your role</div>
-  <div class="rl-cards">
-    <div class="rl-card" onclick="pinAsk('worker')">
-      <div class="rl-icon">👷</div>
-      <div class="rl-name">Data Entry Operator</div>
-      <div class="rl-desc">দৈনিক ট্রিপ রিপোর্ট ফর্ম পূরণ করুন<br><span style="color:#475569">Fill the daily trip report form</span></div>
-    </div>
-    <div class="rl-card" onclick="pinAsk('owner')">
-      <div class="rl-icon">📊</div>
-      <div class="rl-name">Management</div>
-      <div class="rl-desc">সব ট্রাকের ড্যাশবোর্ড ও রিপোর্ট দেখুন<br><span style="color:#475569">View fleet dashboard &amp; reports</span></div>
-    </div>
+  <div class="pin-box" style="max-width:360px">
+    <div class="pin-icon">🚚</div>
+    <div class="pin-title">ফ্লিটলেজার</div>
+    <div class="pin-sub2">আপনার username বেছে নিন</div>
+    <div id="userList" style="display:flex;flex-direction:column;gap:10px;margin:18px 0;width:100%"></div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px">FleetLedger v2.0</div>
   </div>
 </div>
 
@@ -30,7 +22,7 @@
   <div class="pin-box">
     <div class="pin-icon" id="pinIcon">🔒</div>
     <div class="pin-title" id="pinTitle">Enter PIN</div>
-    <div class="pin-sub2">পিন কোড দিন</div>
+    <div class="pin-sub2" id="pinSub">পিন কোড দিন</div>
     <div class="pin-dots">
       <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
       <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
@@ -144,8 +136,6 @@
       <table class="ctbl">
         <tr><td class="ck">মোট আদায়কৃত ক্যাশ<small>Total Collected</small></td><td class="cv" id="wCGross2" style="color:#057a55">৳০</td></tr>
         <tr><td class="ck" style="color:#c81e1e">(-) মোট খরচ</td><td class="cv" id="wCExp" style="color:#c81e1e">৳০</td></tr>
-        <tr class="crow-net"><td class="ck">নিট ক্যাশ</td><td class="cv" id="wCNet">৳০</td></tr>
-        <tr><td class="ck"><div class="wf-f" style="padding:3px 0"><label>(-) ঐচ্ছিক ছাড়</label><input type="number" id="wDiscount" placeholder="০" oninput="wCalc()" style="background:#fff"/></div></td><td class="cv" id="wCDisc" style="color:#6b7280">৳০</td></tr>
         <tr class="crow-fin"><td class="ck">নিট ক্যাশ (চূড়ান্ত)<small style="color:#94a3b8">Final</small></td><td class="cv" id="wCFinal" style="color:#fbbf24">৳০</td></tr>
       </table>
     </div>
@@ -156,15 +146,28 @@
       <div class="wf-bd">
         <div class="wf-f" style="margin-bottom:12px"><label>মন্তব্য</label><input type="text" id="wNote" placeholder="কোনো বিশেষ তথ্য..."/></div>
         <div class="sig-row">
-          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">হিসাবগ্রহণকারী</div></div>
-          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">ড্রাইভার</div></div>
-          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">মালিক</div></div>
+          <div class="sig-box"><div class="sig-line"></div><div class="sig-lbl">Alamgir (হিসাবগ্রহণকারী)</div></div>
         </div>
       </div>
     </div>
 
   </div><!-- /wf-wrap truck -->
-  <div class="wf-bar" id="wbar-truck"><button id="wSubmitBtn" class="wf-btn" onclick="wSubmit()">✅ শিট জমা দিন / Submit All</button></div>
+  <!-- PREVIEW MODAL -->
+  <div id="previewBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;overflow-y:auto;padding:20px;box-sizing:border-box">
+    <div style="background:#fff;border-radius:14px;max-width:500px;margin:0 auto;overflow:hidden">
+      <div style="background:#1e293b;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+        <div style="color:#fff;font-weight:700;font-size:16px">📋 শিট প্রিভিউ / Preview</div>
+        <button onclick="document.getElementById('previewBg').style.display='none'" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <div id="previewContent" style="padding:16px 20px;font-size:13px;line-height:1.7"></div>
+      <div style="padding:12px 20px;background:#f8fafc;border-top:1.5px solid #e2e8f0;display:flex;gap:10px">
+        <button onclick="document.getElementById('previewBg').style.display='none'" style="flex:1;padding:11px;background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← ফিরে যান</button>
+        <button onclick="document.getElementById('previewBg').style.display='none';wSubmit()" style="flex:2;padding:11px;background:#1a56db;border:none;border-radius:8px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">✅ নিশ্চিত করুন ও জমা দিন</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wf-bar" id="wbar-truck"><button id="wSubmitBtn" class="wf-btn" onclick="wPreview()">👁 প্রিভিউ ও জমা দিন</button></div>
   </div><!-- /wtab-truck-content -->
 
   <!-- DEPOT TRIP FORM -->
@@ -274,10 +277,12 @@
     <button class="nav-btn" onclick="switchView('payroll',this)">💰 বেতন শিট</button>
     <button class="nav-btn" onclick="switchView('depot',this)">🏭 ডিপো</button>
     <button class="nav-btn" onclick="switchView('outstanding',this)">💳 বাকি হিসাব</button>
+    <button class="nav-btn" id="userMgmtNavBtn" onclick="switchView('usermgmt',this)" style="display:none">👥 ব্যবহারকারী</button>
   </nav>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV ডাউনলোড</button>
-
+    <button class="btn btn-rev" onclick="openModal('revenue')">+ আয় যোগ করুন</button>
+    <button class="btn btn-exp" onclick="openModal('expense')">+ ব্যয় যোগ করুন</button>
     <button class="btn btn-ghost" onclick="logout()" style="border-color:#f98080;color:#c81e1e">🔒 লগআউট</button>
   </div>
 </header>
@@ -770,7 +775,6 @@
       <div class="form-row">
         <label>তারিখ</label>
         <input type="date" id="fDate"/>
-        <input type="hidden" id="fSheetRef" value=""/>
       </div>
     </div>
     <div class="form-row">
@@ -1102,6 +1106,46 @@
         <input type="text" id="newTruckName" placeholder="যেমন: ঢাকা-মেট্রো-ট-১৫-০০১" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit"/>
         <button class="btn btn-blue" onclick="addTruck()">+ যোগ করুন</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER MANAGEMENT VIEW -->
+<div id="view-usermgmt" class="view" style="display:none;padding:20px;max-width:700px;margin:0 auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div style="font-size:20px;font-weight:700;color:var(--heading)">👥 ব্যবহারকারী ব্যবস্থাপনা</div>
+    <button class="btn btn-blue" onclick="showUserModal()">+ নতুন ব্যবহারকারী</button>
+  </div>
+  <div id="userMgmtTable"></div>
+
+  <!-- Activity Log -->
+  <div style="margin-top:28px">
+    <div style="font-size:16px;font-weight:700;color:var(--heading);margin-bottom:12px">📋 লগ / Activity Log</div>
+    <div id="activityLogTable"></div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div id="userModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;width:340px;overflow:hidden">
+    <div style="background:#1e293b;padding:16px 20px">
+      <div style="color:#fff;font-weight:700;font-size:15px" id="userModalTitle">নতুন ব্যবহারকারী</div>
+    </div>
+    <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+      <div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">Username</label>
+        <input id="umUsername" type="text" placeholder="যেমন: alamgir" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box"/></div>
+      <div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">PIN (৪ সংখ্যা)</label>
+        <input id="umPin" type="password" maxlength="4" placeholder="••••" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box"/></div>
+      <div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px">ভূমিকা / Role</label>
+        <select id="umRole" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;font-family:inherit;box-sizing:border-box">
+          <option value="operator">👷 Operator</option>
+          <option value="viewer">👁 Viewer</option>
+          <option value="admin">⚙️ Admin</option>
+        </select></div>
+    </div>
+    <div style="padding:12px 20px;background:#f8fafc;border-top:1.5px solid #e2e8f0;display:flex;gap:10px">
+      <button onclick="closeUserModal()" style="flex:1;padding:10px;background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">বাতিল</button>
+      <button onclick="saveUser()" style="flex:2;padding:10px;background:#1a56db;border:none;border-radius:7px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">✅ সেভ করুন</button>
     </div>
   </div>
 </div>

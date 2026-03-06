@@ -593,6 +593,7 @@ function printMonthlyReport() {
 }
 
 function switchView(v, btn) {
+  if (v === 'usermgmt') { renderUserMgmtTable(); loadActivityLog(); }
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1004,6 +1005,62 @@ function showScreen(name) {
   document.getElementById('screen-' + name).classList.add('active');
 }
 
+// ── USER SYSTEM ──
+var currentUser = null; // { id, username, role }
+var allUsers = [];
+var selectedUserId = null;
+
+// SHA-256 hash for PIN
+async function sha256(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function loadUsers() {
+  try {
+    var r = await fetch(S_URL + '/rest/v1/users?select=id,username,role&order=created_at.asc', { headers: S_HDR });
+    if (!r.ok) return;
+    allUsers = await r.json();
+    renderUserList();
+  } catch(e) { console.error('loadUsers error:', e); }
+}
+
+function renderUserList() {
+  var el = document.getElementById('userList');
+  if (!el) return;
+  var roleIcon = { admin: '⚙️', operator: '👷', viewer: '👁' };
+  var roleLabel = { admin: 'Admin', operator: 'Operator', viewer: 'Viewer' };
+  el.innerHTML = allUsers.map(function(u) {
+    var onclick = 'selectUser("' + u.id + '","' + u.username + '","' + u.role + '")';
+    return '<button onclick="' + onclick + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;width:100%;text-align:left">'
+      + '<span style="font-size:22px">' + roleIcon[u.role] + '</span>'
+      + '<div><div style="font-weight:700;color:#1e293b">' + u.username + '</div>'
+      + '<div style="font-size:11px;color:#94a3b8">' + roleLabel[u.role] + '</div></div>'
+      + '</button>';
+  }).join('');
+}
+
+function selectUser(id, username, role) {
+  selectedUserId = id;
+  document.getElementById('pinIcon').textContent = { admin:'⚙️', operator:'👷', viewer:'👁' }[role] || '🔒';
+  document.getElementById('pinTitle').textContent = username;
+  document.getElementById('pinSub').textContent = 'PIN দিন';
+  document.getElementById('pinErr').textContent = '';
+  pinVal = '';
+  pinUpdateDots();
+  showScreen('pin');
+}
+
+async function logActivity(username, role, action) {
+  try {
+    await fetch(S_URL + '/rest/v1/activity_log', {
+      method: 'POST',
+      headers: Object.assign({}, S_HDR, { 'Prefer': 'return=minimal' }),
+      body: JSON.stringify({ username: username, role: role, action: action })
+    });
+  } catch(e) {}
+}
+
 // ── PIN ──
 var pinTarget = '', pinVal = '';
 var pinCodes = { worker: '0000', owner: '1234' };
@@ -1248,9 +1305,7 @@ function wCalc() {
   var tg2 = document.getElementById('wCGross2'); if (tg2) tg2.textContent = wFmt(fare);
   document.getElementById('wExpTotal').textContent = wFmt(tot);
   document.getElementById('wCExp').textContent = wFmt(tot);
-  document.getElementById('wCNet').textContent = wFmt(net);
-  document.getElementById('wCNet').style.color = net >= 0 ? '#1a56db' : '#c81e1e';
-  document.getElementById('wCDisc').textContent = wFmt(disc);
+  var wCNet = document.getElementById('wCNet'); if (wCNet) { wCNet.textContent = wFmt(net); wCNet.style.color = net >= 0 ? '#1a56db' : '#c81e1e'; }
   document.getElementById('wCFinal').textContent = wFmt(fin);
   document.getElementById('wCFinal').style.color = fin >= 0 ? '#fbbf24' : '#fca5a5';
 }
@@ -1260,6 +1315,42 @@ function wCalcM() {
   var eff = (lit > 0 && dist > 0) ? (dist / lit).toFixed(2) : null;
   document.getElementById('wMRes').textContent = eff ? eff.replace(/\d/g, function (d) { return '০১২৩৪৫৬৭৮৯'[+d]; }) + '  কি.মি./লি.' : '— কি.মি./লি.';
 }
+function wPreview() {
+  var plate = document.getElementById('wPlate').value;
+  if (!plate) { showNotif('গাড়ির নম্বর বেছে নিন', 'var(--red)'); return; }
+  var driver = document.getElementById('wDriver').value || '—';
+  var validTrips = wTripData.filter(function(t) { return t.fare > 0 && t.route && t.route.trim() && t.date && t.date.length === 10; });
+  if (!validTrips.length) { showNotif('কমপক্ষে একটি ট্রিপে রুট ও ভাড়া দিন', 'var(--red)'); return; }
+
+  var fare = wTripData.reduce(function(s, t) { return s + (t.fare || 0); }, 0);
+  var tot = 0; W_EXPS.forEach(function(e) { var el = document.getElementById('we_' + e.id); tot += el ? (parseFloat(el.value) || 0) : 0; });
+  var fin = fare - tot;
+  var note = document.getElementById('wNote') ? document.getElementById('wNote').value : '';
+
+  var tripsHTML = validTrips.map(function(t, i) {
+    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;color:#64748b">' + (i+1) + '</td><td style="padding:5px 8px">' + t.route + '</td><td style="padding:5px 8px;text-align:right;color:#057a55;font-weight:700">' + wFmt(t.fare) + '</td></tr>';
+  }).join('');
+
+  var expsHTML = W_EXPS.map(function(e) {
+    var el = document.getElementById('we_' + e.id), amt = el ? (parseFloat(el.value) || 0) : 0;
+    if (!amt) return '';
+    return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px;color:#64748b">' + e.bn + '</td><td style="padding:5px 8px;text-align:right;color:#c81e1e;font-weight:600">' + wFmt(amt) + '</td></tr>';
+  }).join('');
+
+  var html = '<div style="margin-bottom:12px"><span style="font-size:12px;color:#64748b">ট্রাক</span><div style="font-weight:700;font-size:15px;color:#1e293b">' + plate + '</div></div>'
+    + '<div style="margin-bottom:12px"><span style="font-size:12px;color:#64748b">ড্রাইভার</span><div style="font-weight:600">' + driver + '</div></div>'
+    + '<div style="margin-bottom:10px;font-weight:700;color:#1e293b;border-bottom:1.5px solid #e2e8f0;padding-bottom:4px">ট্রিপ সমূহ</div>'
+    + '<table style="width:100%;border-collapse:collapse;margin-bottom:12px">' + tripsHTML + '</table>'
+    + (expsHTML ? '<div style="margin-bottom:10px;font-weight:700;color:#1e293b;border-bottom:1.5px solid #e2e8f0;padding-bottom:4px">খরচ সমূহ</div><table style="width:100%;border-collapse:collapse;margin-bottom:12px">' + expsHTML + '</table>' : '')
+    + '<div style="background:#1e293b;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="color:#94a3b8;font-size:13px">নিট ক্যাশ (চূড়ান্ত)</span>'
+    + '<span style="font-size:18px;font-weight:800;color:' + (fin >= 0 ? '#34d399' : '#f87171') + '">' + wFmt(fin) + '</span></div>'
+    + (note ? '<div style="margin-top:10px;font-size:12px;color:#64748b">মন্তব্য: ' + note + '</div>' : '');
+
+  document.getElementById('previewContent').innerHTML = html;
+  document.getElementById('previewBg').style.display = 'block';
+}
+
 async function wSubmit() {
   var plate = document.getElementById('wPlate').value;
   if (!plate) { showNotif('গাড়ির নম্বর বেছে নিন', 'var(--red)'); return; }
@@ -2530,7 +2621,12 @@ async function wdSubmit() {
 }
 
 // ── LOGOUT ──
-function logout() {
+async function logout() {
+  if (currentUser) {
+    await logActivity(currentUser.username, currentUser.role, 'logout');
+    currentUser = null;
+  }
+  selectedUserId = null;
   pinVal = '';
   pinTarget = '';
   // reset worker tab back to truck on next login
@@ -2545,12 +2641,129 @@ function logout() {
 }
 
 // ── STARTUP ──
+
+// ── USER MANAGEMENT ──
+var editingUserId = null;
+
+function showUserModal(userId) {
+  editingUserId = userId || null;
+  document.getElementById('userModalTitle').textContent = userId ? 'ব্যবহারকারী সম্পাদনা' : 'নতুন ব্যবহারকারী';
+  if (userId) {
+    var u = allUsers.find(function(x) { return x.id === userId; });
+    if (u) {
+      document.getElementById('umUsername').value = u.username;
+      document.getElementById('umRole').value = u.role;
+      document.getElementById('umUsername').disabled = true;
+    }
+  } else {
+    document.getElementById('umUsername').value = '';
+    document.getElementById('umPin').value = '';
+    document.getElementById('umRole').value = 'operator';
+    document.getElementById('umUsername').disabled = false;
+  }
+  document.getElementById('umPin').value = '';
+  document.getElementById('userModalBg').style.display = 'flex';
+}
+
+function closeUserModal() {
+  document.getElementById('userModalBg').style.display = 'none';
+  editingUserId = null;
+}
+
+async function saveUser() {
+  var username = document.getElementById('umUsername').value.trim();
+  var pin = document.getElementById('umPin').value.trim();
+  var role = document.getElementById('umRole').value;
+  if (!username) { showNotif('Username দিন', 'var(--red)'); return; }
+  if (!editingUserId && pin.length !== 4) { showNotif('৪ সংখ্যার PIN দিন', 'var(--red)'); return; }
+  try {
+    if (editingUserId) {
+      // update role (and PIN if provided)
+      var payload = { role: role };
+      if (pin.length === 4) payload.pin_hash = await sha256(pin);
+      var r = await fetch(S_URL + '/rest/v1/users?id=eq.' + editingUserId, {
+        method: 'PATCH',
+        headers: Object.assign({}, S_HDR, { 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) throw new Error('Update failed');
+    } else {
+      var pinHash = await sha256(pin);
+      var r = await fetch(S_URL + '/rest/v1/users', {
+        method: 'POST',
+        headers: Object.assign({}, S_HDR, { 'Prefer': 'return=minimal' }),
+        body: JSON.stringify({ username: username, pin_hash: pinHash, role: role })
+      });
+      if (!r.ok) throw new Error('Create failed');
+    }
+    showNotif('✅ সেভ হয়েছে!', 'var(--green)');
+    closeUserModal();
+    await loadUsers();
+    renderUserMgmtTable();
+  } catch(e) {
+    showNotif('❌ Error: ' + e.message, 'var(--red)');
+  }
+}
+
+async function deleteUser(userId) {
+  if (!confirm('এই ব্যবহারকারী মুছে ফেলবেন?')) return;
+  try {
+    await fetch(S_URL + '/rest/v1/users?id=eq.' + userId, { method: 'DELETE', headers: S_HDR });
+    showNotif('✅ মুছে ফেলা হয়েছে', 'var(--green)');
+    await loadUsers();
+    renderUserMgmtTable();
+  } catch(e) { showNotif('❌ Error', 'var(--red)'); }
+}
+
+function renderUserMgmtTable() {
+  var el = document.getElementById('userMgmtTable');
+  if (!el) return;
+  var roleLabel = { admin: '⚙️ Admin', operator: '👷 Operator', viewer: '👁 Viewer' };
+  var rows = allUsers.map(function(u) {
+    return '<tr style="border-bottom:1px solid #f1f5f9">'
+      + '<td style="padding:10px 12px;font-weight:700">' + u.username + '</td>'
+      + '<td style="padding:10px 12px"><span style="background:#e0e7ff;color:#4338ca;border-radius:5px;padding:2px 9px;font-size:12px;font-weight:600">' + (roleLabel[u.role]||u.role) + '</span></td>'
+      + '<td style="padding:10px 12px;white-space:nowrap">'
+      + '<button onclick="showUserModal(\"' + u.id + '\")" style="background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:6px">✏️ সম্পাদনা</button>'
+      + (currentUser && u.id !== currentUser.id ? '<button onclick="deleteUser(\"' + u.id + '\")" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🗑️</button>' : '')
+      + '</td></tr>';
+  }).join('');
+  el.innerHTML = '<table style="width:100%;border-collapse:collapse;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden">'
+    + '<thead><tr style="background:#f8fafc"><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">Username</th><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">Role</th><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">Action</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>';
+}
+
+async function loadActivityLog() {
+  try {
+    var r = await fetch(S_URL + '/rest/v1/activity_log?select=*&order=created_at.desc&limit=50', { headers: S_HDR });
+    if (!r.ok) return;
+    var logs = await r.json();
+    var el = document.getElementById('activityLogTable');
+    if (!el) return;
+    var rows = logs.map(function(l) {
+      var dt = new Date(l.created_at);
+      var dtStr = dt.toLocaleDateString('bn-BD') + ' ' + dt.toLocaleTimeString('bn-BD', {hour:'2-digit',minute:'2-digit'});
+      var actionColor = l.action === 'login' ? '#057a55' : l.action === 'logout' ? '#c81e1e' : '#1a56db';
+      return '<tr style="border-bottom:1px solid #f1f5f9">'
+        + '<td style="padding:8px 12px;font-weight:600">' + l.username + '</td>'
+        + '<td style="padding:8px 12px"><span style="background:#e0e7ff;color:#4338ca;border-radius:4px;padding:2px 7px;font-size:11px">' + (l.role||'') + '</span></td>'
+        + '<td style="padding:8px 12px;color:' + actionColor + ';font-weight:600">' + l.action + '</td>'
+        + '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">' + dtStr + '</td>'
+        + '</tr>';
+    }).join('');
+    el.innerHTML = '<table style="width:100%;border-collapse:collapse;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden">'
+      + '<thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">User</th><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">Role</th><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">Action</th><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">সময়</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table>';
+  } catch(e) {}
+}
+
 async function startup() {
   init();
   var kpiStrip = document.getElementById('mainKpiStrip');
   if (kpiStrip) kpiStrip.classList.add('visible');
   showScreen('role');
-  // load everything at startup
+  // load users for login screen
+  await loadUsers();
   // load truck list FIRST so dropdowns are ready, then load entries
   await loadTruckList();
 
