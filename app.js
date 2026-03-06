@@ -1,4 +1,3 @@
-
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -1078,7 +1077,7 @@ function pinAsk(role) {
 function pinPress(d) {
   if (pinVal.length >= 4) return;
   pinVal += d; pinUpdateDots();
-  if (pinVal.length === 4) setTimeout(pinCheck, 130);
+  if (pinVal.length === 4) setTimeout(function() { pinCheck().catch(function(e){ console.error('pinCheck error:',e); }); }, 130);
 }
 function pinDel() {
   pinVal = pinVal.slice(0, -1); pinUpdateDots();
@@ -1089,31 +1088,7 @@ function pinUpdateDots() {
     document.getElementById('pd' + i).className = 'pin-dot' + (i < pinVal.length ? ' on' : '');
   }
 }
-function pinCheck() {
-  if (pinVal === pinCodes[pinTarget]) {
-    var t = pinTarget;
-    showScreen(t === 'worker' ? 'worker' : 'owner');
-    if (t === 'worker') wInit();
-    if (t === 'owner') {
-      showScreen('owner');
-      Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenance()])
-        .then(function (results) {
-          var loaded = results[0];
-          entries = (loaded && loaded.length > 0) ? loaded : [];
-          applyFilters();
-          renderAll();
-        }).catch(function (err) {
-          console.error('load error:', err);
-          applyFilters();
-        });
-    }
-  } else {
-    document.getElementById('pinErr').textContent = '❌ ভুল পিন। আবার চেষ্টা করুন।';
-    pinVal = ''; pinUpdateDots();
-    var b = document.querySelector('.pin-box');
-    b.style.animation = 'none'; void b.offsetWidth; b.style.animation = 'shake .3s ease';
-  }
-}
+// pinCheck is defined below as async function (user-based auth)
 
 // ── SUPABASE ──
 var S_URL = 'https://ggarbfxekttnimdhioga.supabase.co';
@@ -2791,4 +2766,3 @@ async function startup() {
   renderAll();
 }
 startup();
-
