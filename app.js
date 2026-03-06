@@ -278,6 +278,46 @@ function renderTruckTable() {
   }).join('');
 }
 
+// Store sheet groups for button callbacks
+var _sheetGroups = {};
+function renderSheetAddBtns(g) {
+  if (!currentUser || currentUser.role === 'viewer') return '';
+  var key = (g.sheet_ref || (g.truck + g.date)).replace(/[^a-zA-Z0-9]/g,'');
+  _sheetGroups[key] = g;
+  var b1 = document.createElement('button');
+  b1.setAttribute('data-sgkey', key);
+  b1.setAttribute('data-sgtype', 'revenue');
+  b1.setAttribute('onclick', 'openSheetModal(this)');
+  b1.style.cssText = 'background:#dcfce7;border:1.5px solid #86efac;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:700;color:#15803d';
+  b1.textContent = '+ আয়';
+  var b2 = document.createElement('button');
+  b2.setAttribute('data-sgkey', key);
+  b2.setAttribute('data-sgtype', 'expense');
+  b2.setAttribute('onclick', 'openSheetModal(this)');
+  b2.style.cssText = 'background:#fee2e2;border:1.5px solid #fca5a5;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:700;color:#b91c1c';
+  b2.textContent = '+ ব্যয়';
+  return b1.outerHTML + b2.outerHTML;
+}
+function openSheetModal(btn) {
+  event.stopPropagation();
+  var key = btn.dataset.sgkey;
+  var type = btn.dataset.sgtype;
+  var g = _sheetGroups[key];
+  if (g) openModal(type, g.sheet_ref || '', g.truck, g.date);
+}
+function renderEntryActionBtns(id) {
+  if (!currentUser || currentUser.role === 'viewer') return '';
+  var b1 = document.createElement('button');
+  b1.setAttribute('onclick', 'event.stopPropagation();adminEditEntry(' + JSON.stringify(id) + ')');
+  b1.style.cssText = 'background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:4px';
+  b1.textContent = '✏️';
+  var b2 = document.createElement('button');
+  b2.setAttribute('onclick', 'event.stopPropagation();adminDeleteEntry(' + JSON.stringify(id) + ')');
+  b2.style.cssText = 'background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit';
+  b2.textContent = '🗑️';
+  return b1.outerHTML + b2.outerHTML;
+}
+
 function renderEntries() {
   const groups = {};
   filteredEntries.forEach(e => {
@@ -319,8 +359,7 @@ function renderEntries() {
       <td style="color:var(--muted)">${g.entries.length}টি এন্ট্রি</td>
       <td style="white-space:nowrap;display:flex;gap:6px;align-items:center">
         <button id="btn_toggle_${idx}" style="background:#fff;border:1.5px solid #cbd5e1;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;color:#475569">▼ বিস্তারিত</button>
-        <button onclick="event.stopPropagation();openModal('revenue','${g.sheet_ref||''}','${g.truck}','${g.date}')" style="background:#dcfce7;border:1.5px solid #86efac;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:700;color:#15803d">+ আয়</button>
-        <button onclick="event.stopPropagation();openModal('expense','${g.sheet_ref||''}','${g.truck}','${g.date}')" style="background:#fee2e2;border:1.5px solid #fca5a5;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:700;color:#b91c1c">+ ব্যয়</button>
+        ${renderSheetAddBtns(g)}
       </td>
     </tr>
     `;
@@ -335,8 +374,7 @@ function renderEntries() {
           <td style="color:var(--heading)">${e.description}</td>
           <td style="color:var(--muted)">${e.client || e.category || '—'}</td>
           <td style="white-space:nowrap">
-            <button onclick="event.stopPropagation();adminEditEntry('${e.id}')" style="background:#eff6ff;border:1.5px solid #c7d7f8;color:#1a56db;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;margin-right:4px">✏️</button>
-            <button onclick="event.stopPropagation();adminDeleteEntry('${e.id}')" style="background:#fde8e8;border:1.5px solid #f8d0d0;color:#c81e1e;border-radius:6px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🗑️</button>
+            ${renderEntryActionBtns(e.id)}
           </td>
         </tr>
         `;
@@ -1106,6 +1144,9 @@ async function pinCheck() {
       } else {
         var umBtn = document.getElementById('userMgmtNavBtn');
         if (umBtn) umBtn.style.display = role === 'admin' ? 'inline-flex' : 'none';
+        // Hide add buttons for viewer
+        var addRevBtn = document.querySelector('.btn-rev');
+        var addExpBtn = document.querySelector('.btn-exp');
         showScreen('owner');
         Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenance()])
           .then(function(results) {
