@@ -1030,8 +1030,7 @@ function renderUserList() {
   var roleIcon = { admin: '⚙️', operator: '👷', viewer: '👁' };
   var roleLabel = { admin: 'Admin', operator: 'Operator', viewer: 'Viewer' };
   el.innerHTML = allUsers.map(function(u) {
-    var onclick = 'selectUser("' + u.id + '","' + u.username + '","' + u.role + '")';
-    return '<button onclick="' + onclick + '" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;width:100%;text-align:left">'
+    return '<button data-uid="' + u.id + '" data-uname="' + u.username + '" data-urole="' + u.role + '" onclick="selectUserFromBtn(this)" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;width:100%;text-align:left">'
       + '<span style="font-size:22px">' + roleIcon[u.role] + '</span>'
       + '<div><div style="font-weight:700;color:#1e293b">' + u.username + '</div>'
       + '<div style="font-size:11px;color:#94a3b8">' + roleLabel[u.role] + '</div></div>'
@@ -1039,6 +1038,9 @@ function renderUserList() {
   }).join('');
 }
 
+function selectUserFromBtn(btn) {
+  selectUser(btn.dataset.uid, btn.dataset.uname, btn.dataset.urole);
+}
 function selectUser(id, username, role) {
   selectedUserId = id;
   document.getElementById('pinIcon').textContent = { admin:'⚙️', operator:'👷', viewer:'👁' }[role] || '🔒';
