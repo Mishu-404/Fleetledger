@@ -597,7 +597,7 @@
     </div>
 
   </div><!-- /wf-wrap truck -->
-  <div class="wf-bar" id="wbar-truck"><button class="wf-btn" onclick="wSubmit()">✅ শিট জমা দিন / Submit All</button></div>
+  <div class="wf-bar" id="wbar-truck"><button id="wSubmitBtn" class="wf-btn" onclick="wSubmit()">✅ শিট জমা দিন / Submit All</button></div>
   </div><!-- /wtab-truck-content -->
 
   <!-- DEPOT TRIP FORM -->
@@ -2511,19 +2511,44 @@ var S_HDR = {'apikey':S_KEY,'Authorization':'Bearer '+S_KEY,'Content-Type':'appl
 
 async function dbLoad() {
   try {
-    var r = await fetch(S_URL+'/rest/v1/trips?select=*&order=created_at.desc',{headers:S_HDR});
-    if (!r.ok) return null;
-    return await r.json();
-  } catch(e) { return null; }
+    var r = await fetch(S_URL+'/rest/v1/trips?select=*&order=date.desc',{headers:S_HDR});
+    if (!r.ok) {
+      console.error('dbLoad failed:', r.status, await r.text());
+      return null;
+    }
+    var data = await r.json();
+    console.log('dbLoad: loaded', data.length, 'entries');
+    return data;
+  } catch(e) {
+    console.error('dbLoad error:', e);
+    return null;
+  }
 }
 async function dbSave(e) {
   try {
-    fetch(S_URL+'/rest/v1/trips',{
-      method:'POST',
-      headers:Object.assign({},S_HDR,{'Prefer':'return=minimal'}),
-      body:JSON.stringify(e)
+    // only save fields that exist in Supabase trips table
+    var payload = {
+      type:        e.type,
+      truck:       e.truck,
+      date:        e.date,
+      amount:      e.amount,
+      description: e.description,
+      client:      e.client   || null,
+      category:    e.category || null
+    };
+    var res = await fetch(S_URL+'/rest/v1/trips', {
+      method:  'POST',
+      headers: Object.assign({}, S_HDR, {'Prefer':'return=minimal'}),
+      body:    JSON.stringify(payload)
     });
-  } catch(x) {}
+    if (!res.ok) {
+      var err = await res.text();
+      console.error('dbSave failed:', res.status, err);
+      throw new Error('Save failed: ' + res.status + ' ' + err);
+    }
+  } catch(x) {
+    console.error('dbSave error:', x);
+  }
 }
 
 // ── WORKER FORM ──
@@ -2673,32 +2698,58 @@ async function wSubmit(){
   // use first valid trip date for expenses
   var expDate = validTrips[0].date;
 
+  var savePromises = [];
+
   validTrips.forEach(function(t,ti){
     var rev={id:'w'+Date.now()+ti,type:'revenue',truck:plate,date:t.date,amount:t.fare,description:t.route,client:driver};
-    entries.unshift(rev); dbSave(rev);
+    entries.unshift(rev);
+    savePromises.push(dbSave(rev));
   });
 
   W_EXPS.forEach(function(e){
     var el=document.getElementById('we_'+e.id),amt=el?(parseFloat(el.value)||0):0;
     if(amt>0){
       var exp={id:'wx'+Date.now()+e.id,type:'expense',truck:plate,date:expDate,amount:amt,category:e.bn,description:e.bn+' ব্যয়'};
-      entries.unshift(exp); dbSave(exp);
+      entries.unshift(exp);
+      savePromises.push(dbSave(exp));
     }
   });
 
-  // reset form
-  ['wCode','wDriver','wHelper','wDiscount','wMPrev','wMCurr','wMLiters','wMDist'].forEach(function(id){
-    var el=document.getElementById(id);if(el)el.value='';
-  });
-  W_EXPS.forEach(function(e){var el=document.getElementById('we_'+e.id);if(el)el.value='';});
-  wTripData=[];
-  var todayISO2 = new Date().toISOString().split('T')[0];
-  for(var i=0;i<5;i++) wTripData.push({date:todayISO2,route:'',fare:0});
-  wRenderTripRows();
-  wCalc();wCalcM();
-  applyFilters();
-  showNotif('✅ শিট সফলভাবে জমা হয়েছে!','var(--green)');
-  setTimeout(function(){showScreen('role');},1400);
+  // ঐচ্ছিক ছাড় — save as expense
+  var disc=wNv('wDiscount');
+  if(disc>0){
+    var discExp={id:'wd'+Date.now(),type:'expense',truck:plate,date:expDate,amount:disc,category:'ঐচ্ছিক ছাড়',description:'ঐচ্ছিক ছাড় ব্যয়'};
+    entries.unshift(discExp);
+    savePromises.push(dbSave(discExp));
+  }
+
+  // wait for all saves — show clear result to operator
+  showNotif('⏳ সেভ হচ্ছে...','var(--accent)');
+  try {
+    await Promise.all(savePromises);
+    // reset form
+    ['wCode','wDriver','wHelper','wDiscount','wMPrev','wMCurr','wMLiters','wMDist'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value='';
+    });
+    W_EXPS.forEach(function(e){var el=document.getElementById('we_'+e.id);if(el)el.value='';});
+    wTripData=[];
+    var todayISO2 = new Date().toISOString().split('T')[0];
+    for(var i=0;i<5;i++) wTripData.push({date:todayISO2,route:'',fare:0});
+    wRenderTripRows();
+    wCalc();wCalcM();
+    applyFilters();
+    // big success message for operator
+    var btn = document.getElementById('wSubmitBtn');
+    if (btn) { btn.textContent = '✅ সফলভাবে জমা হয়েছে!'; btn.style.background='#057a55'; }
+    showNotif('✅ '+validTrips.length+'টি ট্রিপ সফলভাবে জমা হয়েছে!','var(--green)');
+    setTimeout(function(){
+      if (btn) { btn.textContent = '✅ শিট জমা দিন / Submit All'; btn.style.background=''; }
+      showScreen('role');
+    }, 2000);
+  } catch(err) {
+    console.error('Submit error:', err);
+    showNotif('❌ সেভ ব্যর্থ হয়েছে! ইন্টারনেট চেক করুন।','var(--red)');
+  }
 }
 
 
@@ -3916,12 +3967,19 @@ async function startup() {
   if (kpiStrip) kpiStrip.classList.add('visible');
   showScreen('role');
   // load everything at startup
-  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadTruckList(), loadDrivers(), loadMaintenanceItems()]);
+  // load truck list FIRST so dropdowns are ready, then load entries
+  await loadTruckList();
+
+  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadDrivers(), loadMaintenanceItems()]);
   var loaded = results[0].status==='fulfilled' ? results[0].value : null;
+  console.log('startup: entries loaded =', loaded ? loaded.length : 0);
   if (loaded && loaded.length > 0) {
     entries = loaded;
-    applyFilters();
+  } else {
+    entries = [];
   }
+  applyFilters();
+  renderAll();
 }
 startup();
 
