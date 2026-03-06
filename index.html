@@ -2495,7 +2495,14 @@ function pinCheck() {
     var t = pinTarget;
     showScreen(t === 'worker' ? 'worker' : 'owner');
     if (t === 'worker') wInit();
-    if (t === 'owner')  applyFilters();
+    if (t === 'owner') {
+      // always reload fresh data from Supabase on management login
+      dbLoad().then(function(loaded) {
+        if (loaded && loaded.length > 0) entries = loaded;
+        applyFilters();
+        renderAll();
+      });
+    }
   } else {
     document.getElementById('pinErr').textContent = '❌ ভুল পিন। আবার চেষ্টা করুন।';
     pinVal = ''; pinUpdateDots();
