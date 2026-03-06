@@ -2112,6 +2112,7 @@ function addTruck() {
   document.getElementById('newTruckName').value = '';
   renderTruckMgmtList();
   truckNamesChanged();
+  saveTruckList();
   showNotif('ট্রাক যোগ হয়েছে ✓','var(--green)');
 }
 
@@ -2120,10 +2121,10 @@ function renameTruck(i, newName) {
   if (!newName) return;
   var old = TRUCK_NAMES[i];
   TRUCK_NAMES[i] = newName;
-  // update existing entries
   entries.forEach(function(e){ if(e.truck===old) e.truck=newName; });
   if (truckMeta[old]) { truckMeta[newName]=truckMeta[old]; delete truckMeta[old]; }
   truckNamesChanged();
+  saveTruckList();
   showNotif('ট্রাকের নাম পরিবর্তন হয়েছে ✓','var(--green)');
 }
 
@@ -2138,6 +2139,7 @@ function deleteTruck(i) {
   TRUCK_NAMES.splice(i, 1);
   renderTruckMgmtList();
   truckNamesChanged();
+  saveTruckList();
   showNotif(name+' মুছে ফেলা হয়েছে','var(--red)');
 }
 var fuelAlertMultiplier = 1.5;  // alert if this month > avg * multiplier
@@ -2308,6 +2310,33 @@ async function loadTruckMeta() {
       };
     });
   } catch(e) { console.warn('loadTruckMeta error:', e); }
+}
+
+async function saveTruckList() {
+  try {
+    // store entire list as a single JSON row with id=1
+    await fetch(S_URL+'/rest/v1/truck_list?on_conflict=id', {
+      method: 'POST',
+      headers: Object.assign({}, S_HDR, {'Prefer':'resolution=merge-duplicates,return=minimal'}),
+      body: JSON.stringify({id: 1, names: JSON.stringify(TRUCK_NAMES)})
+    });
+  } catch(e) { console.warn('saveTruckList error:', e); }
+}
+
+async function loadTruckList() {
+  try {
+    var res = await fetch(S_URL+'/rest/v1/truck_list?id=eq.1&select=names', {headers: S_HDR});
+    if (!res.ok) return;
+    var data = await res.json();
+    if (data && data[0] && data[0].names) {
+      var list = JSON.parse(data[0].names);
+      if (Array.isArray(list) && list.length > 0) {
+        TRUCK_NAMES.length = 0;
+        list.forEach(function(n){ TRUCK_NAMES.push(n); });
+        truckNamesChanged();
+      }
+    }
+  } catch(e) { console.warn('loadTruckList error:', e); }
 }
 
 function goTruckEntries(truck) {
@@ -2531,9 +2560,10 @@ function wInit() {
       +'placeholder="'+(e.auto?'auto':'০')+'" '+(e.auto?'readonly':'oninput="wCalc()"')
       +' style="width:90px"/></div></td></tr>';
   }).join('');
-  // start with 5 empty trip rows
+  // start with 5 empty trip rows — pre-fill today's date
   wTripData = [];
-  for (var i=0; i<5; i++) wTripData.push({date:'', route:'', fare:0});
+  var todayISO = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  for (var i=0; i<5; i++) wTripData.push({date:todayISO, route:'', fare:0});
   wRenderTripRows();
   wCalc(); wCalcM();
 }
@@ -2555,7 +2585,10 @@ function wRenderTripRows() {
       +'</div>'
       +'</td>'
       +'<td style="padding:4px 6px"><input type="text" value="'+t.route+'" placeholder="রুট/গন্তব্য" oninput="wTripData['+i+'].route=this.value" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:100%;min-width:120px"/></td>'
-      +'<td style="padding:4px 6px"><input type="number" value="'+(t.fare||'')+'" placeholder="০" oninput="wTripData['+i+'].fare=parseFloat(this.value)||0;wCalc()" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:90px;text-align:right"/></td>'
+      +'<td style="padding:4px 6px">'
+      +'<input type="number" value="'+(t.fare||'')+'" placeholder="০" oninput="wTripFareInput('+i+',this)" style="border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 8px;font-size:12px;font-family:inherit;width:90px;text-align:right"/>'
+      +'<div id="wFareBn'+i+'" style="font-size:10px;color:#057a55;text-align:right;min-height:14px">'+(t.fare>0?wFmt(t.fare):'')+'</div>'
+      +'</td>'
       +'<td style="padding:4px 6px;text-align:center">'
       +(wTripData.length>1?'<button onclick="wRemoveTripRow('+i+')" style="background:#fde8e8;border:none;border-radius:4px;width:22px;height:22px;cursor:pointer;color:#c81e1e;font-size:14px;line-height:1">×</button>':'')
       +'</td>'
@@ -2573,12 +2606,25 @@ function wRemoveTripRow(i) {
   wTripData.splice(i, 1);
   wRenderTripRows();
 }
+function wTripFareInput(i, el) {
+  wTripData[i].fare = parseFloat(el.value)||0;
+  var bn = document.getElementById('wFareBn'+i);
+  if (bn) bn.textContent = wTripData[i].fare>0 ? wFmt(wTripData[i].fare) : '';
+  wCalc();
+}
+
 function wUpdateDate(i, part, val) {
-  var d = wTripData[i].date || (new Date().getFullYear()+'-'+(new Date().getMonth()+1<10?'0':''+(new Date().getMonth()+1))+'-01');
-  var parts = d.split('-'); // [yyyy, mm, dd]
-  if (parts.length < 3) parts = [new Date().getFullYear()+'','01','01'];
-  if (part==='y') parts[0] = val.length===4?val:parts[0];
-  if (part==='m') parts[1] = val;
+  var now = new Date();
+  var d = wTripData[i].date;
+  // parse existing or use today
+  var parts = (d && d.length===10) ? d.split('-') : [
+    now.getFullYear()+'',
+    String(now.getMonth()+1).padStart(2,'0'),
+    String(now.getDate()).padStart(2,'0')
+  ];
+  if (parts.length !== 3) parts = [now.getFullYear()+'','01','01'];
+  if (part==='y' && val && val.length===4) parts[0] = val;
+  if (part==='m') parts[1] = String(parseInt(val)||1).padStart(2,'0');
   if (part==='d') parts[2] = String(parseInt(val)||1).padStart(2,'0');
   wTripData[i].date = parts.join('-');
   wCalc();
@@ -2612,24 +2658,46 @@ function wCalcM(){
 }
 async function wSubmit(){
   var plate=document.getElementById('wPlate').value;
-  var date=document.getElementById('wDate').value;
-  if(!plate||!date){showNotif('গাড়ির নম্বর ও তারিখ আবশ্যক','var(--red)');return;}
+  if(!plate){showNotif('গাড়ির নম্বর বেছে নিন','var(--red)');return;}
   var driver=document.getElementById('wDriver').value||'—';
-  var validTrips = wTripData.filter(function(t){return t.date && t.route && t.fare>0;});
-  if(!validTrips.length){showNotif('কমপক্ষে একটি ট্রিপের তারিখ, রুট ও ভাড়া দিন','var(--red)');return;}
+
+  var validTrips = wTripData.filter(function(t){
+    return t.fare>0 && t.route && t.route.trim() && t.date && t.date.length===10;
+  });
+
+  if(!validTrips.length){
+    showNotif('কমপক্ষে একটি ট্রিপে রুট ও ভাড়া দিন','var(--red)');
+    return;
+  }
+
+  // use first valid trip date for expenses
+  var expDate = validTrips[0].date;
+
   validTrips.forEach(function(t,ti){
     var rev={id:'w'+Date.now()+ti,type:'revenue',truck:plate,date:t.date,amount:t.fare,description:t.route,client:driver};
     entries.unshift(rev); dbSave(rev);
   });
+
   W_EXPS.forEach(function(e){
     var el=document.getElementById('we_'+e.id),amt=el?(parseFloat(el.value)||0):0;
-    if(amt>0){var exp={id:'wx'+Date.now()+e.id,type:'expense',truck:plate,date:date,amount:amt,category:e.bn,description:e.bn+' ব্যয়'};entries.unshift(exp);dbSave(exp);}
+    if(amt>0){
+      var exp={id:'wx'+Date.now()+e.id,type:'expense',truck:plate,date:expDate,amount:amt,category:e.bn,description:e.bn+' ব্যয়'};
+      entries.unshift(exp); dbSave(exp);
+    }
   });
-  ['wCode','wDriver','wHelper','wRoute','wNote','wFare','wDiscount','wMPrev','wMCurr','wMLiters','wMDist'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+
+  // reset form
+  ['wCode','wDriver','wHelper','wDiscount','wMPrev','wMCurr','wMLiters','wMDist'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
   W_EXPS.forEach(function(e){var el=document.getElementById('we_'+e.id);if(el)el.value='';});
-  document.getElementById('wDate').value=new Date().toISOString().split('T')[0];
+  wTripData=[];
+  var todayISO2 = new Date().toISOString().split('T')[0];
+  for(var i=0;i<5;i++) wTripData.push({date:todayISO2,route:'',fare:0});
+  wRenderTripRows();
   wCalc();wCalcM();
-  showNotif('✅ ট্রিপ সফলভাবে জমা হয়েছে!','var(--green)');
+  applyFilters();
+  showNotif('✅ শিট সফলভাবে জমা হয়েছে!','var(--green)');
   setTimeout(function(){showScreen('role');},1400);
 }
 
@@ -3848,7 +3916,7 @@ async function startup() {
   if (kpiStrip) kpiStrip.classList.add('visible');
   showScreen('role');
   // load everything at startup
-  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadDrivers(), loadMaintenanceItems()]);
+  var results = await Promise.allSettled([dbLoad(), loadTruckMeta(), loadTruckList(), loadDrivers(), loadMaintenanceItems()]);
   var loaded = results[0].status==='fulfilled' ? results[0].value : null;
   if (loaded && loaded.length > 0) {
     entries = loaded;
