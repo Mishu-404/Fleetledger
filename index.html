@@ -438,7 +438,12 @@
     nav .nav-btn { font-size: 11px; padding: 7px 10px; }
   }
 
-  </style>
+  
+@keyframes loadbar {
+  from { width: 20%; margin-left: 0; }
+  to   { width: 60%; margin-left: 40%; }
+}
+</style>
 </head>
 <body>
 <div id="screen-role" class="screen">
@@ -2496,11 +2501,25 @@ function pinCheck() {
     showScreen(t === 'worker' ? 'worker' : 'owner');
     if (t === 'worker') wInit();
     if (t === 'owner') {
-      // always reload fresh data from Supabase on management login
-      dbLoad().then(function(loaded) {
-        if (loaded && loaded.length > 0) entries = loaded;
+      // show loading overlay while fetching fresh data
+      showScreen('loading');
+      Promise.all([
+        dbLoad(),
+        loadTruckList(),
+        loadTruckMeta(),
+        loadDrivers(),
+        loadMaintenanceItems()
+      ]).then(function(results) {
+        var loaded = results[0];
+        entries = (loaded && loaded.length > 0) ? loaded : [];
         applyFilters();
         renderAll();
+        showScreen('owner');
+      }).catch(function(err) {
+        console.error('load error:', err);
+        entries = [];
+        applyFilters();
+        showScreen('owner');
       });
     }
   } else {
