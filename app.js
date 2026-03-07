@@ -1281,15 +1281,21 @@ async function getDeviceInfo() {
   // Device type
   var device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
 
-  // Location via free IP API
+  // Location via free IP API with fallbacks
   var city = '', region = '';
   try {
-    var loc = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
+    var loc = await fetch('https://freeipapi.com/api/json', { signal: AbortSignal.timeout(4000) });
     var locData = await loc.json();
-    city = locData.city || '';
-    region = locData.region || '';
-  } catch(e) {}
-
+    city = locData.cityName || '';
+    region = locData.regionName || '';
+  } catch(e) {
+    try {
+      var loc2 = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4000) });
+      var locData2 = await loc2.json();
+      city = locData2.city || '';
+      region = locData2.region || '';
+    } catch(e2) {}
+  }
   return { os: os, browser: browser, device: device, city: city, region: region };
 }
 
