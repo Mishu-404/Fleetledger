@@ -278,10 +278,15 @@ function renderTruckGrid() {
 
   entries.forEach(function(e){
     if (!e.date) return;
-    if (!tMap[e.truck]) tMap[e.truck] = {rev:0,exp:0,trips:0,prevRev:0,prevExp:0};
+    if (!tMap[e.truck]) tMap[e.truck] = {rev:0,exp:0,trips:0,prevRev:0,prevExp:0,dist:0,fuel:0,mCount:0};
     var em = e.date.slice(0,7);
     if (em === filterMonth) {
-      if (e.type==='revenue'){ tMap[e.truck].rev += e.amount; tMap[e.truck].trips++; }
+      if (e.type==='revenue'){
+        tMap[e.truck].rev += e.amount; tMap[e.truck].trips++;
+        if (e.distance) tMap[e.truck].dist += e.distance;
+        if (e.fuel_liters) tMap[e.truck].fuel += e.fuel_liters;
+        if (e.mileage) tMap[e.truck].mCount++;
+      }
       else tMap[e.truck].exp += e.amount;
     } else if (em === prevMonth) {
       if (e.type==='revenue') tMap[e.truck].prevRev += e.amount;
@@ -291,8 +296,9 @@ function renderTruckGrid() {
 
   var summaries = TRUCK_NAMES.map(function(t){
     var d = tMap[t];
+    var avgEff = (d.fuel > 0 && d.dist > 0) ? (d.dist/d.fuel).toFixed(1) : null;
     return { truck:t, revenue:d.rev, expenses:d.exp, profit:d.rev-d.exp, trips:d.trips,
-             prevProfit: d.prevRev - d.prevExp };
+             prevProfit: d.prevRev - d.prevExp, dist: d.dist, fuel: d.fuel, avgEff: avgEff };
   });
 
   // Sort by profit desc
@@ -336,11 +342,13 @@ function renderTruckGrid() {
       + '<div style="background:#f0fdf4;border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:2px">আয়</div><div style="font-size:13px;font-weight:700;color:#057a55">'+fmt(t.revenue)+'</div></div>'
       + '<div style="background:#fff5f5;border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:2px">ব্যয়</div><div style="font-size:13px;font-weight:700;color:#c81e1e">'+fmt(t.expenses)+'</div></div>'
       + '</div>'
-      // margin badge
+      // margin badge + mileage
       + '<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between">'
       + '<span style="font-size:10px;color:#64748b">আয়ের অংশ: '+revPct+'%</span>'
-      + '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+(parseFloat(margin)>=20?'#dcfce7':parseFloat(margin)>=0?'#fef9c3':'#fee2e2')+';color:'+(parseFloat(margin)>=20?'#15803d':parseFloat(margin)>=0?'#92400e':'#c81e1e')+'">'+margin+'% মার্জিন</span>'
+      + '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+(parseFloat(margin)>=20?'#dcfce7':parseFloat(margin)>=0?'#fef9c3':'#fee2e2')+';color:'+(parseFloat(margin)>=20?'#15803d':parseFloat(margin)>=0?'#92400e':'#c81e1e')+'">'+marginBn+'% মার্জিন</span>'
       + '</div>'
+      + (t.avgEff ? '<div style="margin-top:8px;background:#eff6ff;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;color:#64748b">⛽ জ্বালানি দক্ষতা</span><span style="font-size:12px;font-weight:700;color:#1a56db">'+toBn(t.avgEff)+' কি.মি./লি.</span></div>' : '')
+      + (t.dist > 0 ? '<div style="margin-top:4px;display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;padding:0 2px"><span>দূরত্ব: '+toBn(Math.round(t.dist))+' কি.মি.</span><span>জ্বালানি: '+toBn(t.fuel.toFixed(0))+' লি.</span></div>' : '')
       + (!hasData ? '<div style="margin-top:8px;font-size:11px;color:#94a3b8;text-align:center">এই মাসে কোনো ডেটা নেই</div>' : '')
       + '</div>';
   });
@@ -690,6 +698,20 @@ function printMonthlyReport() {
     if (!driverMap[e.client]) driverMap[e.client] = {trips:0, rev:0};
     driverMap[e.client].trips++; driverMap[e.client].rev += e.amount;
   });
+  // Mileage summary per truck for report
+  var mileageMap = {};
+  rEntries.filter(function(e){return e.type==='revenue' && e.mileage > 0;}).forEach(function(e){
+    if (!mileageMap[e.truck]) mileageMap[e.truck] = {dist:0, fuel:0, count:0};
+    mileageMap[e.truck].dist += (e.distance||0);
+    mileageMap[e.truck].fuel += (e.fuel_liters||0);
+    mileageMap[e.truck].count++;
+  });
+  var mileageRows = Object.keys(mileageMap).length ? Object.keys(mileageMap).map(function(t) {
+    var m = mileageMap[t];
+    var eff = m.fuel > 0 ? (m.dist/m.fuel).toFixed(2) : '—';
+    return '<tr><td>'+t+'</td><td class="num">'+toBnDigits(Math.round(m.dist))+' কি.মি.</td><td class="num">'+toBnDigits(m.fuel.toFixed(1))+' লি.</td><td class="num">'+toBnDigits(eff)+' কি.মি./লি.</td></tr>';
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:#94a3b8">কোনো মাইলেজ ডেটা নেই</td></tr>';
+
   var driverRows = Object.keys(driverMap).length ? Object.keys(driverMap)
     .sort(function(a,b){return driverMap[b].rev-driverMap[a].rev;})
     .map(function(d) {
@@ -749,6 +771,8 @@ function printMonthlyReport() {
     + '<tfoot><tr><td><b>\u09ae\u09cb\u099f \u0996\u09b0\u099a</b></td><td class="num red"><b>'+fmtP(exp)+'</b></td><td class="num"><b>100%</b></td></tr></tfoot></table>' : '')
     + (showDrivers ? '<h2>\uD83D\uDC77 \u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
     + '<table><thead><tr><th>\u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa \u09b8\u0982\u0996\u09cd\u09af\u09be</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th></tr></thead><tbody>'+driverRows+'</tbody></table>' : '')
+    + '<h2>⛽ জ্বালানি দক্ষতা (মাইলেজ)</h2>'
+    + '<table><thead><tr><th>ট্রাক</th><th class="num">মোট দূরত্ব</th><th class="num">মোট জ্বালানি</th><th class="num">গড় দক্ষতা</th></tr></thead><tbody>'+mileageRows+'</tbody></table>'
     + '<div class="sig-row">'
     + '<div class="sig-box">Alamgir (\u09b9\u09bf\u09b8\u09be\u09ac\u0997\u09cd\u09b0\u09b9\u09a3\u0995\u09be\u09b0\u09c0)</div>'
     + '<div class="sig-box">\u09ac\u09cd\u09af\u09ac\u09b8\u09cd\u09a5\u09be\u09aa\u0995</div>'
@@ -920,12 +944,22 @@ function openTruckDetail(truck) {
   // Mileage
   var mileageEntries = te.filter(function (e) { return e.mileage && e.mileage > 0; })
     .sort(function (a, b) { return b.date.localeCompare(a.date); }).slice(0, 5);
+  var avgMileage = mileageEntries.length ? (mileageEntries.reduce(function(s,e){return s+e.mileage;},0)/mileageEntries.length).toFixed(2) : null;
+  var totalDist = te.reduce(function(s,e){return s+(e.distance||0);},0);
+  var totalFuel = te.reduce(function(s,e){return s+(e.fuel_liters||0);},0);
   document.getElementById('truckMileageTrack').innerHTML = mileageEntries.length
-    ? '<table style="width:100%;font-size:13px;border-collapse:collapse">'
-    + '<tr style="color:var(--muted);font-size:11px"><th style="text-align:left;padding:4px 0">তারিখ</th><th style="text-align:right">কি.মি./লি.</th></tr>'
+    ? '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">'
+    + '<div style="background:#eff6ff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">গড় দক্ষতা</div><div style="font-size:16px;font-weight:700;color:#1a56db">'+toBn(avgMileage)+' কি.মি./লি.</div></div>'
+    + '<div style="background:#f0fdf4;border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">মোট দূরত্ব</div><div style="font-size:16px;font-weight:700;color:#057a55">'+toBn(Math.round(totalDist))+' কি.মি.</div></div>'
+    + '<div style="background:#fef9c3;border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">মোট জ্বালানি</div><div style="font-size:16px;font-weight:700;color:#d97706">'+toBn(totalFuel.toFixed(1))+' লি.</div></div>'
+    + '</div>'
+    + '<table style="width:100%;font-size:13px;border-collapse:collapse">'
+    + '<tr style="color:var(--muted);font-size:11px"><th style="text-align:left;padding:4px 0">তারিখ</th><th style="text-align:right">দূরত্ব</th><th style="text-align:right">জ্বালানি</th><th style="text-align:right">দক্ষতা</th></tr>'
     + mileageEntries.map(function (e) {
-      return '<tr><td style="padding:5px 0">' + fmtDate(e.date) + '</td>'
-        + '<td style="text-align:right;font-weight:600;color:var(--accent)">' + e.mileage.toFixed(2) + ' কি.মি./লি.</td></tr>';
+      return '<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 0">' + fmtDate(e.date) + '</td>'
+        + '<td style="text-align:right;color:var(--muted)">' + (e.distance ? toBn(Math.round(e.distance))+' কি.মি.' : '—') + '</td>'
+        + '<td style="text-align:right;color:var(--muted)">' + (e.fuel_liters ? toBn(e.fuel_liters)+' লি.' : '—') + '</td>'
+        + '<td style="text-align:right;font-weight:600;color:var(--accent)">' + toBn(e.mileage.toFixed(2)) + ' কি.মি./লি.</td></tr>';
     }).join('') + '</table>'
     : '<div style="color:var(--muted);font-size:13px">কোনো মাইলেজ ডেটা নেই</div>';
 }
@@ -1569,8 +1603,15 @@ async function wSubmit() {
 
   var savePromises = [];
 
+  // Capture mileage data
+  var mPrev = parseFloat(document.getElementById('wMPrev') ? document.getElementById('wMPrev').value : 0) || 0;
+  var mCurr = parseFloat(document.getElementById('wMCurr') ? document.getElementById('wMCurr').value : 0) || 0;
+  var mLit  = parseFloat(document.getElementById('wMLiters') ? document.getElementById('wMLiters').value : 0) || 0;
+  var mDist = mCurr > mPrev ? mCurr - mPrev : 0;
+  var mEff  = (mLit > 0 && mDist > 0) ? parseFloat((mDist / mLit).toFixed(2)) : 0;
+
   validTrips.forEach(function (t, ti) {
-    var rev = { id: 'w' + Date.now() + ti, type: 'revenue', truck: plate, date: t.date, amount: t.fare, description: t.route, client: driver, sheet_ref: sheetRef };
+    var rev = { id: 'w' + Date.now() + ti, type: 'revenue', truck: plate, date: t.date, amount: t.fare, description: t.route, client: driver, sheet_ref: sheetRef, mileage: mEff, distance: mDist, fuel_liters: mLit };
     entries.unshift(rev);
     savePromises.push(dbSave(rev));
   });
