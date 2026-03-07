@@ -340,9 +340,18 @@
     <!-- FUEL ALERT STRIP -->
     <div id="fuelAlertStrip" style="display:none;margin-bottom:12px"></div>
 
-    <div class="panel">
-      <div class="section-title">সকল ট্রাকের সংক্ষিপ্ত চিত্র</div>
-      <div class="grid4" id="truckGrid"></div>
+    <!-- TRUCK P&L CARDS -->
+    <div class="panel" style="margin-top:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div class="section-title" style="margin:0">🚛 ট্রাক ভিত্তিক লাভ-ক্ষতি (P&amp;L)</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-size:11px;color:var(--muted);font-weight:600">মাস:</label>
+          <select id="plMonthFilter" class="sel" style="font-size:12px;padding:5px 10px" onchange="renderTruckGrid()">
+            <option value="">এই মাস</option>
+          </select>
+        </div>
+      </div>
+      <div id="truckGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px"></div>
     </div>
   </div>
 

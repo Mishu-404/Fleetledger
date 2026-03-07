@@ -250,14 +250,113 @@ function renderExpBreakdown() {
 }
 
 function renderTruckGrid() {
-  const summaries = getTruckSummaries();
-  document.getElementById('truckGrid').innerHTML = summaries.map(t => `
-    <div class="truck-mini" onclick="openTruckDetail('${t.truck}')">
-      <div class="truck-mini-name">🚚 ${t.truck}</div>
-      <div class="truck-mini-profit" style="color:${t.profit >= 0 ? 'var(--green)' : 'var(--red)'}">${t.profit < 0 ? '-' : ''}${fmt(Math.abs(t.profit))}</div>
-      <div class="truck-mini-sub">আয়: ${fmt(t.revenue)} | ব্যয়: ${fmt(t.expenses)}</div>
-    </div>
-  `).join('');
+  // Populate month filter
+  var mfEl = document.getElementById('plMonthFilter');
+  if (mfEl && mfEl.options.length <= 1) {
+    var months = {};
+    entries.forEach(function(e){ if(e.date) months[e.date.slice(0,7)] = true; });
+    var curMonth = new Date().toISOString().slice(0,7);
+    mfEl.innerHTML = '<option value="">এই মাস</option>'
+      + Object.keys(months).sort().reverse().map(function(m){
+          var d = new Date(m+'-01');
+          return '<option value="'+m+'">'+(MONTHS_BN[d.getMonth()])+' '+d.getFullYear()+'</option>';
+        }).join('');
+  }
+  var selM = mfEl ? mfEl.value : '';
+  var filterMonth = selM || new Date().toISOString().slice(0,7);
+
+  // Build per-truck data for selected month
+  var tMap = {};
+  TRUCK_NAMES.forEach(function(t){ tMap[t] = {rev:0, exp:0, trips:0, prevRev:0, prevExp:0}; });
+
+  // Prev month for trend
+  var prevDate = new Date(filterMonth+'-01');
+  prevDate.setMonth(prevDate.getMonth()-1);
+  var prevMonth = prevDate.toISOString().slice(0,7);
+
+  entries.forEach(function(e){
+    if (!e.date) return;
+    if (!tMap[e.truck]) tMap[e.truck] = {rev:0,exp:0,trips:0,prevRev:0,prevExp:0};
+    var em = e.date.slice(0,7);
+    if (em === filterMonth) {
+      if (e.type==='revenue'){ tMap[e.truck].rev += e.amount; tMap[e.truck].trips++; }
+      else tMap[e.truck].exp += e.amount;
+    } else if (em === prevMonth) {
+      if (e.type==='revenue') tMap[e.truck].prevRev += e.amount;
+      else tMap[e.truck].prevExp += e.amount;
+    }
+  });
+
+  var summaries = TRUCK_NAMES.map(function(t){
+    var d = tMap[t];
+    return { truck:t, revenue:d.rev, expenses:d.exp, profit:d.rev-d.exp, trips:d.trips,
+             prevProfit: d.prevRev - d.prevExp };
+  });
+
+  // Sort by profit desc
+  summaries.sort(function(a,b){ return b.profit - a.profit; });
+
+  var monthLabel = (function(){
+    var d = new Date(filterMonth+'-01');
+    return MONTHS_BN[d.getMonth()] + ' ' + d.getFullYear();
+  })();
+
+  var totalRev = summaries.reduce(function(s,t){return s+t.revenue;},0);
+  var totalExp = summaries.reduce(function(s,t){return s+t.expenses;},0);
+  var totalProfit = totalRev - totalExp;
+
+  var cards = summaries.map(function(t, i) {
+    var margin = t.revenue > 0 ? ((t.profit/t.revenue)*100).toFixed(0) : '0';
+    var isProfit = t.profit >= 0;
+    var trend = t.prevProfit === 0 ? '' : t.profit > t.prevProfit
+      ? '<span style="color:#057a55;font-size:11px;font-weight:700">▲ উন্নতি</span>'
+      : t.profit < t.prevProfit
+      ? '<span style="color:#c81e1e;font-size:11px;font-weight:700">▼ হ্রাস</span>'
+      : '<span style="color:#64748b;font-size:11px">→ অপরিবর্তিত</span>';
+    var revPct = totalRev > 0 ? Math.round((t.revenue/totalRev)*100) : 0;
+    var rankColor = i===0 ? '#f59e0b' : i===1 ? '#94a3b8' : i===2 ? '#b45309' : '#e2e8f0';
+    var hasData = t.revenue > 0 || t.expenses > 0;
+
+    return '<div onclick="openTruckDetail(\''+t.truck+'\')" style="background:#fff;border:2px solid '+(isProfit&&hasData?'#bbf7d0':'#fecdd3')+';border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow .15s;position:relative;overflow:hidden" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.10)\'" onmouseout="this.style.boxShadow=\'none\'">'
+      // rank badge
+      + '<div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:'+rankColor+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+(i+1)+'</div>'
+      // truck name
+      + '<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:2px;padding-right:28px">🚚 '+t.truck+'</div>'
+      + '<div style="font-size:10px;color:#94a3b8;margin-bottom:12px">'+t.trips+'টি ট্রিপ · '+monthLabel+'</div>'
+      // profit big number
+      + '<div style="font-size:22px;font-weight:800;color:'+(isProfit?'#057a55':'#c81e1e')+';margin-bottom:4px">'+(t.profit<0?'-':'')+fmt(Math.abs(t.profit))+'</div>'
+      + '<div style="font-size:10px;color:#64748b;margin-bottom:10px">নিট মুনাফা &nbsp;'+trend+'</div>'
+      // bar
+      + (hasData ? '<div style="height:4px;background:#f1f5f9;border-radius:2px;margin-bottom:10px"><div style="height:4px;border-radius:2px;background:'+(isProfit?'#057a55':'#c81e1e')+';width:'+Math.min(Math.abs(parseInt(margin)),100)+'%"></div></div>' : '<div style="height:4px;background:#f1f5f9;border-radius:2px;margin-bottom:10px"></div>')
+      // rev / exp row
+      + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      + '<div style="background:#f0fdf4;border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:2px">আয়</div><div style="font-size:13px;font-weight:700;color:#057a55">'+fmt(t.revenue)+'</div></div>'
+      + '<div style="background:#fff5f5;border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#64748b;font-weight:600;margin-bottom:2px">ব্যয়</div><div style="font-size:13px;font-weight:700;color:#c81e1e">'+fmt(t.expenses)+'</div></div>'
+      + '</div>'
+      // margin badge
+      + '<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between">'
+      + '<span style="font-size:10px;color:#64748b">আয়ের অংশ: '+revPct+'%</span>'
+      + '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+(parseFloat(margin)>=20?'#dcfce7':parseFloat(margin)>=0?'#fef9c3':'#fee2e2')+';color:'+(parseFloat(margin)>=20?'#15803d':parseFloat(margin)>=0?'#92400e':'#c81e1e')+'">'+margin+'% মার্জিন</span>'
+      + '</div>'
+      + (!hasData ? '<div style="margin-top:8px;font-size:11px;color:#94a3b8;text-align:center">এই মাসে কোনো ডেটা নেই</div>' : '')
+      + '</div>';
+  });
+
+  // Summary total card
+  var totalMargin = totalRev > 0 ? ((totalProfit/totalRev)*100).toFixed(0) : '0';
+  var totalCard = '<div style="background:linear-gradient(135deg,#1e3a5f,#1a56db);border-radius:12px;padding:16px;color:#fff">'
+    + '<div style="font-size:11px;opacity:.7;font-weight:600;letter-spacing:.05em;margin-bottom:4px">📊 সামগ্রিক সারসংক্ষেপ</div>'
+    + '<div style="font-size:11px;opacity:.6;margin-bottom:12px">'+monthLabel+'</div>'
+    + '<div style="font-size:22px;font-weight:800;margin-bottom:4px">'+(totalProfit<0?'-':'')+fmt(Math.abs(totalProfit))+'</div>'
+    + '<div style="font-size:10px;opacity:.7;margin-bottom:12px">মোট নিট মুনাফা</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+    + '<div style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px"><div style="font-size:9px;opacity:.7;margin-bottom:2px">মোট আয়</div><div style="font-size:13px;font-weight:700;color:#86efac">'+fmt(totalRev)+'</div></div>'
+    + '<div style="background:rgba(255,255,255,.1);border-radius:8px;padding:8px 10px"><div style="font-size:9px;opacity:.7;margin-bottom:2px">মোট ব্যয়</div><div style="font-size:13px;font-weight:700;color:#fca5a5">'+fmt(totalExp)+'</div></div>'
+    + '</div>'
+    + '<div style="font-size:11px;opacity:.8">মোট মার্জিন: <b>'+totalMargin+'%</b> &nbsp;|&nbsp; সক্রিয় ট্রাক: <b>'+summaries.filter(function(t){return t.revenue>0||t.expenses>0;}).length+'টি</b></div>'
+    + '</div>';
+
+  document.getElementById('truckGrid').innerHTML = totalCard + cards.join('');
 }
 
 function renderTruckTable() {
@@ -518,115 +617,139 @@ function printMonthlyReport() {
   var monthLabel = selMonth ? (function () { var d = new Date(selMonth + '-01'); return MONTHS_BN[d.getMonth()] + ' ' + d.getFullYear(); })() : 'সকল মাস';
   var truckLabel = selTruck || 'সকল ট্রাক';
 
-  // gather data
   var rEntries = entries.filter(function (e) {
     var okM = !selMonth || (e.date && e.date.slice(0, 7) === selMonth);
     var okT = !selTruck || e.truck === selTruck;
     return okM && okT;
   });
-  var rev = rEntries.filter(function (e) { return e.type === 'revenue'; }).reduce(function (s, e) { return s + e.amount; }, 0);
-  var exp = rEntries.filter(function (e) { return e.type === 'expense'; }).reduce(function (s, e) { return s + e.amount; }, 0);
-  var profit = rev - exp;
-  var margin = rev > 0 ? ((profit / rev) * 100).toFixed(1) : '0';
 
-  // per-truck for print
+  function fmtP(n) { return '\u09f3' + Math.round(n).toLocaleString('en-IN'); }
+  function fmtD(d) { if (!d) return ''; var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+
+  var rev = rEntries.filter(function(e){return e.type==='revenue';}).reduce(function(s,e){return s+e.amount;},0);
+  var exp = rEntries.filter(function(e){return e.type==='expense';}).reduce(function(s,e){return s+e.amount;},0);
+  var profit = rev - exp;
+  var margin = rev > 0 ? ((profit/rev)*100).toFixed(1) : '0';
+
+  // Per-truck
   var tMap = {};
-  TRUCK_NAMES.forEach(function (t) { tMap[t] = { rev: 0, exp: 0, trips: 0 }; });
-  rEntries.forEach(function (e) {
-    if (!tMap[e.truck]) tMap[e.truck] = { rev: 0, exp: 0, trips: 0 };
-    if (e.type === 'revenue') { tMap[e.truck].rev += e.amount; tMap[e.truck].trips++; }
+  rEntries.forEach(function(e) {
+    if (!tMap[e.truck]) tMap[e.truck] = {rev:0, exp:0, trips:0};
+    if (e.type==='revenue') { tMap[e.truck].rev += e.amount; tMap[e.truck].trips++; }
     else tMap[e.truck].exp += e.amount;
   });
-  var truckRows = Object.keys(tMap).filter(function (t) { return tMap[t].rev > 0 || tMap[t].exp > 0; })
-    .sort(function (a, b) { return (tMap[b].rev - tMap[b].exp) - (tMap[a].rev - tMap[a].exp); })
-    .map(function (t) {
+  var truckRows = Object.keys(tMap)
+    .sort(function(a,b){ return (tMap[b].rev-tMap[b].exp)-(tMap[a].rev-tMap[a].exp); })
+    .map(function(t) {
       var p = tMap[t].rev - tMap[t].exp;
-      var m = tMap[t].rev > 0 ? ((p / tMap[t].rev) * 100).toFixed(1) : '0';
-      return '<tr><td>' + t + '</td><td class="num green">' + fmtP(tMap[t].rev) + '</td><td class="num red">' + fmtP(tMap[t].exp) + '</td>'
-        + '<td class="num ' + (p >= 0 ? 'green' : 'red') + '">' + (p < 0 ? '-' : '') + fmtP(Math.abs(p)) + '</td>'
-        + '<td class="num">' + m + '%</td><td class="num">' + tMap[t].trips + '</td></tr>';
+      var m = tMap[t].rev > 0 ? ((p/tMap[t].rev)*100).toFixed(1) : '0';
+      return '<tr><td>'+t+'</td><td class="num green">'+fmtP(tMap[t].rev)+'</td>'
+        +'<td class="num red">'+fmtP(tMap[t].exp)+'</td>'
+        +'<td class="num '+(p>=0?'green':'red')+'">'+(p<0?'-':'')+fmtP(Math.abs(p))+'</td>'
+        +'<td class="num">'+m+'%</td><td class="num">'+tMap[t].trips+'\u099f\u09bf</td></tr>';
     }).join('');
 
-  var entryRows = rEntries.slice().sort(function (a, b) {
-    if (a.type !== b.type) return a.type === 'revenue' ? -1 : 1;
-    return b.date.localeCompare(a.date);
-  }).map(function (e) {
-    return '<tr><td>' + fmtDate(e.date) + '</td><td>' + e.truck + '</td>'
-      + '<td class="' + (e.type === 'revenue' ? 'green' : 'red') + '">' + (e.type === 'revenue' ? 'আয়' : 'ব্যয়') + '</td>'
-      + '<td class="num ' + (e.type === 'revenue' ? 'green' : 'red') + '">' + (e.type === 'revenue' ? '+' : '-') + fmtP(Math.abs(e.amount)) + '</td>'
-      + '<td>' + e.description + '</td></tr>';
-  }).join('');
+  // Sheet breakdown
+  var sheetMap = {};
+  rEntries.forEach(function(e) {
+    var key = e.sheet_ref || (e.truck + '|' + e.date);
+    if (!sheetMap[key]) sheetMap[key] = {ref: e.sheet_ref||'\u2014', truck: e.truck, date: e.date, rev:0, exp:0};
+    if (e.type==='revenue') sheetMap[key].rev += e.amount;
+    else sheetMap[key].exp += e.amount;
+  });
+  var sheetRows = Object.keys(sheetMap)
+    .sort(function(a,b){ return sheetMap[a].date.localeCompare(sheetMap[b].date); })
+    .map(function(k) {
+      var s = sheetMap[k]; var net = s.rev - s.exp;
+      return '<tr><td><b>'+s.ref+'</b></td><td>'+s.truck+'</td><td>'+fmtD(s.date)+'</td>'
+        +'<td class="num green">'+fmtP(s.rev)+'</td><td class="num red">'+fmtP(s.exp)+'</td>'
+        +'<td class="num '+(net>=0?'green':'red')+'">'+(net<0?'-':'')+fmtP(Math.abs(net))+'</td></tr>';
+    }).join('');
 
-  function fmtP(n) { return '৳' + Math.round(n).toLocaleString('en-IN'); }
+  // Expense categories
+  var catMap = {};
+  rEntries.filter(function(e){return e.type==='expense';}).forEach(function(e) {
+    var cat = e.category || e.description || '\u0985\u09a8\u09cd\u09af\u09be\u09a8\u09cd\u09af';
+    catMap[cat] = (catMap[cat]||0) + e.amount;
+  });
+  var catRows = Object.keys(catMap)
+    .sort(function(a,b){return catMap[b]-catMap[a];})
+    .map(function(c) {
+      var pct = exp > 0 ? ((catMap[c]/exp)*100).toFixed(1) : '0';
+      return '<tr><td>'+c+'</td><td class="num red">'+fmtP(catMap[c])+'</td><td class="num">'+pct+'%</td></tr>';
+    }).join('');
+
+  // Driver summary
+  var driverMap = {};
+  rEntries.filter(function(e){return e.type==='revenue' && e.client;}).forEach(function(e) {
+    if (!driverMap[e.client]) driverMap[e.client] = {trips:0, rev:0};
+    driverMap[e.client].trips++; driverMap[e.client].rev += e.amount;
+  });
+  var driverRows = Object.keys(driverMap).length ? Object.keys(driverMap)
+    .sort(function(a,b){return driverMap[b].rev-driverMap[a].rev;})
+    .map(function(d) {
+      return '<tr><td>'+d+'</td><td class="num">'+driverMap[d].trips+'\u099f\u09bf</td><td class="num green">'+fmtP(driverMap[d].rev)+'</td></tr>';
+    }).join('') : '<tr><td colspan="3" style="color:#94a3b8;text-align:center">\u0995\u09cb\u09a8\u09cb \u09a1\u09c7\u099f\u09be \u09a8\u09c7\u0987</td></tr>';
+
+  var printDate = new Date().toLocaleDateString('en-GB');
+  var preparedBy = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : 'Admin';
+
+  var html = '<!DOCTYPE html><html><head>'
+    + '<meta charset="UTF-8"/>'
+    + '<title>\u09ae\u09be\u09b8\u09bf\u0995 \u09aa\u09cd\u09b0\u09a4\u09bf\u09ac\u09c7\u09a6\u09a8</title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet"/>'
+    + '<style>'
+    + '*{margin:0;padding:0;box-sizing:border-box}'
+    + 'body{font-family:\'Hind Siliguri\',sans-serif;font-size:12px;color:#1e293b;background:#fff;padding:24px 32px}'
+    + '.header{border-bottom:3px solid #1a56db;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end}'
+    + '.logo{font-size:22px;font-weight:700;color:#1a56db}'
+    + '.sub{font-size:12px;color:#64748b;margin-top:3px}'
+    + '.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}'
+    + '.kpi{border:1.5px solid #e2e8f0;border-radius:8px;padding:12px 14px}'
+    + '.kpi .lbl{font-size:10px;color:#64748b;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}'
+    + '.kpi .val{font-size:18px;font-weight:700}'
+    + '.kpi.green .val{color:#057a55}.kpi.red .val{color:#c81e1e}.kpi.blue .val{color:#1a56db}.kpi.orange .val{color:#d97706}'
+    + 'h2{font-size:12px;font-weight:700;color:#fff;background:#1a56db;padding:7px 12px;margin:20px 0 0;border-radius:6px 6px 0 0;letter-spacing:.04em}'
+    + 'table{width:100%;border-collapse:collapse;border:1px solid #e2e8f0}'
+    + 'th{background:#f8fafc;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0}'
+    + 'td{padding:6px 10px;border-bottom:1px solid #f8fafc;font-size:11px}'
+    + 'tfoot tr td{background:#f8fafc;border-top:2px solid #e2e8f0}'
+    + '.num{text-align:right;font-weight:600}'
+    + '.green{color:#057a55}.red{color:#c81e1e}'
+    + '.sig-row{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:48px}'
+    + '.sig-box{border-top:1.5px solid #1e293b;padding-top:6px;font-size:11px;color:#64748b;text-align:center}'
+    + '.footer{margin-top:24px;border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;font-size:10px;color:#94a3b8}'
+    + '@media print{body{padding:12px}@page{margin:10mm;size:A4}}'
+    + '</style></head><body>'
+    + '<div class="header"><div><div class="logo">\uD83D\uDE9B FleetLedger</div>'
+    + '<div class="sub">\u09ae\u09be\u09b8\u09bf\u0995 \u0986\u09af\u09bc-\u09ac\u09cd\u09af\u09af\u09bc \u09aa\u09cd\u09b0\u09a4\u09bf\u09ac\u09c7\u09a6\u09a8 &nbsp;|&nbsp; '+monthLabel+' &nbsp;|&nbsp; '+truckLabel+'</div></div>'
+    + '<div style="font-size:11px;color:#94a3b8;text-align:right">\u09ae\u09c1\u09a6\u09cd\u09b0\u09a3\u09c7\u09b0 \u09a4\u09be\u09b0\u09bf\u0996: '+printDate+'<br>\u09aa\u09cd\u09b0\u09b8\u09cd\u09a4\u09c1\u09a4\u0995\u09be\u09b0\u09c0: '+preparedBy+'</div></div>'
+    + '<div class="kpi-row">'
+    + '<div class="kpi green"><div class="lbl">\u09ae\u09cb\u099f \u0986\u09af\u09bc</div><div class="val">'+fmtP(rev)+'</div></div>'
+    + '<div class="kpi red"><div class="lbl">\u09ae\u09cb\u099f \u09ac\u09cd\u09af\u09af\u09bc</div><div class="val">'+fmtP(exp)+'</div></div>'
+    + '<div class="kpi '+(profit>=0?'blue':'red')+'"><div class="lbl">\u09a8\u09bf\u099f \u09ae\u09c1\u09a8\u09be\u09ab\u09be</div><div class="val">'+(profit<0?'-':'')+fmtP(Math.abs(profit))+'</div></div>'
+    + '<div class="kpi orange"><div class="lbl">\u09ae\u09c1\u09a8\u09be\u09ab\u09be\u09b0 \u09b9\u09be\u09b0</div><div class="val">'+margin+'%</div></div>'
+    + '</div>'
+    + '<h2>\uD83D\uDE9A \u099f\u09cd\u09b0\u09be\u0995 \u0985\u09a8\u09c1\u09af\u09be\u09af\u09bc\u09c0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
+    + '<table><thead><tr><th>\u099f\u09cd\u09b0\u09be\u0995</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th><th class="num">\u09ae\u09cb\u099f \u09ac\u09cd\u09af\u09af\u09bc</th><th class="num">\u09a8\u09bf\u099f \u09ae\u09c1\u09a8\u09be\u09ab\u09be</th><th class="num">\u09ae\u09c1\u09a8\u09be\u09ab\u09be\u09b0 \u09b9\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa</th></tr></thead><tbody>'+truckRows+'</tbody></table>'
+    + '<h2>\uD83D\uDCCB \u09b6\u09bf\u099f \u09ad\u09bf\u09a4\u09cd\u09a4\u09bf\u0995 \u09ac\u09bf\u09b8\u09cd\u09a4\u09be\u09b0\u09bf\u09a4</h2>'
+    + '<table><thead><tr><th>\u09b6\u09bf\u099f \u09a8\u09ae\u09cd\u09ac\u09b0</th><th>\u099f\u09cd\u09b0\u09be\u0995</th><th>\u09a4\u09be\u09b0\u09bf\u0996</th><th class="num">\u0986\u09af\u09bc</th><th class="num">\u09ac\u09cd\u09af\u09af\u09bc</th><th class="num">\u09a8\u09bf\u099f</th></tr></thead><tbody>'+sheetRows+'</tbody></table>'
+    + '<h2>\uD83D\uDCB0 \u0996\u09b0\u099a\u09c7\u09b0 \u09ad\u09be\u0999\u09a8</h2>'
+    + '<table><thead><tr><th>\u0996\u09b0\u099a\u09c7\u09b0 \u09a7\u09b0\u09a8</th><th class="num">\u09aa\u09b0\u09bf\u09ae\u09be\u09a3</th><th class="num">\u09ae\u09cb\u099f\u09c7\u09b0 %</th></tr></thead><tbody>'+catRows+'</tbody>'
+    + '<tfoot><tr><td><b>\u09ae\u09cb\u099f \u0996\u09b0\u099a</b></td><td class="num red"><b>'+fmtP(exp)+'</b></td><td class="num"><b>100%</b></td></tr></tfoot></table>'
+    + '<h2>\uD83D\uDC77 \u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
+    + '<table><thead><tr><th>\u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa \u09b8\u0982\u0996\u09cd\u09af\u09be</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th></tr></thead><tbody>'+driverRows+'</tbody></table>'
+    + '<div class="sig-row">'
+    + '<div class="sig-box">Alamgir (\u09b9\u09bf\u09b8\u09be\u09ac\u0997\u09cd\u09b0\u09b9\u09a3\u0995\u09be\u09b0\u09c0)</div>'
+    + '<div class="sig-box">\u09ac\u09cd\u09af\u09ac\u09b8\u09cd\u09a5\u09be\u09aa\u0995</div>'
+    + '<div class="sig-box">\u09ae\u09be\u09b2\u09bf\u0995</div>'
+    + '</div>'
+    + '<div class="footer"><span>FleetLedger \u2014 \u09b8\u09cd\u09ac\u09af\u09bc\u0982\u0995\u09cd\u09b0\u09bf\u09af\u09bc\u09ad\u09be\u09ac\u09c7 \u09a4\u09c8\u09b0\u09bf \u09aa\u09cd\u09b0\u09a4\u09bf\u09ac\u09c7\u09a6\u09a8</span><span>'+monthLabel+' | '+truckLabel+'</span></div>'
+    + '<scr'+'ipt>window.onload=function(){window.print();}<'+'/scr'+'ipt>'
+    + '</body></html>';
 
   var win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html><head>
-<meta charset="UTF-8"/>
-<title>মাসিক প্রতিবেদন — ${monthLabel}</title>
-<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet"/>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Hind Siliguri',sans-serif; font-size:12px; color:#1e293b; background:#fff; padding:24px 32px; }
-  .header { border-bottom:3px solid #1a56db; padding-bottom:12px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end; }
-  .header h1 { font-size:22px; font-weight:700; color:#1a56db; }
-  .header .sub { font-size:12px; color:#64748b; margin-top:4px; }
-  .header .date { font-size:11px; color:#94a3b8; text-align:right; }
-  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-  .kpi { border:1.5px solid #e2e8f0; border-radius:8px; padding:12px 14px; }
-  .kpi .lbl { font-size:10px; color:#64748b; font-weight:600; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; }
-  .kpi .val { font-size:18px; font-weight:700; }
-  .kpi.green .val { color:#057a55; }
-  .kpi.red   .val { color:#c81e1e; }
-  .kpi.blue  .val { color:#1a56db; }
-  .kpi.orange .val { color:#d97706; }
-  h2 { font-size:13px; font-weight:700; color:#374151; background:#f8fafc; padding:8px 12px; border-left:4px solid #1a56db; margin:20px 0 8px; }
-  table { width:100%; border-collapse:collapse; margin-bottom:8px; }
-  th { background:#f1f5f9; padding:7px 10px; text-align:left; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.04em; border-bottom:2px solid #e2e8f0; }
-  td { padding:6px 10px; border-bottom:1px solid #f1f5f9; font-size:11px; }
-  tr:last-child td { border-bottom:none; }
-  .num { text-align:right; font-weight:600; }
-  .green { color:#057a55; }
-  .red   { color:#c81e1e; }
-  .footer { margin-top:24px; border-top:1px solid #e2e8f0; padding-top:10px; display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; }
-  @media print {
-    body { padding:16px; }
-    @page { margin:12mm; size:A4; }
-  }
-</style>
-</head><body>
-<div class="header">
-  <div>
-    <div class="h1" style="font-size:22px;font-weight:700;color:#1a56db">🚛 FleetLedger</div>
-    <div class="sub">মাসিক প্রতিবেদন — ${monthLabel} | ${truckLabel}</div>
-  </div>
-  <div class="date">মুদ্রণের তারিখ: ${new Date().toLocaleDateString('en-GB')}</div>
-</div>
-
-<div class="kpi-row">
-  <div class="kpi green"><div class="lbl">মোট আয়</div><div class="val">${fmtP(rev)}</div></div>
-  <div class="kpi red"><div class="lbl">মোট ব্যয়</div><div class="val">${fmtP(exp)}</div></div>
-  <div class="kpi ${profit >= 0 ? 'blue' : 'red'}"><div class="lbl">নিট মুনাফা</div><div class="val">${(profit < 0 ? '-' : '') + fmtP(Math.abs(profit))}</div></div>
-  <div class="kpi orange"><div class="lbl">মুনাফার হার</div><div class="val">${margin}%</div></div>
-</div>
-
-<h2>ট্রাক বিস্তারিত</h2>
-<table>
-  <thead><tr><th>ট্রাক</th><th class="num">মোট আয়</th><th class="num">মোট ব্যয়</th><th class="num">নিট মুনাফা</th><th class="num">মুনাফার হার</th><th class="num">ট্রিপ</th></tr></thead>
-  <tbody>${truckRows}</tbody>
-</table>
-
-<h2>এন্ট্রি তালিকা</h2>
-<table>
-  <thead><tr><th>তারিখ</th><th>ট্রাক</th><th>ধরন</th><th class="num">পরিমাণ</th><th>বিবরণ</th></tr></thead>
-  <tbody>${entryRows}</tbody>
-</table>
-
-<div class="footer">
-  <span>FleetLedger — স্বয়ংক্রিয়ভাবে তৈরি প্রতিবেদন</span>
-  <span>${monthLabel} | ${truckLabel}</span>
-</div>
-<script>window.onload=function(){window.print();}<\/script>
-</body></html>`);
+  win.document.write(html);
   win.document.close();
 }
 
