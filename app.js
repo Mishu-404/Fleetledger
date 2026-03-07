@@ -1,4 +1,3 @@
-
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -1259,12 +1258,56 @@ function selectUser(id, username, role) {
   showScreen('pin');
 }
 
+async function getDeviceInfo() {
+  var ua = navigator.userAgent;
+  // OS detection
+  var os = 'Unknown';
+  if (/Windows NT 10/.test(ua)) os = 'Windows 10';
+  else if (/Windows NT/.test(ua)) os = 'Windows';
+  else if (/Mac OS X/.test(ua) && !/Mobile/.test(ua)) os = 'MacBook';
+  else if (/iPhone/.test(ua)) os = 'iPhone';
+  else if (/iPad/.test(ua)) os = 'iPad';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/Linux/.test(ua)) os = 'Linux';
+
+  // Browser detection
+  var browser = 'Unknown';
+  if (/Edg\//.test(ua)) browser = 'Edge';
+  else if (/OPR\//.test(ua)) browser = 'Opera';
+  else if (/Chrome\//.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari\//.test(ua)) browser = 'Safari';
+
+  // Device type
+  var device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
+
+  // Location via free IP API
+  var city = '', region = '';
+  try {
+    var loc = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
+    var locData = await loc.json();
+    city = locData.city || '';
+    region = locData.region || '';
+  } catch(e) {}
+
+  return { os: os, browser: browser, device: device, city: city, region: region };
+}
+
 async function logActivity(username, role, action) {
   try {
+    var info = await getDeviceInfo();
+    var deviceStr = info.device + ' · ' + info.os + ' · ' + info.browser;
+    var locationStr = [info.city, info.region].filter(Boolean).join(', ');
     await fetch(S_URL + '/rest/v1/activity_log', {
       method: 'POST',
       headers: Object.assign({}, S_HDR, { 'Prefer': 'return=minimal' }),
-      body: JSON.stringify({ username: username, role: role, action: action })
+      body: JSON.stringify({
+        username: username,
+        role: role,
+        action: action,
+        device: deviceStr,
+        location: locationStr
+      })
     });
   } catch(e) {}
 }
@@ -3195,15 +3238,35 @@ async function loadActivityLog() {
       var dt = new Date(l.created_at);
       var dtStr = dt.toLocaleDateString('bn-BD') + ' ' + dt.toLocaleTimeString('bn-BD', {hour:'2-digit',minute:'2-digit'});
       var actionColor = l.action === 'login' ? '#057a55' : l.action === 'logout' ? '#c81e1e' : '#1a56db';
+      var actionIcon = l.action === 'login' ? '🔓' : l.action === 'logout' ? '🔒' : '⚡';
+
+      // device icon
+      var devStr = l.device || '';
+      var devIcon = '💻';
+      if (/Android|Mobile/.test(devStr)) devIcon = '📱';
+      else if (/iPhone/.test(devStr)) devIcon = '📱';
+      else if (/iPad/.test(devStr)) devIcon = '📱';
+      else if (/MacBook/.test(devStr)) devIcon = '💻';
+      else if (/Windows/.test(devStr)) devIcon = '🖥️';
+
+      var locationStr = l.location || '';
+      var deviceLine = devStr ? (devIcon + ' ' + devStr) : '';
+      var locationLine = locationStr ? ('📍 ' + locationStr) : '';
+
       return '<tr style="border-bottom:1px solid #f1f5f9">'
-        + '<td style="padding:8px 12px;font-weight:600">' + l.username + '</td>'
-        + '<td style="padding:8px 12px"><span style="background:#e0e7ff;color:#4338ca;border-radius:4px;padding:2px 7px;font-size:11px">' + (l.role||'') + '</span></td>'
-        + '<td style="padding:8px 12px;color:' + actionColor + ';font-weight:600">' + l.action + '</td>'
-        + '<td style="padding:8px 12px;color:#94a3b8;font-size:12px">' + dtStr + '</td>'
+        + '<td style="padding:10px 12px"><div style="font-weight:700;color:#1e293b">' + l.username + '</div>'
+        + '<div style="font-size:11px;margin-top:2px"><span style="background:#e0e7ff;color:#4338ca;border-radius:4px;padding:1px 6px">' + (l.role||'') + '</span></div></td>'
+        + '<td style="padding:10px 12px"><span style="color:'+actionColor+';font-weight:700;font-size:13px">'+actionIcon+' ' + l.action + '</span></td>'
+        + '<td style="padding:10px 12px">'
+        + (deviceLine ? '<div style="font-size:12px;color:#475569">'+deviceLine+'</div>' : '')
+        + (locationLine ? '<div style="font-size:12px;color:#94a3b8;margin-top:2px">'+locationLine+'</div>' : '')
+        + (!deviceLine && !locationLine ? '<span style="color:#cbd5e1;font-size:12px">—</span>' : '')
+        + '</td>'
+        + '<td style="padding:10px 12px;color:#94a3b8;font-size:12px;white-space:nowrap">' + dtStr + '</td>'
         + '</tr>';
     }).join('');
     el.innerHTML = '<table style="width:100%;border-collapse:collapse;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden">'
-      + '<thead><tr style="background:#f8fafc"><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">User</th><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">Role</th><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">Action</th><th style="padding:8px 12px;text-align:left;font-size:12px;color:#64748b">সময়</th></tr></thead>'
+      + '<thead><tr style="background:#f8fafc"><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">ব্যবহারকারী</th><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">কার্যক্রম</th><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">ডিভাইস / লোকেশন</th><th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b">সময়</th></tr></thead>'
       + '<tbody>' + rows + '</tbody></table>';
   } catch(e) {}
 }
@@ -3242,4 +3305,3 @@ async function startup() {
   renderAll();
 }
 startup();
-
