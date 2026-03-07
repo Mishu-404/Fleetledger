@@ -444,7 +444,18 @@
         <label style="font-size:12px;color:var(--muted);font-weight:600">ট্রাক:</label>
         <select id="reportTruckFilter" class="sel" style="min-width:130px" onchange="renderReports()"></select>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;color:var(--heading)">
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
+            <input type="checkbox" id="rptShowSheets" checked style="cursor:pointer"> শিট বিস্তারিত
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
+            <input type="checkbox" id="rptShowExpCat" style="cursor:pointer"> খরচের ভাঙন
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-weight:600">
+            <input type="checkbox" id="rptShowDrivers" checked style="cursor:pointer"> ড্রাইভার
+          </label>
+        </div>
         <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV</button>
         <button class="btn btn-blue" onclick="printMonthlyReport()">🖨️ PDF প্রিন্ট</button>
       </div>

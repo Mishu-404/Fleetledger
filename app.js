@@ -694,6 +694,11 @@ function printMonthlyReport() {
   var printDate = new Date().toLocaleDateString('en-GB');
   var preparedBy = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.username : 'Admin';
 
+  // Read checkbox options
+  var showSheets  = document.getElementById('rptShowSheets')  ? document.getElementById('rptShowSheets').checked  : true;
+  var showExpCat  = document.getElementById('rptShowExpCat')  ? document.getElementById('rptShowExpCat').checked   : false;
+  var showDrivers = document.getElementById('rptShowDrivers') ? document.getElementById('rptShowDrivers').checked : true;
+
   var html = '<!DOCTYPE html><html><head>'
     + '<meta charset="UTF-8"/>'
     + '<title>\u09ae\u09be\u09b8\u09bf\u0995 \u09aa\u09cd\u09b0\u09a4\u09bf\u09ac\u09c7\u09a6\u09a8</title>'
@@ -732,13 +737,13 @@ function printMonthlyReport() {
     + '</div>'
     + '<h2>\uD83D\uDE9A \u099f\u09cd\u09b0\u09be\u0995 \u0985\u09a8\u09c1\u09af\u09be\u09af\u09bc\u09c0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
     + '<table><thead><tr><th>\u099f\u09cd\u09b0\u09be\u0995</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th><th class="num">\u09ae\u09cb\u099f \u09ac\u09cd\u09af\u09af\u09bc</th><th class="num">\u09a8\u09bf\u099f \u09ae\u09c1\u09a8\u09be\u09ab\u09be</th><th class="num">\u09ae\u09c1\u09a8\u09be\u09ab\u09be\u09b0 \u09b9\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa</th></tr></thead><tbody>'+truckRows+'</tbody></table>'
-    + '<h2>\uD83D\uDCCB \u09b6\u09bf\u099f \u09ad\u09bf\u09a4\u09cd\u09a4\u09bf\u0995 \u09ac\u09bf\u09b8\u09cd\u09a4\u09be\u09b0\u09bf\u09a4</h2>'
-    + '<table><thead><tr><th>\u09b6\u09bf\u099f \u09a8\u09ae\u09cd\u09ac\u09b0</th><th>\u099f\u09cd\u09b0\u09be\u0995</th><th>\u09a4\u09be\u09b0\u09bf\u0996</th><th class="num">\u0986\u09af\u09bc</th><th class="num">\u09ac\u09cd\u09af\u09af\u09bc</th><th class="num">\u09a8\u09bf\u099f</th></tr></thead><tbody>'+sheetRows+'</tbody></table>'
-    + '<h2>\uD83D\uDCB0 \u0996\u09b0\u099a\u09c7\u09b0 \u09ad\u09be\u0999\u09a8</h2>'
+    + (showSheets ? '<h2>\uD83D\uDCCB \u09b6\u09bf\u099f \u09ad\u09bf\u09a4\u09cd\u09a4\u09bf\u0995 \u09ac\u09bf\u09b8\u09cd\u09a4\u09be\u09b0\u09bf\u09a4</h2>'
+    + '<table><thead><tr><th>\u09b6\u09bf\u099f \u09a8\u09ae\u09cd\u09ac\u09b0</th><th>\u099f\u09cd\u09b0\u09be\u0995</th><th>\u09a4\u09be\u09b0\u09bf\u0996</th><th class="num">\u0986\u09af\u09bc</th><th class="num">\u09ac\u09cd\u09af\u09af\u09bc</th><th class="num">\u09a8\u09bf\u099f</th></tr></thead><tbody>'+sheetRows+'</tbody></table>' : '')
+    + (showExpCat ? '<h2>\uD83D\uDCB0 \u0996\u09b0\u099a\u09c7\u09b0 \u09ad\u09be\u0999\u09a8</h2>'
     + '<table><thead><tr><th>\u0996\u09b0\u099a\u09c7\u09b0 \u09a7\u09b0\u09a8</th><th class="num">\u09aa\u09b0\u09bf\u09ae\u09be\u09a3</th><th class="num">\u09ae\u09cb\u099f\u09c7\u09b0 %</th></tr></thead><tbody>'+catRows+'</tbody>'
-    + '<tfoot><tr><td><b>\u09ae\u09cb\u099f \u0996\u09b0\u099a</b></td><td class="num red"><b>'+fmtP(exp)+'</b></td><td class="num"><b>100%</b></td></tr></tfoot></table>'
-    + '<h2>\uD83D\uDC77 \u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
-    + '<table><thead><tr><th>\u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa \u09b8\u0982\u0996\u09cd\u09af\u09be</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th></tr></thead><tbody>'+driverRows+'</tbody></table>'
+    + '<tfoot><tr><td><b>\u09ae\u09cb\u099f \u0996\u09b0\u099a</b></td><td class="num red"><b>'+fmtP(exp)+'</b></td><td class="num"><b>100%</b></td></tr></tfoot></table>' : '')
+    + (showDrivers ? '<h2>\uD83D\uDC77 \u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
+    + '<table><thead><tr><th>\u09a1\u09cd\u09b0\u09be\u0987\u09ad\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa \u09b8\u0982\u0996\u09cd\u09af\u09be</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th></tr></thead><tbody>'+driverRows+'</tbody></table>' : '')
     + '<div class="sig-row">'
     + '<div class="sig-box">Alamgir (\u09b9\u09bf\u09b8\u09be\u09ac\u0997\u09cd\u09b0\u09b9\u09a3\u0995\u09be\u09b0\u09c0)</div>'
     + '<div class="sig-box">\u09ac\u09cd\u09af\u09ac\u09b8\u09cd\u09a5\u09be\u09aa\u0995</div>'
