@@ -1,4 +1,4 @@
-const CACHE = 'fleetledger-v1';
+const CACHE = 'fleetledger-v2';
 const ASSETS = ['/', '/index.html', '/app.js', '/styles.css'];
 
 self.addEventListener('install', function(e) {

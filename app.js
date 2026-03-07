@@ -1,3 +1,4 @@
+
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -1281,12 +1282,12 @@ async function getDeviceInfo() {
   // Device type
   var device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
 
-  // Location via free IP API with fallbacks
+  // Location via IP
   var city = '', region = '';
   try {
-    var loc = await fetch('https://freeipapi.com/api/json', { signal: AbortSignal.timeout(4000) });
+    var loc = await fetch('http://ip-api.com/json/?fields=city,regionName', { signal: AbortSignal.timeout(4000) });
     var locData = await loc.json();
-    city = locData.cityName || '';
+    city = locData.city || '';
     region = locData.regionName || '';
   } catch(e) {
     try {
@@ -3311,3 +3312,4 @@ async function startup() {
   renderAll();
 }
 startup();
+
