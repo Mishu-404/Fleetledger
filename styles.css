@@ -323,48 +323,34 @@
   ═══════════════════════════════════════ */
   @media (max-width: 768px) {
 
-    /* HEADER */
-    header {
-      padding: 0 12px;
-      height: auto;
-      flex-wrap: wrap;
-      gap: 0;
+    /* HEADER top bar */
+    header { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .top-bar {
+      padding: 0 14px;
+      height: 50px;
     }
-    .logo { padding: 10px 0 6px; }
-    .logo-text { font-size: 16px; }
-    .logo-sub  { display: none; }
+    .logo-text { font-size: 15px; }
     .logo-icon { width: 30px; height: 30px; font-size: 16px; }
+    .logo > div > div:last-child { font-size: 9px; } /* by Mishu */
 
-    /* NAV — scrollable horizontal strip */
+    /* Hide CSV on mobile, keep role badge + logout */
+    .btn-csv { display: none; }
+    .role-badge span:last-child { display: none; } /* hide (Admin) label */
+    .btn-logout span { display: none; } /* keep only icon */
+    .btn-logout { padding: 6px 10px; }
+
+    /* NAV — scrollable strip */
     nav {
-      order: 3;
-      width: 100%;
-      overflow-x: auto;
+      padding: 0 8px;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      border-top: 1px solid var(--border);
-      gap: 0;
-      padding-bottom: 2px;
+      border-top: 1px solid #f1f5f9;
     }
-    nav::-webkit-scrollbar { display: none; }
     .nav-btn {
-      font-size: 12px;
-      padding: 8px 12px;
+      font-size: 11px;
+      padding: 9px 10px;
       white-space: nowrap;
       flex-shrink: 0;
     }
-
-    /* HEADER ACTIONS */
-    .header-actions {
-      order: 2;
-      gap: 4px;
-      padding: 6px 0;
-    }
-    .header-actions .btn {
-      font-size: 11px;
-      padding: 6px 10px;
-    }
-    .header-actions .btn-ghost:first-child { display: none; } /* hide CSV on mobile */
 
     /* FILTERS */
     .filters {
@@ -373,61 +359,74 @@
       flex-wrap: wrap;
     }
     .filters select.sel { min-width: 110px; font-size: 12px; }
+    .filter-label { display: none; }
 
-    /* KPI STRIP */
+    /* KPI STRIP — 2 columns */
     .kpi-strip.visible {
       grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin: 12px 12px 0;
     }
-    .kpi-card { padding: 14px 14px; }
-    .kpi-value { font-size: 20px; }
+    .kpi-card { padding: 12px; }
+    .kpi-value { font-size: 18px; }
+    .kpi-label { font-size: 10px; }
 
-    /* MAIN CONTENT PADDING */
-    .view-content, #viewDepot > div, #viewDrivers > div,
-    #viewMaintenance > div, #viewPayroll > div {
-      padding: 12px !important;
+    /* MAIN CONTENT */
+    #screen-owner > *:not(header):not(.filters) { padding: 0 12px; }
+    .panel { padding: 14px; margin-bottom: 12px; }
+    .section-title { font-size: 13px; }
+
+    /* TRUCK P&L CARDS — single column */
+    #truckGrid {
+      grid-template-columns: 1fr !important;
     }
 
-    /* PANELS */
-    .panel { padding: 14px; }
+    /* DASHBOARD charts — single column */
+    .grid2 { grid-template-columns: 1fr !important; }
+    .grid4 { grid-template-columns: 1fr 1fr !important; }
 
     /* TABLES — horizontal scroll */
-    .table-wrap { overflow-x: auto; }
-    .table-wrap table { min-width: 600px; }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-wrap table { min-width: 560px; }
 
-    /* TWO-COLUMN → ONE COLUMN panels */
-    .depot-grid-2,
+    /* TWO-COLUMN → ONE COLUMN */
     div[style*="grid-template-columns: 1fr 1fr"],
-    div[style*="grid-template-columns:1fr 1fr"] {
+    div[style*="grid-template-columns:1fr 1fr"],
+    div[style*="grid-template-columns:repeat(2"],
+    div[style*="grid-template-columns: repeat(2"] {
       grid-template-columns: 1fr !important;
     }
 
-    /* DEPOT route cards 3-col → 1-col */
-    #depotRoutesList {
-      grid-template-columns: 1fr !important;
+    /* 4-col → 2-col */
+    div[style*="grid-template-columns:repeat(4"],
+    div[style*="grid-template-columns: repeat(4"] {
+      grid-template-columns: 1fr 1fr !important;
     }
-
-    /* DEPOT filter row */
-    #viewDepot .filters { gap: 6px; }
 
     /* MODAL */
     .modal {
       width: 95vw !important;
       max-height: 90vh;
       overflow-y: auto;
-      margin: 20px auto;
+      border-radius: 16px 16px 0 0 !important;
+      position: fixed !important;
+      bottom: 0 !important;
+      top: auto !important;
+      transform: none !important;
     }
+    .modal-bg { align-items: flex-end !important; }
 
-    /* SECTION TITLES */
-    .section-title { font-size: 13px; }
+    /* DEPOT */
+    #depotRoutesList { grid-template-columns: 1fr !important; }
+    .depot-grid-2 { grid-template-columns: 1fr !important; }
   }
 
   @media (max-width: 480px) {
     .kpi-strip.visible { grid-template-columns: 1fr 1fr; }
-    .header-actions .btn-rev,
-    .header-actions .btn-exp { font-size: 11px; padding: 6px 8px; }
-    nav .nav-btn { font-size: 11px; padding: 7px 10px; }
+    .top-bar { height: 46px; }
+    .logo-text { font-size: 14px; }
+    nav .nav-btn { font-size: 10px; padding: 8px 9px; }
+    .kpi-value { font-size: 16px; }
   }
 
   
