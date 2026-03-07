@@ -1,3 +1,4 @@
+
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -3034,3 +3035,4 @@ async function startup() {
   renderAll();
 }
 startup();
+

@@ -259,31 +259,33 @@
 
 
 <!-- HEADER -->
-<header>
-  <div class="logo">
-    <div class="logo-icon">🚚</div>
-    <div>
-      <div class="logo-text">ফ্লিটলেজার</div>
-
+<header style="display:block;height:auto;padding:0">
+  <!-- Top bar: logo + actions -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;border-bottom:1px solid var(--border)">
+    <div class="logo">
+      <div class="logo-icon" style="width:34px;height:34px;font-size:18px">🚚</div>
+      <div class="logo-text" style="font-size:18px">ফ্লিটলেজার</div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:-2px">by <strong style="color:#475569">Mishu</strong></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="userRoleBadge" style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:#f8fafc;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:700;color:var(--heading)"></div>
+      <button class="btn btn-ghost" onclick="exportCSV()" style="font-size:12px;padding:6px 12px">↓ CSV</button>
+      <button onclick="logout()" style="display:flex;align-items:center;gap:5px;background:#fff0f0;border:1.5px solid #fca5a5;color:#c81e1e;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit">🔒 লগআউট</button>
     </div>
   </div>
-  <nav>
-    <button class="nav-btn active" onclick="switchView('dashboard',this)">ড্যাশবোর্ড</button>
-    <button class="nav-btn" onclick="switchView('trucks',this)">ট্রাকসমূহ</button>
-    <button class="nav-btn" onclick="switchView('entries',this)">এন্ট্রি তালিকা</button>
-    <button class="nav-btn" onclick="switchView('reports',this)">প্রতিবেদন</button>
-    <button class="nav-btn" onclick="switchView('drivers',this)">👤 ড্রাইভার</button>
-    <button class="nav-btn" onclick="switchView('maintenance',this)">🔧 মেইনটেন্যান্স</button>
-    <button class="nav-btn" onclick="switchView('payroll',this)">💰 বেতন শিট</button>
-    <button class="nav-btn" onclick="switchView('depot',this)">🏭 ডিপো</button>
-    <button class="nav-btn" onclick="switchView('outstanding',this)">💳 বাকি হিসাব</button>
-    <button class="nav-btn" id="userMgmtNavBtn" onclick="switchView('usermgmt',this)" style="display:none">👥 ব্যবহারকারী</button>
+  <!-- Bottom bar: nav -->
+  <nav style="display:flex;gap:0;padding:0 16px;background:#fff;overflow-x:auto;scrollbar-width:none">
+    <button class="nav-btn active" onclick="switchView('dashboard',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">📊 ড্যাশবোর্ড</button>
+    <button class="nav-btn" onclick="switchView('trucks',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">🚛 ট্রাকসমূহ</button>
+    <button class="nav-btn" onclick="switchView('entries',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">📋 এন্ট্রি তালিকা</button>
+    <button class="nav-btn" onclick="switchView('reports',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">📈 প্রতিবেদন</button>
+    <button class="nav-btn" onclick="switchView('drivers',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">👤 ড্রাইভার</button>
+    <button class="nav-btn" onclick="switchView('maintenance',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">🔧 মেইনটেন্যান্স</button>
+    <button class="nav-btn" onclick="switchView('payroll',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">💰 বেতন শিট</button>
+    <button class="nav-btn" onclick="switchView('depot',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">🏭 ডিপো</button>
+    <button class="nav-btn" onclick="switchView('outstanding',this)" style="font-size:12px;padding:10px 14px;white-space:nowrap">💳 বাকি হিসাব</button>
+    <button class="nav-btn" id="userMgmtNavBtn" onclick="switchView('usermgmt',this)" style="display:none;font-size:12px;padding:10px 14px;white-space:nowrap">👥 ব্যবহারকারী</button>
   </nav>
-  <div class="header-actions">
-    <button class="btn btn-ghost" onclick="exportCSV()">↓ CSV ডাউনলোড</button>
-    <div id="userRoleBadge" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:12px;font-weight:700;color:#fff"></div>
-    <button class="btn btn-ghost" onclick="logout()" style="border-color:#f98080;color:#c81e1e">🔒 লগআউট</button>
-  </div>
 </header>
 
 <!-- FILTERS -->
