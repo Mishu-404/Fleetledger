@@ -1,3 +1,4 @@
+
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -1144,9 +1145,11 @@ async function pinCheck() {
       } else {
         var umBtn = document.getElementById('userMgmtNavBtn');
         if (umBtn) umBtn.style.display = role === 'admin' ? 'inline-flex' : 'none';
-        // Hide add buttons for viewer
-        var addRevBtn = document.querySelector('.btn-rev');
-        var addExpBtn = document.querySelector('.btn-exp');
+        // Set role badge
+        var roleIcon = { admin: '⚙️', operator: '👷', viewer: '👁' };
+        var roleLabel = { admin: 'Admin', operator: 'Operator', viewer: 'Viewer' };
+        var badge = document.getElementById('userRoleBadge');
+        if (badge) badge.innerHTML = roleIcon[role] + ' <span>' + currentUser.username + '</span> <span style="opacity:0.6;font-weight:400">(' + roleLabel[role] + ')</span>';
         showScreen('owner');
         Promise.all([dbLoad(), loadTruckList(), loadTruckMeta(), loadDrivers(), loadMaintenance()])
           .then(function(results) {
@@ -2689,6 +2692,12 @@ async function logout() {
   selectedUserId = null;
   pinVal = '';
   pinTarget = '';
+  // Remove viewer restrictions
+  var vStyle = document.getElementById('viewer-restrictions');
+  if (vStyle) vStyle.remove();
+  // Clear role badge
+  var badge = document.getElementById('userRoleBadge');
+  if (badge) badge.innerHTML = '';
   // reset worker tab back to truck on next login
   document.getElementById('wtab-truck-content').style.display = 'block';
   document.getElementById('wtab-depot-content').style.display = 'none';
@@ -2851,3 +2860,4 @@ async function startup() {
   renderAll();
 }
 startup();
+
