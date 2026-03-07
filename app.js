@@ -1281,24 +1281,29 @@ async function getDeviceInfo() {
   // Device type
   var device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
 
-  // Location via HTTPS IP APIs (iOS Safari compatible)
+  // Location via HTTPS IP APIs
   var city = '', region = '';
   var locationApis = [
     { url: 'https://ipwho.is/', parse: function(d){ return { city: d.city, region: d.region }; } },
     { url: 'https://ipinfo.io/json', parse: function(d){ return { city: d.city, region: d.region }; } },
     { url: 'https://freeipapi.com/api/json', parse: function(d){ return { city: d.cityName, region: d.regionName }; } }
   ];
-  for (var i = 0; i < locationApis.length; i++) {
+  async function tryLocationApi(apiObj) {
+    var controller = new AbortController();
+    var timer = setTimeout(function(){ controller.abort(); }, 4000);
     try {
-      // Use manual timeout for iOS Safari compatibility
-      var controller = new AbortController();
-      var timer = setTimeout(function(){ controller.abort(); }, 4000);
-      var locRes = await fetch(locationApis[i].url, { signal: controller.signal });
+      var locRes = await fetch(apiObj.url, { signal: controller.signal });
       clearTimeout(timer);
       var locData = await locRes.json();
-      var parsed = locationApis[i].parse(locData);
-      if (parsed.city) { city = parsed.city; region = parsed.region || ''; break; }
-    } catch(e) {}
+      return apiObj.parse(locData);
+    } catch(e) {
+      clearTimeout(timer);
+      return null;
+    }
+  }
+  for (var li = 0; li < locationApis.length; li++) {
+    var parsed = await tryLocationApi(locationApis[li]);
+    if (parsed && parsed.city) { city = parsed.city; region = parsed.region || ''; break; }
   }
   return { os: os, browser: browser, device: device, city: city, region: region };
 }
