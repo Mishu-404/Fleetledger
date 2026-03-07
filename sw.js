@@ -1,36 +1,33 @@
-const CACHE = 'fleetledger-v2';
-const ASSETS = ['/', '/index.html', '/app.js', '/styles.css'];
+// FleetLedger SW — always network, no cache for app files
+const CACHE = 'fleetledger-v4';
 
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE).then(function(cache) {
-      return cache.addAll(ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
-      return Promise.all(keys.filter(function(k){ return k !== CACHE; }).map(function(k){ return caches.delete(k); }));
+      return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+    }).then(function() {
+      return self.clients.claim();
     })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', function(e) {
-  // Network first for Supabase API calls
-  if (e.request.url.includes('supabase.co')) {
-    e.respondWith(fetch(e.request).catch(function() { return new Response('{}'); }));
+  var url = e.request.url;
+  // Always fresh for app files
+  if (url.includes('.js') || url.includes('.css') || url.includes('.html') || url.endsWith('/')) {
+    e.respondWith(fetch(e.request));
     return;
   }
-  // Cache first for static assets
+  // Cache for fonts/icons only
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       return cached || fetch(e.request).then(function(res) {
         var clone = res.clone();
-        caches.open(CACHE).then(function(cache){ cache.put(e.request, clone); });
+        caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
         return res;
       });
     })
