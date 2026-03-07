@@ -1281,7 +1281,7 @@ async function getDeviceInfo() {
   // Device type
   var device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
 
-  // Location via HTTPS IP APIs
+  // Location via HTTPS IP APIs (iOS Safari compatible)
   var city = '', region = '';
   var locationApis = [
     { url: 'https://ipwho.is/', parse: function(d){ return { city: d.city, region: d.region }; } },
@@ -1290,7 +1290,11 @@ async function getDeviceInfo() {
   ];
   for (var i = 0; i < locationApis.length; i++) {
     try {
-      var locRes = await fetch(locationApis[i].url, { signal: AbortSignal.timeout(4000) });
+      // Use manual timeout for iOS Safari compatibility
+      var controller = new AbortController();
+      var timer = setTimeout(function(){ controller.abort(); }, 4000);
+      var locRes = await fetch(locationApis[i].url, { signal: controller.signal });
+      clearTimeout(timer);
       var locData = await locRes.json();
       var parsed = locationApis[i].parse(locData);
       if (parsed.city) { city = parsed.city; region = parsed.region || ''; break; }
