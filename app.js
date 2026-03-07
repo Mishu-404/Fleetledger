@@ -1,4 +1,3 @@
-
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -1282,20 +1281,20 @@ async function getDeviceInfo() {
   // Device type
   var device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
 
-  // Location via IP
+  // Location via HTTPS IP APIs
   var city = '', region = '';
-  try {
-    var loc = await fetch('http://ip-api.com/json/?fields=city,regionName', { signal: AbortSignal.timeout(4000) });
-    var locData = await loc.json();
-    city = locData.city || '';
-    region = locData.regionName || '';
-  } catch(e) {
+  var locationApis = [
+    { url: 'https://ipwho.is/', parse: function(d){ return { city: d.city, region: d.region }; } },
+    { url: 'https://ipinfo.io/json', parse: function(d){ return { city: d.city, region: d.region }; } },
+    { url: 'https://freeipapi.com/api/json', parse: function(d){ return { city: d.cityName, region: d.regionName }; } }
+  ];
+  for (var i = 0; i < locationApis.length; i++) {
     try {
-      var loc2 = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(4000) });
-      var locData2 = await loc2.json();
-      city = locData2.city || '';
-      region = locData2.region || '';
-    } catch(e2) {}
+      var locRes = await fetch(locationApis[i].url, { signal: AbortSignal.timeout(4000) });
+      var locData = await locRes.json();
+      var parsed = locationApis[i].parse(locData);
+      if (parsed.city) { city = parsed.city; region = parsed.region || ''; break; }
+    } catch(e) {}
   }
   return { os: os, browser: browser, device: device, city: city, region: region };
 }
@@ -3312,4 +3311,3 @@ async function startup() {
   renderAll();
 }
 startup();
-
