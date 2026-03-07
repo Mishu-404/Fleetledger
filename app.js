@@ -1,4 +1,3 @@
-
 // Dynamic, editable truck list — starts with one truck
 var TRUCK_NAMES = ['ট্রাক-০১'];
 
@@ -56,6 +55,9 @@ function fmt(n) {
   result = result.replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
   return '৳' + result;
 }
+
+function toBn(s) { return String(s).replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+function fmtPct(n) { return toBn(n) + '%'; }
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -307,6 +309,7 @@ function renderTruckGrid() {
 
   var cards = summaries.map(function(t, i) {
     var margin = t.revenue > 0 ? ((t.profit/t.revenue)*100).toFixed(0) : '0';
+    var marginBn = toBn(margin);
     var isProfit = t.profit >= 0;
     var trend = t.prevProfit === 0 ? '' : t.profit > t.prevProfit
       ? '<span style="color:#057a55;font-size:11px;font-weight:700">▲ উন্নতি</span>'
@@ -322,7 +325,7 @@ function renderTruckGrid() {
       + '<div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:'+rankColor+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+(i+1)+'</div>'
       // truck name
       + '<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:2px;padding-right:28px">🚚 '+t.truck+'</div>'
-      + '<div style="font-size:10px;color:#94a3b8;margin-bottom:12px">'+t.trips+'টি ট্রিপ · '+monthLabel+'</div>'
+      + '<div style="font-size:10px;color:#94a3b8;margin-bottom:12px">'+toBn(t.trips)+'টি ট্রিপ · '+monthLabel+'</div>'
       // profit big number
       + '<div style="font-size:22px;font-weight:800;color:'+(isProfit?'#057a55':'#c81e1e')+';margin-bottom:4px">'+(t.profit<0?'-':'')+fmt(Math.abs(t.profit))+'</div>'
       + '<div style="font-size:10px;color:#64748b;margin-bottom:10px">নিট মুনাফা &nbsp;'+trend+'</div>'
@@ -364,8 +367,8 @@ function renderTruckTable() {
   document.getElementById('truckTableBody').innerHTML = summaries.map((t, i) => {
     const m = t.revenue > 0 ? ((t.profit / t.revenue) * 100).toFixed(1) : '০.০';
     const mClass = parseFloat(m) >= 20 ? 'tag-good' : parseFloat(m) >= 0 ? 'tag-mid' : 'tag-bad';
-    const rankBN = (i + 1).toString().replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
-    const mBN = m.replace(/\d/g, d => ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'][+d]);
+    const rankBN = toBn(i + 1);
+    const mBN = toBn(m);
     return `<tr>
       <td style="color:var(--muted);font-weight:600">#${rankBN}</td>
       <td style="color:var(--accent);font-weight:600;cursor:pointer" onclick="openTruckDetail('${t.truck}')">🚚 ${t.truck}</td>
@@ -574,7 +577,7 @@ function renderReports() {
     ['মোট আয়', fmt(rev)],
     ['মোট ব্যয়', fmt(exp)],
     ['নিট মুনাফা', (profit < 0 ? '-' : '') + fmt(Math.abs(profit))],
-    ['মুনাফার হার', margin + '%'],
+    ['মুনাফার হার', fmtPct(margin)],
     ['সক্রিয় ট্রাক', summaries.length + 'টি'],
     ['সেরা পারফরম্যান্স', best ? best.truck : '—'],
     ['মনোযোগ প্রয়োজন', worst ? worst.truck : '—'],
@@ -623,7 +626,9 @@ function printMonthlyReport() {
     return okM && okT;
   });
 
-  function fmtP(n) { return '\u09f3' + Math.round(n).toLocaleString('en-IN'); }
+  function toBnDigits(s) { return String(s).replace(/[0-9]/g, function(d){ return '০১২৩৪৫৬৭৮৯'[+d]; }); }
+  function fmtP(n) { return '৳' + toBnDigits(Math.round(n).toLocaleString('en-IN')); }
+  function fmtPct(p) { return toBnDigits(p) + '%'; }
   function fmtD(d) { if (!d) return ''; var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
 
   var rev = rEntries.filter(function(e){return e.type==='revenue';}).reduce(function(s,e){return s+e.amount;},0);
@@ -646,7 +651,7 @@ function printMonthlyReport() {
       return '<tr><td>'+t+'</td><td class="num green">'+fmtP(tMap[t].rev)+'</td>'
         +'<td class="num red">'+fmtP(tMap[t].exp)+'</td>'
         +'<td class="num '+(p>=0?'green':'red')+'">'+(p<0?'-':'')+fmtP(Math.abs(p))+'</td>'
-        +'<td class="num">'+m+'%</td><td class="num">'+tMap[t].trips+'\u099f\u09bf</td></tr>';
+        +'<td class="num">'+toBnDigits(m)+'%</td><td class="num">'+toBnDigits(tMap[t].trips)+'\u099f\u09bf</td></tr>';
     }).join('');
 
   // Sheet breakdown
@@ -676,7 +681,7 @@ function printMonthlyReport() {
     .sort(function(a,b){return catMap[b]-catMap[a];})
     .map(function(c) {
       var pct = exp > 0 ? ((catMap[c]/exp)*100).toFixed(1) : '0';
-      return '<tr><td>'+c+'</td><td class="num red">'+fmtP(catMap[c])+'</td><td class="num">'+pct+'%</td></tr>';
+      return '<tr><td>'+c+'</td><td class="num red">'+fmtP(catMap[c])+'</td><td class="num">'+toBnDigits(pct)+'%</td></tr>';
     }).join('');
 
   // Driver summary
@@ -688,7 +693,7 @@ function printMonthlyReport() {
   var driverRows = Object.keys(driverMap).length ? Object.keys(driverMap)
     .sort(function(a,b){return driverMap[b].rev-driverMap[a].rev;})
     .map(function(d) {
-      return '<tr><td>'+d+'</td><td class="num">'+driverMap[d].trips+'\u099f\u09bf</td><td class="num green">'+fmtP(driverMap[d].rev)+'</td></tr>';
+      return '<tr><td>'+d+'</td><td class="num">'+toBnDigits(driverMap[d].trips)+'\u099f\u09bf</td><td class="num green">'+fmtP(driverMap[d].rev)+'</td></tr>';
     }).join('') : '<tr><td colspan="3" style="color:#94a3b8;text-align:center">\u0995\u09cb\u09a8\u09cb \u09a1\u09c7\u099f\u09be \u09a8\u09c7\u0987</td></tr>';
 
   var printDate = new Date().toLocaleDateString('en-GB');
@@ -733,7 +738,7 @@ function printMonthlyReport() {
     + '<div class="kpi green"><div class="lbl">\u09ae\u09cb\u099f \u0986\u09af\u09bc</div><div class="val">'+fmtP(rev)+'</div></div>'
     + '<div class="kpi red"><div class="lbl">\u09ae\u09cb\u099f \u09ac\u09cd\u09af\u09af\u09bc</div><div class="val">'+fmtP(exp)+'</div></div>'
     + '<div class="kpi '+(profit>=0?'blue':'red')+'"><div class="lbl">\u09a8\u09bf\u099f \u09ae\u09c1\u09a8\u09be\u09ab\u09be</div><div class="val">'+(profit<0?'-':'')+fmtP(Math.abs(profit))+'</div></div>'
-    + '<div class="kpi orange"><div class="lbl">\u09ae\u09c1\u09a8\u09be\u09ab\u09be\u09b0 \u09b9\u09be\u09b0</div><div class="val">'+margin+'%</div></div>'
+    + '<div class="kpi orange"><div class="lbl">\u09ae\u09c1\u09a8\u09be\u09ab\u09be\u09b0 \u09b9\u09be\u09b0</div><div class="val">'+toBnDigits(margin)+'%</div></div>'
     + '</div>'
     + '<h2>\uD83D\uDE9A \u099f\u09cd\u09b0\u09be\u0995 \u0985\u09a8\u09c1\u09af\u09be\u09af\u09bc\u09c0 \u09b8\u09be\u09b0\u09b8\u0982\u0995\u09cd\u09b7\u09c7\u09aa</h2>'
     + '<table><thead><tr><th>\u099f\u09cd\u09b0\u09be\u0995</th><th class="num">\u09ae\u09cb\u099f \u0986\u09af\u09bc</th><th class="num">\u09ae\u09cb\u099f \u09ac\u09cd\u09af\u09af\u09bc</th><th class="num">\u09a8\u09bf\u099f \u09ae\u09c1\u09a8\u09be\u09ab\u09be</th><th class="num">\u09ae\u09c1\u09a8\u09be\u09ab\u09be\u09b0 \u09b9\u09be\u09b0</th><th class="num">\u099f\u09cd\u09b0\u09bf\u09aa</th></tr></thead><tbody>'+truckRows+'</tbody></table>'
@@ -1820,7 +1825,7 @@ function depotRenderBreakeven(trips) {
     { label: 'মোট ট্রাক ভাড়া', val: dFmt(cost), color: 'var(--red)' },
     { label: 'তহবিল খরচ (COF)', val: dFmt(Math.round(totalCof)), color: 'var(--red)' },
     { label: 'নিট মুনাফা', val: (profit < 0 ? '-' : '') + dFmt(Math.abs(profit)), color: profit >= 0 ? 'var(--green)' : 'var(--red)' },
-    { label: 'মুনাফার হার', val: margin + '%', color: 'var(--accent2)' },
+    { label: 'মুনাফার হার', val: fmtPct(margin), color: 'var(--accent2)' },
     { label: 'গড় মুনাফা/ট্রিপ', val: (avgProfit < 0 ? '-' : '') + dFmt(Math.abs(avgProfit)), color: avgProfit >= 0 ? 'var(--green)' : 'var(--red)' },
     { label: 'মোট কেজি পরিবহন', val: kg.toLocaleString() + ' কেজি', color: 'var(--heading)' },
     { label: 'সর্বোচ্চ লাভজনক রুট', val: bestRoute, color: 'var(--green)' },
@@ -1882,7 +1887,7 @@ function depotRenderRouteTable(trips) {
     map[k].rev += t.revenue; map[k].cost += t.rent; map[k].kg += t.kg; map[k].n++;
   });
   var arr = Object.values(map).map(function (x) {
-    return Object.assign(x, { profit: x.rev - x.cost, margin: x.rev > 0 ? ((x.rev - x.cost) / x.rev * 100).toFixed(1) : 0 });
+    return Object.assign(x, { profit: x.rev - x.cost, margin: x.rev > 0 ? toBn(((x.rev - x.cost) / x.rev * 100).toFixed(1)) : '০' });
   }).sort(function (a, b) { return b.profit - a.profit; });
 
   document.getElementById('depotRouteTable').innerHTML = arr.length ? arr.map(function (x, i) {
@@ -2988,4 +2993,3 @@ async function startup() {
   renderAll();
 }
 startup();
-
