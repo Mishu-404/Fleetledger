@@ -772,32 +772,28 @@
 
   <!-- ░░ PAYROLL ░░ -->
   <div id="view-payroll" class="view">
+    <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="font-size:20px;font-weight:700;color:var(--heading)">💰 মাসিক বেতন শিট</div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <select class="sel" id="payrollMonth" onchange="payrollRender()" style="font-size:13px;min-width:150px">
-        </select>
-        <button class="btn btn-ghost" onclick="payrollExportCSV()">↓ CSV</button>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--heading)">💰 ড্রাইভার সেটেলমেন্ট</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">কমিশন + দৈনিক ভাতা · office জমা হিসাব</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="sel" id="payrollMonth" onchange="payrollRender()" style="font-size:13px;min-width:150px"></select>
+        <button class="btn btn-ghost" onclick="payrollExportCSV()" style="font-size:12px">↓ CSV</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
-      <div class="kpi-card blue"><div class="kpi-label">মোট মূল বেতন</div><div class="kpi-value blue" id="prKpiSalary">৳০</div></div>
-      <div class="kpi-card orange"><div class="kpi-label">মোট ট্রিপ বোনাস</div><div class="kpi-value orange" id="prKpiBonus">৳০</div></div>
-      <div class="kpi-card red"><div class="kpi-label">মোট প্রদেয়</div><div class="kpi-value red" id="prKpiTotal">৳০</div></div>
-      <div class="kpi-card green"><div class="kpi-label">পরিশোধিত</div><div class="kpi-value green" id="prKpiPaid">৳০</div></div>
+
+    <!-- KPI cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+      <div class="kpi-card blue"><div class="kpi-label">মোট আয়</div><div class="kpi-value blue" id="prKpiRev">৳০</div></div>
+      <div class="kpi-card orange"><div class="kpi-label">কমিশন + ভাতা</div><div class="kpi-value orange" id="prKpiDriver">৳০</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Office জমা</div><div class="kpi-value green" id="prKpiOffice">৳০</div></div>
+      <div class="kpi-card red"><div class="kpi-label">বকেয়া</div><div class="kpi-value red" id="prKpiUnpaid">৳০</div></div>
     </div>
-    <div class="table-wrap">
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:var(--surface2);border-bottom:2px solid var(--border)">
-          <th class="th">ড্রাইভার</th><th class="th">ট্রাক</th><th class="th">ট্রিপ সংখ্যা</th>
-          <th class="th" style="text-align:right">মূল বেতন</th>
-          <th class="th" style="text-align:right">ট্রিপ বোনাস</th>
-          <th class="th" style="text-align:right">মোট প্রদেয়</th>
-          <th class="th" style="text-align:center">অবস্থা</th>
-        </tr></thead>
-        <tbody id="payrollTable"></tbody>
-      </table>
-    </div>
+
+    <!-- Driver settlement cards -->
+    <div id="payrollCards"></div>
   </div>
 
 </main>

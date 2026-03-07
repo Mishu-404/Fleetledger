@@ -2663,13 +2663,18 @@ function payrollPopulateMonths() {
   var sel = document.getElementById('payrollMonth');
   if (!sel) return;
   var now = new Date();
-  sel.innerHTML = '';
-  for (var i = 0; i < 6; i++) {
-    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    var val = d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0');
-    var lbl = MONTHS_BN_PR[d.getMonth()] + ' ' + d.getFullYear();
-    sel.innerHTML += '<option value="' + val + '">' + lbl + '</option>';
-  }
+  // build from actual entry dates
+  var months = {};
+  entries.forEach(function(e){ if(e.date) months[e.date.slice(0,7)] = true; });
+  var sorted = Object.keys(months).sort().reverse();
+  sel.innerHTML = sorted.map(function(m){
+    var d = new Date(m+'-01');
+    return '<option value="'+m+'">'+(MONTHS_BN_PR[d.getMonth()])+' '+d.getFullYear()+'</option>';
+  }).join('');
+  // default to current or latest month
+  var cur = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  if (months[cur]) sel.value = cur;
+  else if (sorted.length) sel.value = sorted[0];
 }
 
 function payrollRender() {
@@ -2678,44 +2683,143 @@ function payrollRender() {
   var month = sel.value;
   if (!month) return;
 
-  // calc trips & bonus per truck this month
-  var truckStats = {};
-  TRUCK_NAMES.forEach(function (t) { truckStats[t] = { trips: 0, bonus: 0 }; });
-  entries.filter(function (e) { return e.date && e.date.slice(0, 7) === month && e.type === 'revenue'; })
-    .forEach(function (e) { if (truckStats[e.truck]) truckStats[e.truck].trips++; });
-  entries.filter(function (e) { return e.date && e.date.slice(0, 7) === month && e.type === 'expense' && e.category === 'ড্রাইভার স্যালারি'; })
-    .forEach(function (e) { if (truckStats[e.truck]) truckStats[e.truck].bonus += e.amount; });
+  var mEntries = entries.filter(function(e){ return e.date && e.date.slice(0,7) === month; });
 
-  var totalSalary = 0, totalBonus = 0, totalPaid = 0;
-  var rows = driversData.map(function (d) {
-    var s = truckStats[d.truck] || { trips: 0, bonus: 0 };
-    var total = (d.salary || 0) + s.bonus;
-    var paidKey = d.id + '-' + month;
-    var paid = !!payrollPaid[paidKey];
-    totalSalary += d.salary || 0;
-    totalBonus += s.bonus;
-    if (paid) totalPaid += total;
-    return { d: d, s: s, total: total, paid: paid, paidKey: paidKey };
+  // Group by driver name (from sheet client field or description)
+  // Each sheet = one day's trips for one truck
+  // Revenue entries have driver info in 'client' field
+  // Expense entries with category 'কমিশন' or 'দৈনিক ভাতা' are driver costs
+
+  // Group by sheet_ref → per sheet stats
+  var sheetMap = {};
+  mEntries.forEach(function(e) {
+    var key = e.sheet_ref || (e.truck+'|'+e.date);
+    if (!sheetMap[key]) sheetMap[key] = {
+      ref: e.sheet_ref||'—', truck: e.truck, date: e.date,
+      driver: '—', rev: 0, commission: 0, allowance: 0, otherExp: 0, totalExp: 0
+    };
+    var s = sheetMap[key];
+    if (e.type === 'revenue') {
+      s.rev += e.amount;
+      if (e.client && e.client !== '—' && e.client !== '') s.driver = e.client;
+    }
+    if (e.type === 'expense') {
+      s.totalExp += e.amount;
+      var cat = (e.category||'').toLowerCase();
+      if (cat.indexOf('কমিশন') !== -1 || cat.indexOf('commission') !== -1) {
+        s.commission += e.amount;
+      } else if (cat.indexOf('ভাতা') !== -1 || cat.indexOf('allowance') !== -1 || cat.indexOf('দৈনিক') !== -1) {
+        s.allowance += e.amount;
+      } else {
+        s.otherExp += e.amount;
+      }
+    }
   });
 
-  document.getElementById('prKpiSalary').textContent = dFmtMoney(totalSalary);
-  document.getElementById('prKpiBonus').textContent = dFmtMoney(totalBonus);
-  document.getElementById('prKpiTotal').textContent = dFmtMoney(totalSalary + totalBonus);
-  document.getElementById('prKpiPaid').textContent = dFmtMoney(totalPaid);
+  // Group sheets by driver
+  var driverMap = {};
+  Object.values(sheetMap).forEach(function(s) {
+    var dName = s.driver !== '—' ? s.driver : ('ট্রাক: ' + s.truck);
+    if (!driverMap[dName]) driverMap[dName] = {
+      name: dName, truck: s.truck, sheets: [], totalRev: 0,
+      totalCommission: 0, totalAllowance: 0, totalOtherExp: 0
+    };
+    var d = driverMap[dName];
+    d.sheets.push(s);
+    d.totalRev += s.rev;
+    d.totalCommission += s.commission;
+    d.totalAllowance += s.allowance;
+    d.totalOtherExp += s.otherExp;
+    // keep truck updated
+    if (s.truck) d.truck = s.truck;
+  });
 
-  document.getElementById('payrollTable').innerHTML = rows.length ? rows.map(function (r) {
-    return '<tr style="border-bottom:1px solid var(--border);background:' + (r.paid ? '#f0fdf4' : '#fff') + '">'
-      + '<td class="td"><div style="font-weight:700">' + r.d.name + '</div></td>'
-      + '<td class="td"><span class="tag" style="background:#eff6ff;color:#1a56db">' + (r.d.truck || '—') + '</span></td>'
-      + '<td class="td" style="text-align:center;font-weight:700">' + r.s.trips + '</td>'
-      + '<td class="td" style="text-align:right">' + dFmtMoney(r.d.salary || 0) + '</td>'
-      + '<td class="td" style="text-align:right;color:var(--yellow);font-weight:600">' + dFmtMoney(r.s.bonus) + '</td>'
-      + '<td class="td" style="text-align:right;font-size:15px;font-weight:700;color:var(--red)">' + dFmtMoney(r.total) + '</td>'
-      + '<td class="td" style="text-align:center">'
-      + '<span class="' + (r.paid ? 'tag-paid' : 'tag-unpaid') + '" onclick="payrollToggle(\'' + r.paidKey + '\')" style="cursor:pointer">'
-      + (r.paid ? '✓ পরিশোধিত' : '⏳ বকেয়া') + '</span></td>'
-      + '</tr>';
-  }).join('') : '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--muted)">ড্রাইভার যোগ করুন প্রথমে</td></tr>';
+  var drivers = Object.values(driverMap).sort(function(a,b){ return b.totalRev - a.totalRev; });
+
+  // KPIs
+  var totalRev = drivers.reduce(function(s,d){ return s+d.totalRev; }, 0);
+  var totalDriver = drivers.reduce(function(s,d){ return s+d.totalCommission+d.totalAllowance; }, 0);
+  var totalOffice = drivers.reduce(function(s,d){ return s+(d.totalRev - d.totalCommission - d.totalAllowance - d.totalOtherExp); }, 0);
+  var totalUnpaid = 0;
+  drivers.forEach(function(d){
+    var key = d.name+'-'+month;
+    if (!payrollPaid[key]) totalUnpaid += d.totalCommission + d.totalAllowance;
+  });
+
+  document.getElementById('prKpiRev').textContent    = fmt(totalRev);
+  document.getElementById('prKpiDriver').textContent = fmt(totalDriver);
+  document.getElementById('prKpiOffice').textContent = fmt(totalOffice);
+  document.getElementById('prKpiUnpaid').textContent = fmt(totalUnpaid);
+
+  // Render cards
+  var container = document.getElementById('payrollCards');
+  if (!drivers.length) {
+    container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px;font-size:14px">এই মাসে কোনো এন্ট্রি নেই</div>';
+    return;
+  }
+
+  container.innerHTML = drivers.map(function(d) {
+    var key = d.name+'-'+month;
+    var paid = !!payrollPaid[key];
+    var driverTotal = d.totalCommission + d.totalAllowance;
+    var officeDeposit = d.totalRev - d.totalCommission - d.totalAllowance - d.totalOtherExp;
+    var commPct = d.totalRev > 0 ? Math.round(d.totalCommission/d.totalRev*100) : 0;
+
+    // sheet breakdown rows
+    var sheetRows = d.sheets.sort(function(a,b){ return a.date.localeCompare(b.date); }).map(function(s) {
+      var dp = s.date.split('-');
+      var net = s.rev - s.commission - s.allowance - s.otherExp;
+      return '<tr style="border-bottom:1px solid #f1f5f9;font-size:12px">'
+        + '<td style="padding:6px 8px;color:#64748b">'+dp[2]+'/'+dp[1]+'</td>'
+        + '<td style="padding:6px 8px"><span style="background:#f0f9ff;color:#0284c7;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700">#'+s.ref+'</span></td>'
+        + '<td style="padding:6px 8px;text-align:right;color:#057a55;font-weight:600">'+fmt(s.rev)+'</td>'
+        + '<td style="padding:6px 8px;text-align:right;color:#92400e">'+fmt(s.commission)+'</td>'
+        + '<td style="padding:6px 8px;text-align:right;color:#6d28d9">'+fmt(s.allowance)+'</td>'
+        + '<td style="padding:6px 8px;text-align:right;font-weight:700;color:'+(net>=0?'#057a55':'#c81e1e')+'">'+fmt(net)+'</td>'
+        + '</tr>';
+    }).join('');
+
+    return '<div style="background:#fff;border-radius:14px;border:1.5px solid '+(paid?'#86efac':'#e2e8f0')+';padding:18px;margin-bottom:14px">'
+      // driver header
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">'
+      + '<div style="display:flex;align-items:center;gap:10px">'
+      + '<div style="width:40px;height:40px;background:#f0f9ff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>'
+      + '<div><div style="font-size:15px;font-weight:700;color:#1e293b">'+d.name+'</div>'
+      + '<div style="font-size:11px;color:#94a3b8;margin-top:1px">🚚 '+d.truck+' &nbsp;·&nbsp; '+toBn(d.sheets.length)+'টি শিট &nbsp;·&nbsp; কমিশন '+toBn(commPct)+'%</div>'
+      + '</div></div>'
+      + '<div style="display:flex;align-items:center;gap:8px">'
+      + '<span onclick="payrollToggle(\''+key+'\')" style="cursor:pointer;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;background:'+(paid?'#dcfce7':'#fff7ed')+';color:'+(paid?'#15803d':'#c2410c')+';border:1.5px solid '+(paid?'#86efac':'#fed7aa')+'">'
+      + (paid ? '✓ পরিশোধিত' : '⏳ বকেয়া')+'</span>'
+      + '</div></div>'
+
+      // summary row
+      + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">'
+      + '<div style="background:#f0fdf4;border-radius:9px;padding:10px;text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">মোট আয়</div><div style="font-size:15px;font-weight:700;color:#057a55">'+fmt(d.totalRev)+'</div></div>'
+      + '<div style="background:#fff7ed;border-radius:9px;padding:10px;text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">কমিশন</div><div style="font-size:15px;font-weight:700;color:#c2410c">'+fmt(d.totalCommission)+'</div></div>'
+      + '<div style="background:#f5f3ff;border-radius:9px;padding:10px;text-align:center"><div style="font-size:10px;color:#64748b;margin-bottom:3px">দৈনিক ভাতা</div><div style="font-size:15px;font-weight:700;color:#6d28d9">'+fmt(d.totalAllowance)+'</div></div>'
+      + '<div style="background:'+(officeDeposit>=0?'#eff6ff':'#fff5f5')+';border-radius:9px;padding:10px;text-align:center;border:1.5px solid '+(officeDeposit>=0?'#bfdbfe':'#fecaca')+'">'
+      + '<div style="font-size:10px;color:#64748b;margin-bottom:3px">Office জমা</div>'
+      + '<div style="font-size:15px;font-weight:700;color:'+(officeDeposit>=0?'#1a56db':'#c81e1e')+'">'+fmt(officeDeposit)+'</div></div>'
+      + '</div>'
+
+      // sheet breakdown table
+      + '<details style="margin-top:4px"><summary style="cursor:pointer;font-size:12px;font-weight:600;color:#64748b;padding:4px 0">শিট বিস্তারিত ▸</summary>'
+      + '<div style="overflow-x:auto;margin-top:8px"><table style="width:100%;border-collapse:collapse;min-width:420px">'
+      + '<thead><tr style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b">'
+      + '<th style="padding:6px 8px;text-align:left">তারিখ</th><th style="padding:6px 8px;text-align:left">শিট</th>'
+      + '<th style="padding:6px 8px;text-align:right">আয়</th><th style="padding:6px 8px;text-align:right">কমিশন</th>'
+      + '<th style="padding:6px 8px;text-align:right">ভাতা</th><th style="padding:6px 8px;text-align:right">Office জমা</th>'
+      + '</tr></thead><tbody>'+sheetRows+'</tbody>'
+      + '<tfoot><tr style="background:#f8fafc;font-weight:700;font-size:12px">'
+      + '<td colspan="2" style="padding:7px 8px">মোট</td>'
+      + '<td style="padding:7px 8px;text-align:right;color:#057a55">'+fmt(d.totalRev)+'</td>'
+      + '<td style="padding:7px 8px;text-align:right;color:#c2410c">'+fmt(d.totalCommission)+'</td>'
+      + '<td style="padding:7px 8px;text-align:right;color:#6d28d9">'+fmt(d.totalAllowance)+'</td>'
+      + '<td style="padding:7px 8px;text-align:right;color:'+(officeDeposit>=0?'#1a56db':'#c81e1e')+'">'+fmt(officeDeposit)+'</td>'
+      + '</tr></tfoot>'
+      + '</table></div></details>'
+      + '</div>';
+  }).join('');
 }
 
 function payrollToggle(key) {
@@ -2726,20 +2830,42 @@ function payrollToggle(key) {
 function payrollExportCSV() {
   var sel = document.getElementById('payrollMonth');
   var month = sel ? sel.value : '';
-  var rows = [['ড্রাইভার', 'ট্রাক', 'ট্রিপ সংখ্যা', 'মূল বেতন', 'ট্রিপ বোনাস', 'মোট', 'অবস্থা']];
-  driversData.forEach(function (d) {
-    var tStats = { trips: 0, bonus: 0 };
-    entries.filter(function (e) { return e.date && e.date.slice(0, 7) === month && e.truck === d.truck; }).forEach(function (e) {
-      if (e.type === 'revenue') tStats.trips++;
-      if (e.type === 'expense' && e.category === 'ড্রাইভার স্যালারি') tStats.bonus += e.amount;
-    });
-    var total = (d.salary || 0) + tStats.bonus;
-    var paid = payrollPaid[d.id + '-' + month] ? 'পরিশোধিত' : 'বকেয়া';
-    rows.push([d.name, d.truck || '—', tStats.trips, d.salary || 0, tStats.bonus, total, paid]);
+  var rows = [['ড্রাইভার', 'ট্রাক', 'শিট সংখ্যা', 'মোট আয়', 'কমিশন', 'দৈনিক ভাতা', 'অন্যান্য খরচ', 'Office জমা', 'অবস্থা']];
+
+  var mEntries = entries.filter(function(e){ return e.date && e.date.slice(0,7) === month; });
+  var sheetMap = {};
+  mEntries.forEach(function(e) {
+    var key = e.sheet_ref || (e.truck+'|'+e.date);
+    if (!sheetMap[key]) sheetMap[key] = { truck: e.truck, date: e.date, driver: '—', rev:0, commission:0, allowance:0, otherExp:0 };
+    var s = sheetMap[key];
+    if (e.type==='revenue') { s.rev += e.amount; if (e.client && e.client!=='—') s.driver = e.client; }
+    if (e.type==='expense') {
+      var cat = (e.category||'').toLowerCase();
+      if (cat.indexOf('কমিশন')!==-1) s.commission += e.amount;
+      else if (cat.indexOf('ভাতা')!==-1||cat.indexOf('দৈনিক')!==-1) s.allowance += e.amount;
+      else s.otherExp += e.amount;
+    }
   });
-  var csv = '\uFEFF' + rows.map(function (r) { return r.join(','); }).join('\n');
-  var a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = 'payroll-' + month + '.csv'; a.click();
+
+  var driverMap = {};
+  Object.values(sheetMap).forEach(function(s) {
+    var dn = s.driver !== '—' ? s.driver : s.truck;
+    if (!driverMap[dn]) driverMap[dn] = { name:dn, truck:s.truck, sheets:0, rev:0, commission:0, allowance:0, otherExp:0 };
+    var d = driverMap[dn];
+    d.sheets++; d.rev+=s.rev; d.commission+=s.commission; d.allowance+=s.allowance; d.otherExp+=s.otherExp;
+  });
+
+  Object.values(driverMap).forEach(function(d) {
+    var office = d.rev - d.commission - d.allowance - d.otherExp;
+    var paid = payrollPaid[d.name+'-'+month] ? 'পরিশোধিত' : 'বকেয়া';
+    rows.push([d.name, d.truck, d.sheets, d.rev, d.commission, d.allowance, d.otherExp, office, paid]);
+  });
+
+  var csv = '\uFEFF' + rows.map(function(r){ return r.join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'settlement-' + month + '.csv';
+  a.click();
   showNotif('CSV ডাউনলোড হয়েছে', 'var(--accent)');
 }
 
