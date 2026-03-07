@@ -66,6 +66,7 @@
   <div style="background:#1e293b;display:flex;gap:0;border-bottom:2px solid #334155">
     <button id="wtab-truck" onclick="wSwitchTab('truck')" style="flex:1;padding:11px;background:#1a56db;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Hind Siliguri',sans-serif">🚚 ট্রাক ট্রিপ রিপোর্ট</button>
     <button id="wtab-depot" onclick="wSwitchTab('depot')" style="flex:1;padding:11px;background:transparent;color:#94a3b8;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hind Siliguri',sans-serif">🏭 ডিপো ট্রিপ এন্ট্রি</button>
+    <button id="wtab-mysheets" onclick="wSwitchTab('mysheets')" style="flex:1;padding:11px;background:transparent;color:#94a3b8;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Hind Siliguri',sans-serif">📋 আমার শিট</button>
   </div>
 
   <!-- TRUCK TRIP FORM -->
@@ -258,6 +259,21 @@
     <button onclick="wdSubmit()" style="width:100%;max-width:700px;display:block;margin:0 auto;background:#057a55;color:#fff;border:none;padding:14px;font-size:15px;font-weight:700;border-radius:9px;cursor:pointer;font-family:'Hind Siliguri',sans-serif">✅ ডিপো ট্রিপ জমা দিন / Submit</button>
   </div>
 </div><!-- /wtab-depot-content -->
+
+<!-- MY SHEETS TAB -->
+<div id="wtab-mysheets-content" style="display:none;background:#f4f6f9;min-height:calc(100vh - 80px);padding:14px;box-sizing:border-box">
+  <div style="max-width:700px;margin:0 auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:16px;font-weight:700;color:#1e293b">📋 আমার জমা দেওয়া শিট</div>
+      <select id="mySheetsMonth" class="sel" style="font-size:12px" onchange="renderMySheets()">
+        <option value="">সকল মাস</option>
+      </select>
+    </div>
+    <div id="mySheetsContainer">
+      <div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:14px">লোড হচ্ছে...</div>
+    </div>
+  </div>
+</div>
 
 </div>
 

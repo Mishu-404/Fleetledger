@@ -1602,6 +1602,17 @@ async function wSubmit() {
   // generate one sheet reference for this entire submission
   var sheetRef = generateSheetRef(plate, expDate);
 
+  // Duplicate check — same truck + same date already submitted?
+  var todaySheets = entries.filter(function(e) {
+    return e.truck === plate && e.date === expDate && e.sheet_ref;
+  });
+  if (todaySheets.length > 0) {
+    var existingRef = todaySheets[0].sheet_ref;
+    if (!confirm('⚠️ সতর্কতা!\n\n' + plate + ' ট্রাকের জন্য ' + expDate + ' তারিখে ইতিমধ্যে একটি শিট (#' + existingRef + ') জমা আছে।\n\nআবার জমা দিতে চান?')) {
+      return;
+    }
+  }
+
   var savePromises = [];
 
   // Capture mileage data
@@ -2757,14 +2768,23 @@ switchView = function (v, btn) {
 
 // ── WORKER TAB SWITCHER ──
 function wSwitchTab(tab) {
-  var isTruck = tab === 'truck';
-  document.getElementById('wtab-truck-content').style.display = isTruck ? 'block' : 'none';
-  document.getElementById('wtab-depot-content').style.display = isTruck ? 'none' : 'block';
-  document.getElementById('wbar-truck').style.display = isTruck ? 'block' : 'none';
-  document.getElementById('wtab-truck').style.background = isTruck ? '#1a56db' : 'transparent';
-  document.getElementById('wtab-truck').style.color = isTruck ? '#fff' : '#94a3b8';
-  document.getElementById('wtab-depot').style.background = isTruck ? 'transparent' : '#1a56db';
-  document.getElementById('wtab-depot').style.color = isTruck ? '#94a3b8' : '#fff';
+  // hide all tab contents
+  ['truck','depot','mysheets'].forEach(function(t) {
+    var el = document.getElementById('wtab-'+t+'-content');
+    if (el) el.style.display = 'none';
+    var btn = document.getElementById('wtab-'+t);
+    if (btn) { btn.style.background = 'transparent'; btn.style.color = '#94a3b8'; }
+  });
+  // show selected
+  var content = document.getElementById('wtab-'+tab+'-content');
+  if (content) content.style.display = 'block';
+  var activeBtn = document.getElementById('wtab-'+tab);
+  if (activeBtn) { activeBtn.style.background = '#1a56db'; activeBtn.style.color = '#fff'; }
+
+  // wbar
+  var wbar = document.getElementById('wbar-truck');
+  if (wbar) wbar.style.display = tab === 'truck' ? 'block' : 'none';
+
   if (tab === 'depot') {
     var sel = document.getElementById('wdRoute');
     if (sel) sel.innerHTML = '<option value="">⏳ রুট লোড হচ্ছে...</option>';
@@ -2775,6 +2795,67 @@ function wSwitchTab(tab) {
       }
     });
   }
+  if (tab === 'mysheets') {
+    renderMySheets();
+  }
+}
+
+function renderMySheets() {
+  var container = document.getElementById('mySheetsContainer');
+  var monthSel = document.getElementById('mySheetsMonth');
+  if (!container) return;
+
+  // populate month filter
+  if (monthSel && monthSel.options.length <= 1) {
+    var months = {};
+    entries.forEach(function(e){ if(e.date) months[e.date.slice(0,7)] = true; });
+    monthSel.innerHTML = '<option value="">সকল মাস</option>'
+      + Object.keys(months).sort().reverse().map(function(m){
+          var d = new Date(m+'-01');
+          return '<option value="'+m+'">'+(MONTHS_BN[d.getMonth()])+' '+d.getFullYear()+'</option>';
+        }).join('');
+    // default to current month
+    var curM = new Date().toISOString().slice(0,7);
+    if (months[curM]) monthSel.value = curM;
+  }
+
+  var selMonth = monthSel ? monthSel.value : '';
+
+  // group entries by sheet_ref
+  var sheetMap = {};
+  entries.filter(function(e){
+    return !selMonth || (e.date && e.date.slice(0,7) === selMonth);
+  }).forEach(function(e) {
+    var key = e.sheet_ref || (e.truck + '|' + e.date);
+    if (!sheetMap[key]) sheetMap[key] = {ref: e.sheet_ref||'—', truck: e.truck, date: e.date, rev:0, exp:0, driver: e.client||'—'};
+    if (e.type==='revenue') sheetMap[key].rev += e.amount;
+    else sheetMap[key].exp += e.amount;
+    if (e.client && e.client !== '—') sheetMap[key].driver = e.client;
+  });
+
+  var sheets = Object.values(sheetMap).sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+  if (!sheets.length) {
+    container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:14px">এই মাসে কোনো শিট নেই</div>';
+    return;
+  }
+
+  container.innerHTML = sheets.map(function(s) {
+    var net = s.rev - s.exp;
+    var d = s.date.split('-');
+    var dateStr = d[2]+'/'+d[1]+'/'+d[0];
+    return '<div style="background:#fff;border-radius:12px;border:1.5px solid #e2e8f0;padding:16px;margin-bottom:12px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      + '<div><div style="font-size:13px;font-weight:700;color:#1e293b">🚚 '+s.truck+'</div>'
+      + '<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+dateStr+' &nbsp;·&nbsp; ড্রাইভার: '+s.driver+'</div></div>'
+      + '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;color:#0284c7"># '+s.ref+'</div>'
+      + '</div>'
+      + '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+      + '<div style="background:#f0fdf4;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#64748b;margin-bottom:2px">আয়</div><div style="font-size:14px;font-weight:700;color:#057a55">'+fmt(s.rev)+'</div></div>'
+      + '<div style="background:#fff5f5;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#64748b;margin-bottom:2px">ব্যয়</div><div style="font-size:14px;font-weight:700;color:#c81e1e">'+fmt(s.exp)+'</div></div>'
+      + '<div style="background:'+(net>=0?'#f0fdf4':'#fff5f5')+';border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#64748b;margin-bottom:2px">নিট</div><div style="font-size:14px;font-weight:700;color:'+(net>=0?'#057a55':'#c81e1e')+'">'+fmt(net)+'</div></div>'
+      + '</div></div>';
+  }).join('');
 }
 
 // ── DEPOT TRIP FORM (worker side) ──
